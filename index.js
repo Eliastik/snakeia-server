@@ -15,7 +15,7 @@ app.get('/', function(req, res) {
 io.on('connection', function(socket) {
   var grid = new Grid();
   grid.init();
-  var snake = new Snake();
+  var snake = new Snake(null, null, grid);
   var game = new GameEngine(grid, snake);
 
   socket.emit("init", {
