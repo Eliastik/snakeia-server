@@ -8,8 +8,40 @@ var Grid = snakeia.Grid;
 var GameEngine = snakeia.GameEngine;
 var GameConstants = snakeia.GameConstants;
 
+var games = {};
+
+var players;
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/rooms', function(req, res) {
+  var rooms = [];
+  var keysRooms = Object.keys(games);
+
+  for(var i = 0; i < keysRooms.length; i++) {
+    rooms.push({});
+    rooms[i]["borderWalls"] = false;
+    rooms[i]["generateWalls"] = false;
+    rooms[i]["players"] = 0;
+    rooms[i]["width"] = "???";
+    rooms[i]["height"] = "???";
+    rooms[i]["speed"] = games[keysRooms[i]].speed;
+
+    if(games[keysRooms[i]].grid != null) {
+      rooms[i]["width"] = games[keysRooms[i]].grid.width;
+      rooms[i]["height"] = games[keysRooms[i]].grid.height;
+      rooms[i]["borderWalls"] = games[keysRooms[i]].grid.borderWalls;
+      rooms[i]["generateWalls"] = games[keysRooms[i]].grid.generateWalls;
+    }
+
+    if(games[keysRooms[i]].snake != null) {
+      rooms[i]["players"] = games[keysRooms[i]].snake.length;
+    }
+  }
+
+  res.end("callbackDisplayRooms(" + JSON.stringify(rooms) + ");");
 });
 
 io.on('connection', function(socket) {
