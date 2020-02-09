@@ -14,7 +14,7 @@ var players;
 
 function getRoomsData() {
   const rooms = [];
-  const keysRooms = Object.keys(games);
+  const keysRooms = Object.keys(games).filter(key => !games[key]["private"]);
 
   for(let i = 0; i < keysRooms.length; i++) {
     rooms.push({});
@@ -23,18 +23,18 @@ function getRoomsData() {
     rooms[i]["players"] = 0;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
-    rooms[i]["speed"] = games[keysRooms[i]].speed;
+    rooms[i]["speed"] = games[keysRooms[i]]["game"].speed;
     rooms[i]["code"] = keysRooms[i];
 
-    if(games[keysRooms[i]].grid != null) {
-      rooms[i]["width"] = games[keysRooms[i]].grid.width;
-      rooms[i]["height"] = games[keysRooms[i]].grid.height;
-      rooms[i]["borderWalls"] = games[keysRooms[i]].grid.borderWalls;
-      rooms[i]["generateWalls"] = games[keysRooms[i]].grid.generateWalls;
+    if(games[keysRooms[i]]["game"].grid != null) {
+      rooms[i]["width"] = games[keysRooms[i]]["game"].grid.width;
+      rooms[i]["height"] = games[keysRooms[i]]["game"].grid.height;
+      rooms[i]["borderWalls"] = games[keysRooms[i]]["game"].grid.borderWalls;
+      rooms[i]["generateWalls"] = games[keysRooms[i]]["game"].grid.generateWalls;
     }
 
-    if(games[keysRooms[i]].snake != null) {
-      rooms[i]["players"] = games[keysRooms[i]].snake.length;
+    if(games[keysRooms[i]]["game"].snake != null) {
+      rooms[i]["players"] = games[keysRooms[i]]["game"].snake.length;
     }
   }
 
@@ -59,6 +59,7 @@ function createRoom(data, socket) {
   var speed = 8;
   var enableAI = false;
   var validSettings = true;
+  var privateGame = false;
 
   if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
     validSettings = false;
@@ -84,6 +85,12 @@ function createRoom(data, socket) {
     generateWalls = data.generateWalls ? true : false;
   }
 
+  if(data.private == null) {
+    validSettings = false;
+  } else {
+    privateGame = data.private ? true : false;
+  }
+
   if(data.speed == null && data.speed == "custom") {
     if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < 1 || data.customSpeed > 100) {
       validSettings = false;
@@ -101,11 +108,15 @@ function createRoom(data, socket) {
     var grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
     grid.init();
     var game = new GameEngine(grid, [], speed, false, false, false);
-    games[code] = game;
+    
+    games[code] = {
+      game: game,
+      private: privateGame
+    };
 
     if(socket != null) {
       socket.emit("process", {
-        success: false,
+        success: true,
         code: code
       });
     }
