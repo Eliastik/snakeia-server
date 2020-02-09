@@ -24,6 +24,7 @@ function getRoomsData() {
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
     rooms[i]["speed"] = games[keysRooms[i]].speed;
+    rooms[i]["code"] = keysRooms[i];
 
     if(games[keysRooms[i]].grid != null) {
       rooms[i]["width"] = games[keysRooms[i]].grid.width;
@@ -96,20 +97,23 @@ function createRoom(data, socket) {
   }
 
   if(validSettings) {
+    var code = getRandomRoomKey();
     var grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
     grid.init();
     var game = new GameEngine(grid, [], speed, false, false, false);
-    games[getRandomRoomKey()] = game;
+    games[code] = game;
 
     if(socket != null) {
       socket.emit("process", {
-        success: true
+        success: false,
+        code: code
       });
     }
   } else {
     if(socket != null) {
       socket.emit("process", {
-        success: false
+        success: false,
+        code: null
       });
     }
   }
