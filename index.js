@@ -40,6 +40,81 @@ function getRoomsData() {
   return rooms;
 }
 
+function getRandomRoomKey() {
+  let r;
+
+  do {
+    r = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  } while(r in games);
+
+  return r;
+}
+
+function createRoom(data, socket) {
+  var heightGrid = 20;
+  var widthGrid = 20;
+  var borderWalls = false;
+  var generateWalls = false;
+  var speed = 8;
+  var enableAI = false;
+  var validSettings = true;
+
+  if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
+    validSettings = false;
+  } else {
+    heightGrid = data.heightGrid;
+  }
+
+  if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < 5 || data.widthGrid > 100) {
+    validSettings = false;
+  } else {
+    widthGrid = data.widthGrid;
+  }
+
+  if(data.borderWalls == null) {
+    validSettings = false;
+  } else {
+    borderWalls = data.borderWalls ? true : false;
+  }
+
+  if(data.generateWalls == null) {
+    validSettings = false;
+  } else {
+    generateWalls = data.generateWalls ? true : false;
+  }
+
+  if(data.speed == null && data.speed == "custom") {
+    if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < 1 || data.customSpeed > 100) {
+      validSettings = false;
+    } else {
+      speed = data.customSpeed;
+    }
+  } else if(data.speed == null || isNaN(data.speed) || data.speed < 1 || data.speed > 100) {
+    validSettings = false;
+  } else {
+    speed = data.speed;
+  }
+
+  if(validSettings) {
+    var grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
+    grid.init();
+    var game = new GameEngine(grid, [], speed, false, false, false);
+    games[getRandomRoomKey()] = game;
+
+    if(socket != null) {
+      socket.emit("process", {
+        success: true
+      });
+    }
+  } else {
+    if(socket != null) {
+      socket.emit("process", {
+        success: false
+      });
+    }
+  }
+}
+
 app.get("/", function(req, res) {
   res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
 });
@@ -54,7 +129,7 @@ io.of("/rooms").on("connection", function(socket) {
 
 io.of("/createRoom").on("connection", function(socket) {
   socket.on("create", function(data) {
-    var grid = new Grid();
+    createRoom(data, socket);
   });
 });
 
