@@ -1,26 +1,22 @@
-var app = require('express')();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
-var snakeia = require("snakeia");
+const app = require("express")();
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+const snakeia = require("snakeia");
 
-var Snake = snakeia.Snake;
-var Grid = snakeia.Grid;
-var GameEngine = snakeia.GameEngine;
-var GameConstants = snakeia.GameConstants;
+const Snake = snakeia.Snake;
+const Grid = snakeia.Grid;
+const GameEngine = snakeia.GameEngine;
+const GameConstants = snakeia.GameConstants;
 
 var games = {};
 
 var players;
 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
+function getRoomsData() {
+  const rooms = [];
+  const keysRooms = Object.keys(games);
 
-app.get('/rooms', function(req, res) {
-  var rooms = [];
-  var keysRooms = Object.keys(games);
-
-  for(var i = 0; i < keysRooms.length; i++) {
+  for(let i = 0; i < keysRooms.length; i++) {
     rooms.push({});
     rooms[i]["borderWalls"] = false;
     rooms[i]["generateWalls"] = false;
@@ -41,10 +37,28 @@ app.get('/rooms', function(req, res) {
     }
   }
 
-  res.end("callbackDisplayRooms(" + JSON.stringify(rooms) + ");");
+  return rooms;
+}
+
+app.get("/", function(req, res) {
+  res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
 });
 
-io.on('connection', function(socket) {
+app.get("/rooms", function(req, res) {
+  res.end("callbackDisplayRooms(" + JSON.stringify(getRoomsData()) + ");");
+});
+
+io.of("/rooms").on("connection", function(socket) {
+  socket.emit("rooms", getRoomsData());
+});
+
+io.of("/createRoom").on("connection", function(socket) {
+  socket.on("create", function(data) {
+    var grid = new Grid();
+  });
+});
+
+io.on("connection", function(socket) {
   var grid = new Grid();
   grid.init();
   var snake = new Snake(null, null, grid);
@@ -255,5 +269,5 @@ io.on('connection', function(socket) {
 });
 
 http.listen(3000, function(){
-  console.log('listening on *:3000');
+  console.log("listening on *:3000");
 });
