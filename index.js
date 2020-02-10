@@ -10,8 +10,6 @@ const GameConstants = snakeia.GameConstants;
 
 var games = {};
 
-var players;
-
 function getRoomsData() {
   const rooms = [];
   const keysRooms = Object.keys(games).filter(key => !games[key]["private"]);
@@ -111,7 +109,8 @@ function createRoom(data, socket) {
     
     games[code] = {
       game: game,
-      private: privateGame
+      private: privateGame,
+      players: []
     };
 
     if(socket != null) {
@@ -119,6 +118,8 @@ function createRoom(data, socket) {
         success: true,
         code: code
       });
+
+      setupRoom(code);
     }
   } else {
     if(socket != null) {
@@ -130,42 +131,11 @@ function createRoom(data, socket) {
   }
 }
 
-app.get("/", function(req, res) {
-  res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
-});
-
-app.get("/rooms", function(req, res) {
-  res.end("callbackDisplayRooms(" + JSON.stringify(getRoomsData()) + ");");
-});
-
-io.of("/rooms").on("connection", function(socket) {
-  socket.emit("rooms", getRoomsData());
-});
-
-io.of("/createRoom").on("connection", function(socket) {
-  socket.on("create", function(data) {
-    createRoom(data, socket);
-  });
-});
-
-io.on("connection", function(socket) {
-  var grid = new Grid();
-  grid.init();
-  var snake = new Snake(null, null, grid);
-  var game = new GameEngine(grid, snake);
-
-  socket.emit("init", {
-    "snakes": JSON.parse(JSON.stringify(game.snakes)),
-    "grid": JSON.parse(JSON.stringify(game.grid)),
-    "enablePause": game.enablePause,
-    "enableRetry": game.enableRetry,
-    "progressiveSpeed": game.progressiveSpeed,
-    "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-    "errorOccurred": game.errorOccurred
-  });
+function setupRoom(code) {
+  const game = games[code].game;
 
   game.onReset(function() {
-    socket.emit("reset", {
+    io.to("room-" + code).emit("reset", {
       "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
@@ -190,7 +160,7 @@ io.on("connection", function(socket) {
   });
 
   game.onStart(function() {
-    socket.emit("start", {
+    io.to("room-" + code).emit("start", {
       "snakes": JSON.parse(JSON.stringify(game.snakes)),
       "grid": JSON.parse(JSON.stringify(game.grid)),
       "starting": game.starting,
@@ -206,7 +176,7 @@ io.on("connection", function(socket) {
   });
 
   game.onPause(function() {
-    socket.emit("pause", {
+    io.to("room-" + code).emit("pause", {
       "paused": game.paused,
       "confirmReset": false,
       "confirmExit": false,
@@ -217,7 +187,7 @@ io.on("connection", function(socket) {
   });
 
   game.onContinue(function() {
-    socket.emit("continue", {
+    io.to("room-" + code).emit("continue", {
       "confirmReset": false,
       "confirmExit": false,
       "getInfos": false,
@@ -227,7 +197,7 @@ io.on("connection", function(socket) {
   });
 
   game.onStop(function() {
-    socket.emit("stop", {
+    io.to("room-" + code).emit("stop", {
       "paused": game.paused,
       "scoreMax": game.scoreMax,
       "gameOver": game.gameOver,
@@ -241,7 +211,7 @@ io.on("connection", function(socket) {
   });
 
   game.onExit(function() {
-    socket.emit("exit", {
+    io.to("room-" + code).emit("exit", {
       "paused": game.paused,
       "gameOver": game.gameOver,
       "gameFinished": game.gameFinished,
@@ -255,7 +225,7 @@ io.on("connection", function(socket) {
   });
 
   game.onKill(function() {
-    socket.emit("kill", {
+    io.to("room-" + code).emit("kill", {
       "paused": game.paused,
       "gameOver": game.gameOver,
       "killed": game.killed,
@@ -271,7 +241,7 @@ io.on("connection", function(socket) {
   });
 
   game.onScoreIncreased(function() {
-    socket.emit("scoreIncreased", {
+    io.to("room-" + code).emit("scoreIncreased", {
       "snakes": JSON.parse(JSON.stringify(game.snakes)),
       "grid": JSON.parse(JSON.stringify(game.grid)),
       "scoreMax": game.scoreMax,
@@ -281,7 +251,7 @@ io.on("connection", function(socket) {
   });
   
   game.onUpdate(function() {
-    socket.emit("update", {
+    io.to("room-" + code).emit("update", {
       "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
@@ -304,7 +274,7 @@ io.on("connection", function(socket) {
   });
 
   game.onUpdateCounter(function() {
-    socket.emit("updateCounter", {
+    io.to("room-" + code).emit("updateCounter", {
       "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
@@ -324,37 +294,83 @@ io.on("connection", function(socket) {
       "errorOccurred": game.errorOccurred
     });
   });
+}
 
-  socket.on("reset", function() {
-    game.reset();
+app.get("/", function(req, res) {
+  res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
+});
+
+app.get("/rooms", function(req, res) {
+  res.end("callbackDisplayRooms(" + JSON.stringify(getRoomsData()) + ");");
+});
+
+io.of("/rooms").on("connection", function(socket) {
+  socket.emit("rooms", getRoomsData());
+});
+
+io.of("/createRoom").on("connection", function(socket) {
+  socket.on("create", function(data) {
+    createRoom(data, socket);
   });
+});
 
-  socket.on("start", function() {
-    game.start();
-  });
+io.on("connection", function(socket) {
+  socket.on("join-room", function(code) {
+    if(games[code] != null && games[code].players[socket.id] == null) {
+      var game = games[code];
 
-  socket.on("finish", function() {
-    game.stop(true);
-  });
+      socket.join("room-" + code);
 
-  socket.on("stop", function() {
-    game.stop(false);
-  });
+      game.players[socket.id] = {
+        snake: new Snake(null, null, game.game.grid),
+        ready: false
+      };
 
-  socket.on("pause", function() {
-    game.pause();
-  });
+      socket.emit("join-room", {
+        success: true
+      });
+    
+      socket.once("start", function() {
+        game.players[socket.id].ready = true;
+        game.game.snakes.push(game.players[socket.id].snake);
+        game.game.init();
+        game.game.start();
 
-  socket.on("kill", function() {
-    game.kill();
-  });
+        socket.emit("init", {
+          "enablePause": game.enablePause,
+          "enableRetry": game.enableRetry,
+          "progressiveSpeed": game.progressiveSpeed,
+          "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+          "errorOccurred": game.errorOccurred
+        });
+      });
+    
+      socket.on("exit", function() {
+        game.players[socket.id].snake.gameOver = true;
+        socket.emit("kill", {
+          "killed": true
+        });
+      });
+    
+      socket.on("kill", function() {
+        game.players[socket.id].snake.gameOver = true;
+        socket.emit("kill", {
+          "killed": true
+        });
+      });
+    
+      socket.on("key", function(key) {
+        game.players[socket.id].snake.lastKey = key;
+      });
 
-  socket.on("exit", function() {
-    game.exit();
-  });
-
-  socket.on("key", function(key) {
-    game.lastKey = key;
+      socket.once("error", function() {
+        game.players[socket.id].snake.gameOver = true;
+      });
+    } else {
+      socket.emit("join-room", {
+        success: false
+      });
+    }
   });
 });
 
