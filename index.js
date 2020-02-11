@@ -18,7 +18,7 @@ function getRoomsData() {
     rooms.push({});
     rooms[i]["borderWalls"] = false;
     rooms[i]["generateWalls"] = false;
-    rooms[i]["players"] = 0;
+    rooms[i]["players"] = Object.keys(games[keysRooms[i]]["players"]).length;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
     rooms[i]["speed"] = games[keysRooms[i]]["game"].speed;
