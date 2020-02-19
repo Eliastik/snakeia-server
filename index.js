@@ -105,7 +105,7 @@ function createRoom(data, socket) {
     var code = getRandomRoomKey();
     var grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
     grid.init();
-    var game = new GameEngine(grid, [], speed, false, false, false);
+    var game = new GameEngine(grid, [], speed);
     
     games[code] = {
       game: game,
@@ -252,7 +252,6 @@ function setupRoom(code) {
   
   game.onUpdate(function() {
     io.to("room-" + code).emit("update", {
-      "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
       "grid": JSON.parse(JSON.stringify(game.grid)),
@@ -337,11 +336,17 @@ io.on("connection", function(socket) {
         game.game.start();
 
         socket.emit("init", {
-          "enablePause": game.enablePause,
-          "enableRetry": game.enableRetry,
-          "progressiveSpeed": game.progressiveSpeed,
-          "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "errorOccurred": game.errorOccurred
+          "enablePause": game.game.enablePause,
+          "enableRetry": game.game.enableRetry,
+          "progressiveSpeed": game.game.progressiveSpeed,
+          "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+          "errorOccurred": game.game.errorOccurred
+        });
+
+        socket.on("start", function() {
+          socket.emit("start", {
+            "paused": false
+          });
         });
       });
     
@@ -357,10 +362,17 @@ io.on("connection", function(socket) {
         socket.emit("kill", {
           "killed": true
         });
+        console.log("ok");
       });
     
       socket.on("key", function(key) {
         game.players[socket.id].snake.lastKey = key;
+      });
+
+      socket.on("pause", function() {
+        socket.emit("pause", {
+          "paused": true
+        });
       });
 
       socket.once("error", function() {
