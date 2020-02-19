@@ -350,19 +350,20 @@ io.on("connection", function(socket) {
         });
       });
     
-      socket.on("exit", function() {
+      socket.once("exit", function() {
         game.players[socket.id].snake.gameOver = true;
         socket.emit("kill", {
           "killed": true
         });
+        socket.leave("room-" + code);
       });
     
-      socket.on("kill", function() {
+      socket.once("kill", function() {
         game.players[socket.id].snake.gameOver = true;
         socket.emit("kill", {
           "killed": true
         });
-        console.log("ok");
+        socket.leave("room-" + code);
       });
     
       socket.on("key", function(key) {
