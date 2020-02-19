@@ -12,7 +12,7 @@ var games = {};
 
 function getRoomsData() {
   const rooms = [];
-  const keysRooms = Object.keys(games).filter(key => !games[key]["private"]);
+  const keysRooms = Object.keys(games).filter(key => games[key] && !games[key]["private"]);
 
   for(let i = 0; i < keysRooms.length; i++) {
     rooms.push({});
@@ -295,6 +295,34 @@ function setupRoom(code) {
   });
 }
 
+function cleanRooms() {
+  const keys = Object.keys(games);
+  const toRemove = [];
+
+  for(let i = 0; i < keys.length; i++) {
+    const game = games[keys[i]];
+
+    if(game != null) {
+      const players = game.game.snakes;
+      let nb = 0;
+  
+      for(let j = 0; j < players.length; j++) {
+        if(players[j] != null && !players[j].gameOver) {
+          nb++;
+        }
+      }
+  
+      if(nb <= 0) {
+        toRemove.push(keys[i]);
+      }
+    }
+  }
+
+  for(let i = 0; i < toRemove.length; i++) {
+    games[toRemove[i]] = null;
+  }
+}
+
 app.get("/", function(req, res) {
   res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
 });
@@ -356,6 +384,7 @@ io.on("connection", function(socket) {
           "killed": true
         });
         socket.leave("room-" + code);
+        cleanRooms();
       });
     
       socket.once("kill", function() {
@@ -364,6 +393,7 @@ io.on("connection", function(socket) {
           "killed": true
         });
         socket.leave("room-" + code);
+        cleanRooms();
       });
     
       socket.on("key", function(key) {
@@ -378,6 +408,7 @@ io.on("connection", function(socket) {
 
       socket.once("error", function() {
         game.players[socket.id].snake.gameOver = true;
+        cleanRooms();
       });
     } else {
       socket.emit("join-room", {
