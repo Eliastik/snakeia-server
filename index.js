@@ -125,7 +125,8 @@ function createRoom(data, socket) {
     if(socket != null) {
       socket.emit("process", {
         success: false,
-        code: null
+        code: null,
+        errorCode: "INVALID_SETTINGS"
       });
     }
   }
@@ -411,9 +412,17 @@ io.on("connection", function(socket) {
         cleanRooms();
       });
     } else {
-      socket.emit("join-room", {
-        success: false
-      });
+      if(games[code] == null) {
+        socket.emit("join-room", {
+          success: false,
+          errorCode: "ROOM_NOT_FOUND"
+        });
+      } else if(games[code].players[socket.id] == null) {
+        socket.emit("join-room", {
+          success: false,
+          errorCode: "ROOM_ALREADY_JOINED"
+        });
+      }
     }
   });
 });
