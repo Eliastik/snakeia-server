@@ -126,7 +126,7 @@ function createRoom(data, socket) {
       socket.emit("process", {
         success: false,
         code: null,
-        errorCode: "INVALID_SETTINGS"
+        errorCode: GameConstants.Error.INVALID_SETTINGS
       });
     }
   }
@@ -415,12 +415,12 @@ io.on("connection", function(socket) {
       if(games[code] == null) {
         socket.emit("join-room", {
           success: false,
-          errorCode: "ROOM_NOT_FOUND"
+          errorCode: GameConstants.Error.ROOM_NOT_FOUND
         });
-      } else if(games[code].players[socket.id] == null) {
+      } else if(games[code].players[socket.id] != null) {
         socket.emit("join-room", {
           success: false,
-          errorCode: "ROOM_ALREADY_JOINED"
+          errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
         });
       }
     }
