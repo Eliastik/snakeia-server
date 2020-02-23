@@ -2,10 +2,10 @@
   "name": "snakeia-server",
   "version": "1.0.0",
   "description": "Server for multiplaying in SnakeIA (https://github.com/Eliastik/snakeia)",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node index.js"
+    "server": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Eliastik/snakeia-server#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "html-entities": "^1.2.1",
     "snakeia": "git+https://git@github.com/Eliastik/snakeia.git",
     "socket.io": "^2.3.0"
   }

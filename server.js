@@ -1,6 +1,8 @@
 const app = require("express")();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
+const Entities = require('html-entities').AllHtmlEntities;
+const entities = new Entities();
 const snakeia = require("snakeia");
 
 const Snake = snakeia.Snake;
@@ -8,7 +10,10 @@ const Grid = snakeia.Grid;
 const GameEngine = snakeia.GameEngine;
 const GameConstants = snakeia.GameConstants;
 
-var games = {};
+const games = {};
+const maxPlayers = 20;
+const maxRooms = 20;
+const playerWaitTime = 5000;
 
 function getRoomsData() {
   const rooms = [];
@@ -50,14 +55,14 @@ function getRandomRoomKey() {
 }
 
 function createRoom(data, socket) {
-  var heightGrid = 20;
-  var widthGrid = 20;
-  var borderWalls = false;
-  var generateWalls = false;
-  var speed = 8;
-  var enableAI = false;
-  var validSettings = true;
-  var privateGame = false;
+  let heightGrid = 20;
+  let widthGrid = 20;
+  let borderWalls = false;
+  let generateWalls = false;
+  let speed = 8;
+  let enableAI = false;
+  let validSettings = true;
+  let privateGame = false;
 
   if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
     validSettings = false;
@@ -102,15 +107,18 @@ function createRoom(data, socket) {
   }
 
   if(validSettings) {
-    var code = getRandomRoomKey();
-    var grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
+    const code = getRandomRoomKey();
+    const grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
     grid.init();
-    var game = new GameEngine(grid, [], speed);
+    const game = new GameEngine(grid, [], speed);
     
     games[code] = {
       game: game,
       private: privateGame,
-      players: []
+      players: [],
+      searchingPlayers: true,
+      timeoutPlay: null,
+      timeStart: null
     };
 
     if(socket != null) {
@@ -172,7 +180,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
-      "errorOccurred": game.errorOccurred
+      "errorOccurred": game.errorOccurred,
+      "searchingPlayers": false
     });
   });
 
@@ -291,7 +300,8 @@ function setupRoom(code) {
       "snakes": JSON.parse(JSON.stringify(game.snakes)),
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
-      "errorOccurred": game.errorOccurred
+      "errorOccurred": game.errorOccurred,
+      "searchingPlayers": false
     });
   });
 }
@@ -304,14 +314,8 @@ function cleanRooms() {
     const game = games[keys[i]];
 
     if(game != null) {
-      const players = game.game.snakes;
-      let nb = 0;
-  
-      for(let j = 0; j < players.length; j++) {
-        if(players[j] != null && !players[j].gameOver) {
-          nb++;
-        }
-      }
+      const players = Object.keys(game.players);
+      const nb = players.length;
   
       if(nb <= 0) {
         toRemove.push(keys[i]);
@@ -324,16 +328,88 @@ function cleanRooms() {
   }
 }
 
+function gameMatchmaking(game, code) {
+  if(game != null && games[code] != null && games[code].searchingPlayers) {
+    const numberPlayers = Object.keys(game.players).length;
+  
+    if(numberPlayers > 1 && game.timeoutPlay == null) {
+      game.timeStart = playerWaitTime + 1000;
+  
+      game.timeoutPlay = setTimeout(function() {
+        game.timeoutPlay = null;
+        startGame(code);
+      }, playerWaitTime);
+    } else {
+      clearTimeout(game.timeoutPlay);
+      game.timeoutPlay = null;
+      game.timeStart = 0;
+    }
+  
+    io.to("room-" + code).emit("init", {
+      "searchingPlayers": games[code].searchingPlayers,
+      "timeStart": game.timeStart,
+      "playerNumber": numberPlayers,
+      "maxPlayers": maxPlayers,
+      "errorOccurred": game.game.errorOccurred
+    });
+  }
+}
+
+function startGame(code) {
+  const game = games[code];
+
+  if(game != null) {
+    const players = Object.keys(game.players);
+  
+    game.searchingPlayers = false;
+  
+    for(let i = 0; i < players.length; i++) {
+      game.players[players[i]].snake = new Snake(null, null, game.game.grid);
+      game.game.snakes.push(game.players[players[i]].snake);
+    }
+  
+    game.game.init();
+    game.game.start();
+  }
+}
+
+function exitGame(game, socket, code) {
+  if(game) {
+    if(game.players[socket.id] != null && game.players[socket.id].snake != null) game.players[socket.id].snake.gameOver = true;
+  
+    socket.emit("kill", {
+      "killed": true
+    });
+  
+    socket.leave("room-" + code);
+  
+    delete game.players[socket.id];
+    cleanRooms();
+    gameMatchmaking(game, code);
+  }
+}
+
 app.get("/", function(req, res) {
-  res.end("<h1>SnakeIA server</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
+  res.charset = "UTF-8";
+  res.end("<h1>SnakeIA server v" + GameConstants.Setting.APP_VERSION + "</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
 });
 
 app.get("/rooms", function(req, res) {
-  res.end("callbackDisplayRooms(" + JSON.stringify(getRoomsData()) + ");");
+  const callbackName = req.query.callback;
+  res.charset = "UTF-8";
+
+  if(callbackName != null) {
+    res.end(entities.encode(req.query.callback) + "(" + JSON.stringify(getRoomsData()) + ");");
+  } else {
+    res.json(getRoomsData());
+  }
 });
 
 io.of("/rooms").on("connection", function(socket) {
-  socket.emit("rooms", getRoomsData());
+  socket.emit("rooms", {
+    rooms: getRoomsData(),
+    serverVersion: GameConstants.Setting.APP_VERSION
+  });
 });
 
 io.of("/createRoom").on("connection", function(socket) {
@@ -345,13 +421,14 @@ io.of("/createRoom").on("connection", function(socket) {
 io.on("connection", function(socket) {
   socket.on("join-room", function(code) {
     if(games[code] != null && games[code].players[socket.id] == null) {
-      var game = games[code];
+      const game = games[code];
 
       socket.join("room-" + code);
 
       game.players[socket.id] = {
-        snake: new Snake(null, null, game.game.grid),
-        ready: false
+        snake: null,
+        ready: false,
+        master: false
       };
 
       socket.emit("join-room", {
@@ -360,17 +437,15 @@ io.on("connection", function(socket) {
     
       socket.once("start", function() {
         game.players[socket.id].ready = true;
-        game.game.snakes.push(game.players[socket.id].snake);
-        game.game.init();
-        game.game.start();
 
         socket.emit("init", {
           "enablePause": game.game.enablePause,
           "enableRetry": game.game.enableRetry,
           "progressiveSpeed": game.game.progressiveSpeed,
-          "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "errorOccurred": game.game.errorOccurred
+          "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
         });
+
+        gameMatchmaking(game, code);
 
         socket.on("start", function() {
           socket.emit("start", {
@@ -380,25 +455,17 @@ io.on("connection", function(socket) {
       });
     
       socket.once("exit", function() {
-        game.players[socket.id].snake.gameOver = true;
-        socket.emit("kill", {
-          "killed": true
-        });
-        socket.leave("room-" + code);
-        cleanRooms();
+        exitGame(game, socket, code);
       });
     
       socket.once("kill", function() {
-        game.players[socket.id].snake.gameOver = true;
-        socket.emit("kill", {
-          "killed": true
-        });
-        socket.leave("room-" + code);
-        cleanRooms();
+        exitGame(game, socket, code);
       });
     
       socket.on("key", function(key) {
-        game.players[socket.id].snake.lastKey = key;
+        if(game != null && game.players[socket.id] != null && game.players[socket.id].snake) {
+          game.players[socket.id].snake.lastKey = key;
+        }
       });
 
       socket.on("pause", function() {
@@ -408,8 +475,11 @@ io.on("connection", function(socket) {
       });
 
       socket.once("error", function() {
-        game.players[socket.id].snake.gameOver = true;
-        cleanRooms();
+        exitGame(game, socket, code);
+      });
+
+      socket.once("disconnect", function() {
+        exitGame(game, socket, code);
       });
     } else {
       if(games[code] == null) {
