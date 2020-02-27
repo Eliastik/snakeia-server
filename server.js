@@ -391,9 +391,9 @@ function gameMatchmaking(game, code) {
       "maxPlayers": getMaxPlayers(code),
       "errorOccurred": game.game.errorOccurred
     });
-
-    setupSpectators(code);
   }
+  
+  setupSpectators(code);
 }
 
 function startGame(code) {
