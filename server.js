@@ -48,7 +48,7 @@ function getRandomRoomKey() {
   let r;
 
   do {
-    r = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    r = Math.random().toString(36).substring(2, 10);
   } while(r in games);
 
   return r;
@@ -333,13 +333,13 @@ function gameMatchmaking(game, code) {
     const numberPlayers = Object.keys(game.players).length;
   
     if(numberPlayers > 1 && game.timeoutPlay == null) {
-      game.timeStart = playerWaitTime + 1000;
+      game.timeStart = Date.now() + playerWaitTime + 1000;
   
       game.timeoutPlay = setTimeout(function() {
         game.timeoutPlay = null;
         startGame(code);
       }, playerWaitTime);
-    } else {
+    } else if(numberPlayers <= 1 && game.timeoutPlay != null) {
       clearTimeout(game.timeoutPlay);
       game.timeoutPlay = null;
       game.timeStart = 0;
@@ -347,7 +347,7 @@ function gameMatchmaking(game, code) {
   
     io.to("room-" + code).emit("init", {
       "searchingPlayers": games[code].searchingPlayers,
-      "timeStart": game.timeStart,
+      "timeStart": game.timeStart != null ? game.timeStart - Date.now() : 0,
       "playerNumber": numberPlayers,
       "maxPlayers": maxPlayers,
       "errorOccurred": game.game.errorOccurred
@@ -366,6 +366,10 @@ function startGame(code) {
     for(let i = 0; i < players.length; i++) {
       game.players[players[i]].snake = new Snake(null, null, game.game.grid);
       game.game.snakes.push(game.players[players[i]].snake);
+
+      io.to(players[i]).emit("init", {
+        "currentPlayer": (i + 1)
+      });
     }
   
     game.game.init();
