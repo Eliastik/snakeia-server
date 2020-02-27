@@ -20,24 +20,32 @@ function getRoomsData() {
   const keysRooms = Object.keys(games).filter(key => games[key] && !games[key]["private"]);
 
   for(let i = 0; i < keysRooms.length; i++) {
+    const game = games[keysRooms[i]];
+
     rooms.push({});
     rooms[i]["borderWalls"] = false;
     rooms[i]["generateWalls"] = false;
-    rooms[i]["players"] = Object.keys(games[keysRooms[i]]["players"]).length;
+    rooms[i]["players"] = Object.keys(game["players"]).length;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
-    rooms[i]["speed"] = games[keysRooms[i]]["game"].speed;
+    rooms[i]["speed"] = game["game"].speed;
     rooms[i]["code"] = keysRooms[i];
+    rooms[i]["maxPlayers"] = getMaxPlayers(keysRooms[i]);
+    rooms[i]["state"] = (game["started"] ? GameConstants.GameState.STARTED : game["timeoutPlay"] != null ? GameConstants.GameState.STARTING : game["searchingPlayers"] ? GameConstants.GameState.SEARCHING_PLAYERS : "");
 
-    if(games[keysRooms[i]]["game"].grid != null) {
-      rooms[i]["width"] = games[keysRooms[i]]["game"].grid.width;
-      rooms[i]["height"] = games[keysRooms[i]]["game"].grid.height;
-      rooms[i]["borderWalls"] = games[keysRooms[i]]["game"].grid.borderWalls;
-      rooms[i]["generateWalls"] = games[keysRooms[i]]["game"].grid.generateWalls;
+    if(game["game"].grid != null) {
+      rooms[i]["width"] = game["game"].grid.width;
+      rooms[i]["height"] = game["game"].grid.height;
+      rooms[i]["borderWalls"] = game["game"].grid.borderWalls;
+      rooms[i]["generateWalls"] = game["game"].grid.generateWalls;
     }
 
-    if(games[keysRooms[i]]["game"].snake != null) {
-      rooms[i]["players"] = games[keysRooms[i]]["game"].snake.length;
+    if(game["game"].snake != null) {
+      rooms[i]["players"] = game["game"].snake.length;
+    }
+
+    if(game["spectators"] != null) {
+      rooms[i]["spectators"] = Object.keys(game["spectators"]).length;
     }
   }
 
@@ -52,6 +60,29 @@ function getRandomRoomKey() {
   } while(r in games);
 
   return r;
+}
+
+function getMaxPlayers(code) {
+  const game = games[code].game;
+
+  const heightGrid = parseInt(game.grid.height);
+  const widthGrid = parseInt(game.grid.width);
+
+  let numberEmptyCases = heightGrid * widthGrid;
+
+  if(game.grid.borderWalls) {
+    numberEmptyCases -= (((widthGrid + heightGrid) * 2) - 4);
+  }
+
+  if(game.grid.generateWalls) {
+    if(game.grid.borderWalls) {
+      numberEmptyCases -= ((heightGrid * widthGrid) * 0.1);
+    } else {
+      numberEmptyCases -= ((heightGrid * widthGrid) * 0.1675);
+    }
+  }
+
+  return Math.min(maxPlayers, Math.max(Math.round(numberEmptyCases / 5), 2));
 }
 
 function createRoom(data, socket) {
@@ -117,7 +148,9 @@ function createRoom(data, socket) {
         game: game,
         private: privateGame,
         players: [],
+        spectators: [],
         searchingPlayers: true,
+        started: false,
         timeoutPlay: null,
         timeStart: null
       };
@@ -320,7 +353,7 @@ function cleanRooms() {
     const game = games[keys[i]];
 
     if(game != null) {
-      const players = Object.keys(game.players);
+      const players = Object.keys(game.players) + Object.keys(game.spectators);
       const nb = players.length;
   
       if(nb <= 0) {
@@ -355,14 +388,17 @@ function gameMatchmaking(game, code) {
       "searchingPlayers": games[code].searchingPlayers,
       "timeStart": game.timeStart != null ? game.timeStart - Date.now() : 0,
       "playerNumber": numberPlayers,
-      "maxPlayers": maxPlayers,
+      "maxPlayers": getMaxPlayers(code),
       "errorOccurred": game.game.errorOccurred
     });
+
+    setupSpectators(code);
   }
 }
 
 function startGame(code) {
   const game = games[code];
+  game.started = true;
 
   if(game != null) {
     const players = Object.keys(game.players);
@@ -380,12 +416,29 @@ function startGame(code) {
   
     game.game.init();
     game.game.start();
+    setupSpectators(code);
+  }
+}
+
+function setupSpectators(code) {
+  const game = games[code];
+
+  if(game != null) {
+    const spectators = Object.keys(game.spectators);
+
+    for(let i = 0; i < spectators.length; i++) {
+      io.to(spectators[i]).emit("init", {
+        "spectatorMode": true
+      });
+    }
   }
 }
 
 function exitGame(game, socket, code) {
   if(game) {
-    if(game.players[socket.id] != null && game.players[socket.id].snake != null) game.players[socket.id].snake.gameOver = true;
+    if(game.players[socket.id] != null && game.players[socket.id].snake != null) {
+      game.players[socket.id].snake.gameOver = true;
+    }
   
     socket.emit("kill", {
       "killed": true
@@ -393,7 +446,14 @@ function exitGame(game, socket, code) {
   
     socket.leave("room-" + code);
   
-    delete game.players[socket.id];
+    if(game.players[socket.id] != null) {
+      delete game.players[socket.id];
+    }
+  
+    if(game.spectators[socket.id] != null) {
+      delete game.spectators[socket.id];
+    }
+
     cleanRooms();
     gameMatchmaking(game, code);
   }
@@ -430,23 +490,33 @@ io.of("/createRoom").on("connection", function(socket) {
 
 io.on("connection", function(socket) {
   socket.on("join-room", function(code) {
-    if(games[code] != null && games[code].players[socket.id] == null) {
-      const game = games[code];
+    const game = games[code];
 
+    if(game != null && game.players[socket.id] == null && game.spectators[socket.id] == null) {
       socket.join("room-" + code);
 
-      game.players[socket.id] = {
-        snake: null,
-        ready: false,
-        master: false
-      };
+      if(Object.keys(game.players).length > getMaxPlayers(code) || game.started) {
+        game.spectators[socket.id] = {
+          snake: null,
+          ready: false,
+          master: false
+        };
+      } else {
+        game.players[socket.id] = {
+          snake: null,
+          ready: false,
+          master: false
+        };
+      }
 
       socket.emit("join-room", {
         success: true
       });
     
       socket.once("start", function() {
-        game.players[socket.id].ready = true;
+        if(game.players[socket.id] != null) {
+          game.players[socket.id].ready = true;
+        }
 
         socket.emit("init", {
           "enablePause": game.game.enablePause,
@@ -497,7 +567,7 @@ io.on("connection", function(socket) {
           success: false,
           errorCode: GameConstants.Error.ROOM_NOT_FOUND
         });
-      } else if(games[code].players[socket.id] != null) {
+      } else if(games[code].players[socket.id] != null || game.spectators[socket.id] != null) {
         socket.emit("join-room", {
           success: false,
           errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
