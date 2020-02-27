@@ -55,88 +55,94 @@ function getRandomRoomKey() {
 }
 
 function createRoom(data, socket) {
-  let heightGrid = 20;
-  let widthGrid = 20;
-  let borderWalls = false;
-  let generateWalls = false;
-  let speed = 8;
-  let enableAI = false;
-  let validSettings = true;
-  let privateGame = false;
-
-  if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
-    validSettings = false;
-  } else {
-    heightGrid = data.heightGrid;
-  }
-
-  if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < 5 || data.widthGrid > 100) {
-    validSettings = false;
-  } else {
-    widthGrid = data.widthGrid;
-  }
-
-  if(data.borderWalls == null) {
-    validSettings = false;
-  } else {
-    borderWalls = data.borderWalls ? true : false;
-  }
-
-  if(data.generateWalls == null) {
-    validSettings = false;
-  } else {
-    generateWalls = data.generateWalls ? true : false;
-  }
-
-  if(data.private == null) {
-    validSettings = false;
-  } else {
-    privateGame = data.private ? true : false;
-  }
-
-  if(data.speed == null && data.speed == "custom") {
-    if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < 1 || data.customSpeed > 100) {
+  if(Object.keys(games).length < maxRooms) {
+    let heightGrid = 20;
+    let widthGrid = 20;
+    let borderWalls = false;
+    let generateWalls = false;
+    let speed = 8;
+    let enableAI = false;
+    let validSettings = true;
+    let privateGame = false;
+  
+    if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
       validSettings = false;
     } else {
-      speed = data.customSpeed;
+      heightGrid = data.heightGrid;
     }
-  } else if(data.speed == null || isNaN(data.speed) || data.speed < 1 || data.speed > 100) {
-    validSettings = false;
-  } else {
-    speed = data.speed;
-  }
-
-  if(validSettings) {
-    const code = getRandomRoomKey();
-    const grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
-    grid.init();
-    const game = new GameEngine(grid, [], speed);
-    
-    games[code] = {
-      game: game,
-      private: privateGame,
-      players: [],
-      searchingPlayers: true,
-      timeoutPlay: null,
-      timeStart: null
-    };
-
-    if(socket != null) {
-      socket.emit("process", {
-        success: true,
-        code: code
-      });
-
-      setupRoom(code);
+  
+    if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < 5 || data.widthGrid > 100) {
+      validSettings = false;
+    } else {
+      widthGrid = data.widthGrid;
     }
-  } else {
-    if(socket != null) {
+  
+    if(data.borderWalls == null) {
+      validSettings = false;
+    } else {
+      borderWalls = data.borderWalls ? true : false;
+    }
+  
+    if(data.generateWalls == null) {
+      validSettings = false;
+    } else {
+      generateWalls = data.generateWalls ? true : false;
+    }
+  
+    if(data.private == null) {
+      validSettings = false;
+    } else {
+      privateGame = data.private ? true : false;
+    }
+  
+    if(data.speed == null && data.speed == "custom") {
+      if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < 1 || data.customSpeed > 100) {
+        validSettings = false;
+      } else {
+        speed = data.customSpeed;
+      }
+    } else if(data.speed == null || isNaN(data.speed) || data.speed < 1 || data.speed > 100) {
+      validSettings = false;
+    } else {
+      speed = data.speed;
+    }
+  
+    if(validSettings) {
+      const code = getRandomRoomKey();
+      const grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
+      grid.init();
+      const game = new GameEngine(grid, [], speed);
+      
+      games[code] = {
+        game: game,
+        private: privateGame,
+        players: [],
+        searchingPlayers: true,
+        timeoutPlay: null,
+        timeStart: null
+      };
+  
+      if(socket != null) {
+        socket.emit("process", {
+          success: true,
+          code: code
+        });
+  
+        setupRoom(code);
+      }
+    } else if(socket != null) {
       socket.emit("process", {
         success: false,
         code: null,
         errorCode: GameConstants.Error.INVALID_SETTINGS
       });
     }
+  } else if(socket != null) {
+    socket.emit("process", {
+      success: false,
+      code: null,
+      errorCode: GameConstants.Error.MAX_ROOM_LIMIT_REACHED
+    });
   }
 }
 
