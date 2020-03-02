@@ -14,6 +14,7 @@ const games = {};
 const maxPlayers = 20;
 const maxRooms = 20;
 const playerWaitTime = 5000;
+const port = process.env.PORT || 3000;
 
 function getRoomsData() {
   const rooms = [];
@@ -577,6 +578,6 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(3000, function(){
-  console.log("listening on *:3000");
+http.listen(port, function(){
+  console.log("listening on *:" + port);
 });
