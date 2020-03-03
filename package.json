@@ -23,6 +23,7 @@
     "fs": "0.0.1-security",
     "html-entities": "^1.2.1",
     "snakeia": "git+https://git@github.com/Eliastik/snakeia.git",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "socketio-jwt": "^4.5.0"
   }
 }

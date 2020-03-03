@@ -2,7 +2,7 @@ const app = require("express")();
 const fs = require("fs");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
-const Entities = require('html-entities').AllHtmlEntities;
+const Entities = require("html-entities").AllHtmlEntities;
 const entities = new Entities();
 const snakeia = require("snakeia");
 
@@ -29,11 +29,10 @@ if(configFile != null) {
 config.port = process.env.PORT || config.port;
 
 class Player {
-  constructor(id, snake, ready, master) {
+  constructor(id, snake, ready) {
     this.id = id;
     this.snake = snake;
     this.ready = ready;
-    this.master = master;
   }
 
   static getPlayer(array, id) {
@@ -426,28 +425,35 @@ function gameMatchmaking(game, code) {
     }
 
     numberPlayers = game.players.length;
-  
-    if(numberPlayers > 1 && game.timeoutPlay == null) {
-      game.timeStart = Date.now() + config.playerWaitTime + 1000;
-  
-      game.timeoutPlay = setTimeout(function() {
+
+    if(numberPlayers > 0) {
+      if(numberPlayers > 1 && game.timeoutPlay == null) {
+        game.timeStart = Date.now() + config.playerWaitTime + 1000;
+    
+        game.timeoutPlay = setTimeout(function() {
+          game.timeoutPlay = null;
+          startGame(code);
+        }, config.playerWaitTime);
+      } else if(numberPlayers <= 1 && game.timeoutPlay != null) {
+        clearTimeout(game.timeoutPlay);
         game.timeoutPlay = null;
-        startGame(code);
-      }, config.playerWaitTime);
-    } else if(numberPlayers <= 1 && game.timeoutPlay != null) {
-      clearTimeout(game.timeoutPlay);
-      game.timeoutPlay = null;
-      game.timeStart = 0;
+        game.timeStart = 0;
+      }
+    
+      io.to("room-" + code).emit("init", {
+        "searchingPlayers": games[code].searchingPlayers,
+        "timeStart": game.timeStart != null ? game.timeStart - Date.now() : 0,
+        "playerNumber": numberPlayers,
+        "maxPlayers": getMaxPlayers(code),
+        "spectatorMode": false,
+        "errorOccurred": game.game.errorOccurred,
+        "onlineMaster": false
+      });
+
+      io.to(game.players[0].id).emit("init", {
+        "onlineMaster": true
+      });
     }
-  
-    io.to("room-" + code).emit("init", {
-      "searchingPlayers": games[code].searchingPlayers,
-      "timeStart": game.timeStart != null ? game.timeStart - Date.now() : 0,
-      "playerNumber": numberPlayers,
-      "maxPlayers": getMaxPlayers(code),
-      "spectatorMode": false,
-      "errorOccurred": game.game.errorOccurred
-    });
   }
   
   setupSpectators(code);
@@ -457,6 +463,11 @@ function startGame(code) {
   const game = games[code];
 
   if(game != null) {
+    if(game.timeoutPlay != null) {
+      clearTimeout(game.timeoutPlay);
+      game.timeoutPlay = null;
+    }
+
     game.searchingPlayers = false;
     game.started = true;
     game.game.snakes = [];
@@ -559,9 +570,9 @@ io.on("connection", function(socket) {
       socket.join("room-" + code);
 
       if(game.players.length >= getMaxPlayers(code) || game.started) {
-        game.spectators.push(new Player(socket.id, null, false, false));
+        game.spectators.push(new Player(socket.id, null, false));
       } else {
-        game.players.push(new Player(socket.id, null, false, false));
+        game.players.push(new Player(socket.id, null, false));
       }
 
       socket.emit("join-room", {
@@ -626,6 +637,12 @@ io.on("connection", function(socket) {
 
       socket.once("disconnect", function() {
         exitGame(game, socket, code);
+      });
+
+      socket.on("forceStart", function() {
+        if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id) {
+          startGame(code);
+        }
       });
     } else {
       if(games[code] == null) {
