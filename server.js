@@ -546,7 +546,7 @@ io.on("connection", function(socket) {
     if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id)) {
       socket.join("room-" + code);
 
-      if(game.players.length > getMaxPlayers(code) || game.started) {
+      if(game.players.length >= getMaxPlayers(code) || game.started) {
         game.spectators.push(new Player(socket.id, null, false, false));
       } else {
         game.players.push(new Player(socket.id, null, false, false));
