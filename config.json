@@ -1,0 +1,6 @@
+{
+    "maxPlayers": 20,
+    "maxRooms": 20,
+    "playerWaitTime": 5000,
+    "port": 3000
+}

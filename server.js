@@ -1,4 +1,5 @@
 const app = require("express")();
+const fs = require("fs");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 const Entities = require('html-entities').AllHtmlEntities;
@@ -10,11 +11,22 @@ const Grid = snakeia.Grid;
 const GameEngine = snakeia.GameEngine;
 const GameConstants = snakeia.GameConstants;
 
-const games = {};
-const maxPlayers = 20;
-const maxRooms = 20;
-const playerWaitTime = 5000;
-const port = process.env.PORT || 3000;
+const games = {}; // contains all the games processed by the server
+const config = {}; // server configuration (see default config file config.json)
+
+// Load config file
+const configFile = process.argv.splice(2)[0] || "config.json";
+
+if(configFile != null) {
+  try {
+    const file = fs.readFileSync(configFile, "utf-8");
+    Object.assign(config, JSON.parse(file));
+  } catch(e) {
+    console.log("Error while loading config file \"" + configFile + "\": " + e);
+  }
+}
+
+config.port = process.env.PORT || config.port;
 
 class Player {
   constructor(id, snake, ready, master) {
@@ -106,11 +118,11 @@ function getMaxPlayers(code) {
     }
   }
 
-  return Math.min(maxPlayers, Math.max(Math.round(numberEmptyCases / 5), 2));
+  return Math.min(config.maxPlayers, Math.max(Math.round(numberEmptyCases / 5), 2));
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).length < maxRooms) {
+  if(Object.keys(games).length < config.maxRooms) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -416,12 +428,12 @@ function gameMatchmaking(game, code) {
     numberPlayers = game.players.length;
   
     if(numberPlayers > 1 && game.timeoutPlay == null) {
-      game.timeStart = Date.now() + playerWaitTime + 1000;
+      game.timeStart = Date.now() + config.playerWaitTime + 1000;
   
       game.timeoutPlay = setTimeout(function() {
         game.timeoutPlay = null;
         startGame(code);
-      }, playerWaitTime);
+      }, config.playerWaitTime);
     } else if(numberPlayers <= 1 && game.timeoutPlay != null) {
       clearTimeout(game.timeoutPlay);
       game.timeoutPlay = null;
@@ -631,6 +643,6 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(port, function(){
-  console.log("listening on *:" + port);
+http.listen(config.port, function(){
+  console.log("listening on *:" + config.port);
 });

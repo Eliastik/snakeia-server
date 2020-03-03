@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Eliastik/snakeia-server#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "html-entities": "^1.2.1",
     "snakeia": "git+https://git@github.com/Eliastik/snakeia.git",
     "socket.io": "^2.3.0"
