@@ -16,6 +16,29 @@ const maxRooms = 20;
 const playerWaitTime = 5000;
 const port = process.env.PORT || 3000;
 
+class Player {
+  constructor(id, snake, ready, master) {
+    this.id = id;
+    this.snake = snake;
+    this.ready = ready;
+    this.master = master;
+  }
+
+  static getPlayer(array, id) {
+    for(let i = 0; i < array.length; i++) {
+      if(array[i] != null && array[i].id == id) {
+        return array[i];
+      }
+    }
+
+    return null;
+  }
+
+  static containsId(array, id) {
+    return Player.getPlayer(array, id) != null;
+  }
+}
+
 function getRoomsData() {
   const rooms = [];
   const keysRooms = Object.keys(games).filter(key => games[key] && !games[key]["private"]);
@@ -152,6 +175,7 @@ function createRoom(data, socket) {
         spectators: [],
         searchingPlayers: true,
         started: false,
+        alreadyInit: false,
         timeoutPlay: null,
         timeStart: null
       };
@@ -258,6 +282,11 @@ function setupRoom(code) {
       "getInfosGame": false,
       "errorOccurred": game.errorOccurred
     });
+
+    if(games[code] != null) {
+      games[code].started = false;
+      games[code].searchingPlayers = true;
+    }
   });
 
   game.onExit(function() {
@@ -370,7 +399,21 @@ function cleanRooms() {
 
 function gameMatchmaking(game, code) {
   if(game != null && games[code] != null && games[code].searchingPlayers) {
-    const numberPlayers = Object.keys(game.players).length;
+    let numberPlayers = game.players.length;
+
+    if(numberPlayers < getMaxPlayers(code)) {
+      const toAdd = getMaxPlayers(code) - numberPlayers;
+
+      for(let i = 0; i < game.spectators.length && i < toAdd; i++) {
+        game.spectators[i].ready = true;
+        game.players.push(game.spectators[i]);
+        game.spectators[i] = null;
+      }
+
+      game.spectators = game.spectators.filter(spectator => spectator != null);
+    }
+
+    numberPlayers = game.players.length;
   
     if(numberPlayers > 1 && game.timeoutPlay == null) {
       game.timeStart = Date.now() + playerWaitTime + 1000;
@@ -390,6 +433,7 @@ function gameMatchmaking(game, code) {
       "timeStart": game.timeStart != null ? game.timeStart - Date.now() : 0,
       "playerNumber": numberPlayers,
       "maxPlayers": getMaxPlayers(code),
+      "spectatorMode": false,
       "errorOccurred": game.game.errorOccurred
     });
   }
@@ -399,24 +443,32 @@ function gameMatchmaking(game, code) {
 
 function startGame(code) {
   const game = games[code];
-  game.started = true;
 
   if(game != null) {
-    const players = Object.keys(game.players);
-  
     game.searchingPlayers = false;
+    game.started = true;
+    game.game.snakes = [];
+    game.game.grid.init();
   
-    for(let i = 0; i < players.length; i++) {
-      game.players[players[i]].snake = new Snake(null, null, game.game.grid);
-      game.game.snakes.push(game.players[players[i]].snake);
+    for(let i = 0; i < game.players.length; i++) {
+      game.players[i].snake = new Snake(null, null, game.game.grid);
+      game.game.snakes.push(game.players[i].snake);
 
-      io.to(players[i]).emit("init", {
-        "currentPlayer": (i + 1)
+      io.to(game.players[i].id).emit("init", {
+        "currentPlayer": (i + 1),
+        "spectatorMode": false
       });
     }
   
-    game.game.init();
-    game.game.start();
+    if(!game.alreadyInit) {
+      game.game.init();
+      game.game.start();
+      game.alreadyInit = true;
+    } else {
+      game.game.init();
+      game.game.reset();
+    }
+
     setupSpectators(code);
   }
 }
@@ -425,10 +477,8 @@ function setupSpectators(code) {
   const game = games[code];
 
   if(game != null) {
-    const spectators = Object.keys(game.spectators);
-
-    for(let i = 0; i < spectators.length; i++) {
-      io.to(spectators[i]).emit("init", {
+    for(let i = 0; i < game.spectators.length; i++) {
+      io.to(game.spectators[i].id).emit("init", {
         "spectatorMode": true
       });
     }
@@ -437,8 +487,8 @@ function setupSpectators(code) {
 
 function exitGame(game, socket, code) {
   if(game) {
-    if(game.players[socket.id] != null && game.players[socket.id].snake != null) {
-      game.players[socket.id].snake.gameOver = true;
+    if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
+      Player.getPlayer(game.players, socket.id).snake.gameOver = true;
     }
   
     socket.emit("kill", {
@@ -447,12 +497,12 @@ function exitGame(game, socket, code) {
   
     socket.leave("room-" + code);
   
-    if(game.players[socket.id] != null) {
-      delete game.players[socket.id];
+    if(Player.containsId(game.players, socket.id)) {
+      game.players = game.players.filter(player => player.id != socket.id);
     }
   
-    if(game.spectators[socket.id] != null) {
-      delete game.spectators[socket.id];
+    if(Player.containsId(game.spectators, socket.id)) {
+      game.spectators = game.spectators.filter(spectator => spectator.id != socket.id);
     }
 
     cleanRooms();
@@ -493,21 +543,13 @@ io.on("connection", function(socket) {
   socket.on("join-room", function(code) {
     const game = games[code];
 
-    if(game != null && game.players[socket.id] == null && game.spectators[socket.id] == null) {
+    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id)) {
       socket.join("room-" + code);
 
-      if(Object.keys(game.players).length > getMaxPlayers(code) || game.started) {
-        game.spectators[socket.id] = {
-          snake: null,
-          ready: false,
-          master: false
-        };
+      if(game.players.length > getMaxPlayers(code) || game.started) {
+        game.spectators.push(new Player(socket.id, null, false, false));
       } else {
-        game.players[socket.id] = {
-          snake: null,
-          ready: false,
-          master: false
-        };
+        game.players.push(new Player(socket.id, null, false, false));
       }
 
       socket.emit("join-room", {
@@ -515,8 +557,8 @@ io.on("connection", function(socket) {
       });
     
       socket.once("start", function() {
-        if(game.players[socket.id] != null) {
-          game.players[socket.id].ready = true;
+        if(Player.containsId(game.players, socket.id)) {
+          Player.getPlayer(game.players, socket.id).ready = true;
         }
 
         socket.emit("init", {
@@ -544,8 +586,8 @@ io.on("connection", function(socket) {
       });
     
       socket.on("key", function(key) {
-        if(game != null && game.players[socket.id] != null && game.players[socket.id].snake) {
-          game.players[socket.id].snake.lastKey = key;
+        if(game != null && Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake) {
+          Player.getPlayer(game.players, socket.id).snake.lastKey = key;
         }
       });
 
@@ -553,6 +595,17 @@ io.on("connection", function(socket) {
         socket.emit("pause", {
           "paused": true
         });
+      });
+
+      socket.on("reset", function() {
+        if(!game.started) {
+          gameMatchmaking(game, code);
+
+          socket.emit("reset", {
+            "gameOver": false,
+            "gameFinished": false
+          });
+        }
       });
 
       socket.once("error", function() {
@@ -568,7 +621,7 @@ io.on("connection", function(socket) {
           success: false,
           errorCode: GameConstants.Error.ROOM_NOT_FOUND
         });
-      } else if(games[code].players[socket.id] != null || game.spectators[socket.id] != null) {
+      } else if(Player.containsId(game.players, socket.id) || Player.containsId(game.spectators, socket.id)) {
         socket.emit("join-room", {
           success: false,
           errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
