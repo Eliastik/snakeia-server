@@ -447,7 +447,9 @@ function gameMatchmaking(game, code) {
         "maxPlayers": getMaxPlayers(code),
         "spectatorMode": false,
         "errorOccurred": game.game.errorOccurred,
-        "onlineMaster": false
+        "onlineMaster": false,
+        "onlineMode": true,
+        "enableRetryPauseMenu": false
       });
 
       io.to(game.players[0].id).emit("init", {
