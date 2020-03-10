@@ -1,0 +1,61 @@
+<!--
+ * Copyright (C) 2020 Eliastik (eliastiksofts.com)
+ *
+ * This file is part of "SnakeIA Server".
+ *
+ * "SnakeIA Server" is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * "SnakeIA Server" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>. -->
+ <!doctype HTML>
+ <html>
+  <head>
+    <meta charset="UTF-8"></meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/flat-ui.min.css" rel="stylesheet">
+    <link href="/css/main.css" rel="stylesheet">
+  <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
+    <title>SnakeIA Server</title>
+  </head>
+  <body class="text-center">
+    <div class="container">
+      <% if(authent) { %>
+      <h3><%= __("alreadyAuthentified") %></h3>
+      <% } else if(!success) { %>
+      <form action="" method="post">
+        <fieldset class="form-group">
+          <div class="form-group row">
+            <label for="username" class="col-12 col-form-label"><%= __("username") %></label>
+            <div class="col-12">
+              <input type="text" id="username" name="username" class="form-control" min="2" max="20">
+            </div>
+          </div>
+          <% if(enableRecaptcha && publicKey) { %>
+          <div class="form-group row">
+            <div class="col-12">
+              <div class="g-recaptcha" data-sitekey="<%= publicKey %>"></div>
+            </div>
+          </div>
+          <% } %>
+          <div class="form-group row">
+            <div class="col-12">
+              <input type="submit" name="submit" class="btn btn-lg btn-primary" value="<%= __("submit") %>" />
+            </div>
+          </div>
+        </fieldset>
+      </form>
+      <% } else { %>
+      <h3><%= __("successAuthentification") %></h3>
+      <% } %>
+    </div>
+  </body>
+</html>

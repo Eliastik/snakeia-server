@@ -1,17 +1,43 @@
-const app = require("express")();
-const fs = require("fs");
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
-const Entities = require("html-entities").AllHtmlEntities;
-const entities = new Entities();
-const snakeia = require("snakeia");
+/*
+ * Copyright (C) 2020 Eliastik (eliastiksofts.com)
+ *
+ * This file is part of "SnakeIA Server".
+ *
+ * "SnakeIA Server" is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * "SnakeIA Server" is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>.
+ */
+const express        = require("express");
+const app            = require("express")();
+const fs             = require("fs");
+const http           = require("http").createServer(app);
+const io             = require("socket.io")(http);
+const Entities       = require("html-entities").AllHtmlEntities;
+const entities       = new Entities();
+const ejs            = require("ejs");
+const jwt            = require("jsonwebtoken");
+const fetch          = require("node-fetch");
+const cookieParser   = require("cookie-parser");
+const ioCookieParser = require("socket.io-cookie-parser");
+const i18n           = require("i18n");
 
-const Snake = snakeia.Snake;
-const Grid = snakeia.Grid;
-const GameEngine = snakeia.GameEngine;
-const GameConstants = snakeia.GameConstants;
+const snakeia        = require("snakeia");
+const Snake          = snakeia.Snake;
+const Grid           = snakeia.Grid;
+const GameEngine     = snakeia.GameEngine;
+const GameConstants  = snakeia.GameConstants;
 
 const games = {}; // contains all the games processed by the server
+const clients = {}; // currently connected and allowed clients
 const config = {}; // server configuration (see default config file config.json)
 
 // Load config file
@@ -27,6 +53,15 @@ if(configFile != null) {
 }
 
 config.port = process.env.PORT || config.port;
+config.jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
+
+i18n.configure({
+  locales:["fr", "en"], 
+  directory: __dirname + "/locales", 
+  defaultLocale: "en",
+  queryParameter: "lang",
+  cookie: "lang"
+});
 
 class Player {
   constructor(id, snake, ready) {
@@ -95,6 +130,10 @@ function getRandomRoomKey() {
   } while(r in games);
 
   return r;
+}
+
+function generateRandomJsonWebTokenSecretKey() {
+  return require("crypto").randomBytes(256).toString("base64");
 }
 
 function getMaxPlayers(code) {
@@ -504,7 +543,9 @@ function setupSpectators(code) {
   if(game != null) {
     for(let i = 0; i < game.spectators.length; i++) {
       io.to(game.spectators[i].id).emit("init", {
-        "spectatorMode": true
+        "spectatorMode": true,
+        "onlineMode": true,
+        "enableRetryPauseMenu": false
       });
     }
   }
@@ -535,9 +576,96 @@ function exitGame(game, socket, code) {
   }
 }
 
+function verifyRecaptcha(response) {
+  if(config.enableRecaptcha && config.recaptchaPrivateKey && config.recaptchaPrivateKey.trim() != "" && config.recaptchaPublicKey && config.recaptchaPublicKey.trim() != "") {
+    const params = new URLSearchParams();
+    params.append("secret", config.recaptchaPrivateKey);
+    params.append("response", response);
+  
+    return new Promise((resolve, reject) => {
+      fetch(config.recaptchaApiUrl, {
+        method: "POST",
+        body: params
+      }).then(res => res.json()).then(json => {
+        if(json && json.success) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+    });
+  } else {
+    return new Promise((resolve, reject) => {
+      resolve();
+    });
+  }
+}
+
+app.engine("html", ejs.renderFile);
+app.set("view engine", "html");
+
+app.use(express.static("assets"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(i18n.init);
+
 app.get("/", function(req, res) {
-  res.charset = "UTF-8";
-  res.end("<h1>SnakeIA server v" + GameConstants.Setting.APP_VERSION + "</h1><p><a href=\"https://github.com/Eliastik/snakeia-server/\">Github page</a>");
+  res.render(__dirname + "/index.html", {
+    version: GameConstants.Setting.APP_VERSION
+  });
+});
+
+app.get("/authentification", function(req, res) {
+  if(req.cookies) {
+    jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+      res.render(__dirname + "/authentification.html", {
+        publicKey: config.recaptchaPublicKey,
+        enableRecaptcha: config.enableRecaptcha,
+        errorRecaptcha: false,
+        success: false,
+        authent: !err,
+        locale: i18n.getLocale(req)
+      });
+    });
+  } else {
+    res.end();
+  }
+});
+
+app.post("/authentification", function(req, res) {
+  if(req.cookies) {
+    jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+      if(err) {
+        verifyRecaptcha(req.body["g-recaptcha-response"]).then(() => {
+          const token = jwt.sign({
+            username: req.body["username"]
+          }, config.jsonWebTokenSecretKey, { expiresIn: config.authentificationTime });
+      
+          res.cookie("token", token, { maxAge: config.authentificationTime, httpOnly: true });
+          res.render(__dirname + "/authentification.html", {
+            publicKey: config.recaptchaPublicKey,
+            enableRecaptcha: config.enableRecaptcha,
+            errorRecaptcha: false,
+            success: true,
+            authent: false,
+            locale: i18n.getLocale(req)
+          });
+        }, () => {
+          res.render(__dirname + "/authentification.html", {
+            publicKey: config.recaptchaPublicKey,
+            enableRecaptcha: config.enableRecaptcha,
+            errorRecaptcha: true,
+            success: false,
+            authent: false,
+            locale: i18n.getLocale(req)
+          });
+        });
+      }
+    });
+  } else {
+    res.end();
+  }
 });
 
 app.get("/rooms", function(req, res) {
@@ -549,6 +677,15 @@ app.get("/rooms", function(req, res) {
   } else {
     res.json(getRoomsData());
   }
+});
+
+io.use(ioCookieParser());
+
+io.use(function(socket, next) {
+  jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+    if(socket.request.cookies && socket.request.cookies.token && !err) return next();
+    next(new Error('auth_error'));
+  });
 });
 
 io.of("/rooms").on("connection", function(socket) {
