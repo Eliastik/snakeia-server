@@ -34,9 +34,10 @@
       <form action="" method="post">
         <fieldset class="form-group">
           <div class="form-group row">
-            <label for="username" class="col-12 col-form-label"><%= __("username") %></label>
+            <label for="username" class="col-12 col-form-label"><%= __("username", __n("characters", max), min) %></label>
             <div class="col-12">
-              <input type="text" id="username" name="username" class="form-control" min="2" max="20">
+            <input type="text" id="username" name="username" class="form-control<% if(errorUsername) { %> is-invalid <% } %>" min="2" max="20">
+              <% if(errorUsername) { %><div class="text-danger"><span class="fui-cross-circle mr-1"></span> <%= __("errorUsername") %></div><% } %>
             </div>
           </div>
           <% if(enableRecaptcha && publicKey) { %>

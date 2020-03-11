@@ -5,8 +5,13 @@
     "server": "Serveur",
     "engine": "Moteur",
     "alreadyAuthentified": "Vous êtes déjà authentifié.",
-    "username": "Nom d'utilisateur :",
+    "username": "Nom d'utilisateur (%s max, %s min) :",
+	"characters": {
+        "one": "%s caractère",
+        "other": "%s caractères"
+    },
     "successAuthentification": "Authentification réussie.",
     "submit": "Valider",
-    "errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot."
+    "errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot.",
+    "errorUsername": "Nom d'utilisateur invalide."
 }

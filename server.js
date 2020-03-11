@@ -601,6 +601,22 @@ function verifyRecaptcha(response) {
   }
 }
 
+function verifyFormAuthentication(body) {
+  return new Promise((resolve, reject) => {
+    verifyRecaptcha(body["g-recaptcha-response"]).then(() => {
+      const username = body["username"];
+
+      if(username && username.trim() != "" && username.length >= config.minCharactersUsername && username.length <= config.maxCharactersUsername) {
+        resolve();
+      }
+
+      reject("BAD_USERNAME");
+    }, () => {
+      reject("INVALID_RECAPTCHA");
+    });
+  });
+}
+
 app.engine("html", ejs.renderFile);
 app.set("view engine", "html");
 
@@ -624,9 +640,12 @@ app.get("/authentication", function(req, res) {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
         errorRecaptcha: false,
+        errorUsername: false,
         success: false,
         authent: !err,
-        locale: i18n.getLocale(req)
+        locale: i18n.getLocale(req),
+        min: config.minCharactersUsername,
+        max: config.maxCharactersUsername
       });
     });
   } else {
@@ -638,7 +657,7 @@ app.post("/authentication", function(req, res) {
   if(req.cookies && config.enableAuthentication) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
       if(err) {
-        verifyRecaptcha(req.body["g-recaptcha-response"]).then(() => {
+        verifyFormAuthentication(req.body).then(() => {
           const token = jwt.sign({
             username: req.body["username"]
           }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
@@ -648,18 +667,24 @@ app.post("/authentication", function(req, res) {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: false,
+            errorUsername: false,
             success: true,
             authent: false,
-            locale: i18n.getLocale(req)
+            locale: i18n.getLocale(req),
+            min: config.minCharactersUsername,
+            max: config.maxCharactersUsername
           });
-        }, () => {
+        }, (err) => {
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
-            errorRecaptcha: true,
+            errorRecaptcha: err == "INVALID_RECAPTCHA",
+            errorUsername: err == "BAD_USERNAME",
             success: false,
             authent: false,
-            locale: i18n.getLocale(req)
+            locale: i18n.getLocale(req),
+            min: config.minCharactersUsername,
+            max: config.maxCharactersUsername
           });
         });
       }

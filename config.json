@@ -7,6 +7,8 @@
     "enableAuthentication": true,
     "authenticationTime": 86400000,
     "jsonWebTokenSecretKey": "",
+    "minCharactersUsername": 3,
+    "maxCharactersUsername": 15,
     "enableRecaptcha": true,
     "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify",
     "recaptchaPublicKey": "",

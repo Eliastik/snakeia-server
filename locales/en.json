@@ -1,12 +1,17 @@
 {
-    "version": "Version:",
-    "engineVersion": "Engine version:",
-    "githubRepos": "Gihub repositories:",
-    "server": "Serveur",
-    "engine": "Engine",
-    "alreadyAuthentified": "You are already authentified.",
-    "username": "Username:",
-    "successAuthentification": "Successful authentication.",
-    "submit": "Submit",
-    "errorRecaptcha": "Please click on I'm not a robot."
+	"version": "Version:",
+	"engineVersion": "Engine version:",
+	"githubRepos": "Gihub repositories:",
+	"server": "Serveur",
+	"engine": "Engine",
+	"alreadyAuthentified": "You are already authentified.",
+	"username": "Username (%s max, %s min):",
+	"characters": {
+        "one": "%s character",
+        "other": "%s characters"
+	},
+	"successAuthentification": "Successful authentication.",
+	"submit": "Submit",
+	"errorRecaptcha": "Please click on I'm not a robot.",
+	"errorUsername": "Invalid username."
 }
