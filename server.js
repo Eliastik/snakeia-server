@@ -617,10 +617,10 @@ app.get("/", function(req, res) {
   });
 });
 
-app.get("/authentification", function(req, res) {
-  if(req.cookies && config.enableAuthentification) {
+app.get("/authentication", function(req, res) {
+  if(req.cookies && config.enableAuthentication) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
-      res.render(__dirname + "/authentification.html", {
+      res.render(__dirname + "/authentication.html", {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
         errorRecaptcha: false,
@@ -634,17 +634,17 @@ app.get("/authentification", function(req, res) {
   }
 });
 
-app.post("/authentification", function(req, res) {
-  if(req.cookies && config.enableAuthentification) {
+app.post("/authentication", function(req, res) {
+  if(req.cookies && config.enableAuthentication) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
       if(err) {
         verifyRecaptcha(req.body["g-recaptcha-response"]).then(() => {
           const token = jwt.sign({
             username: req.body["username"]
-          }, config.jsonWebTokenSecretKey, { expiresIn: config.authentificationTime });
+          }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
       
-          res.cookie("token", token, { maxAge: config.authentificationTime, httpOnly: true });
-          res.render(__dirname + "/authentification.html", {
+          res.cookie("token", token, { maxAge: config.authenticationTime, httpOnly: true });
+          res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: false,
@@ -653,7 +653,7 @@ app.post("/authentification", function(req, res) {
             locale: i18n.getLocale(req)
           });
         }, () => {
-          res.render(__dirname + "/authentification.html", {
+          res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: true,
@@ -683,10 +683,10 @@ app.get("/rooms", function(req, res) {
 io.use(ioCookieParser());
 
 io.use(function(socket, next) {
-  if(!config.enableAuthentification) return next();
+  if(!config.enableAuthentication) return next();
   jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
     if(socket.request.cookies && socket.request.cookies.token && !err) return next();
-    next(new Error('auth_error'));
+    next(new Error("AUTHENTICATION_REQUIRED"));
   });
 });
 
