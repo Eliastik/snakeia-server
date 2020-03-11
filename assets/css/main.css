@@ -35,6 +35,11 @@ body {
   background-color: #ECF0F1;
 }
 
+body.remove-padding {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 input {
   text-align: center;
 }

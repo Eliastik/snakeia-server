@@ -23,10 +23,10 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
-  <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
+    <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
     <title>SnakeIA Server</title>
   </head>
-  <body class="text-center">
+  <body class="text-center remove-padding">
     <div class="container">
       <% if(authent) { %>
       <h3><%= __("alreadyAuthentified") %></h3>
