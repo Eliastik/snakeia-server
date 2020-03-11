@@ -612,7 +612,8 @@ app.use(i18n.init);
 
 app.get("/", function(req, res) {
   res.render(__dirname + "/index.html", {
-    version: GameConstants.Setting.APP_VERSION
+    version: config.version,
+    engineVersion: GameConstants.Setting.APP_VERSION
   });
 });
 

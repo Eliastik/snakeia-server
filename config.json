@@ -1,4 +1,5 @@
 {
+    "version": "1.0",
     "maxPlayers": 20,
     "maxRooms": 20,
     "playerWaitTime": 5000,

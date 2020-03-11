@@ -31,8 +31,9 @@
         <div class="row">
             <div class="col">
                 <p><img class="logo" src="/img/logo.png" alt="SnakeIA Server" /></p>
-                <h2>Version <%=version%></h2>
-                <p class="lead">Github pages: <a href="https://github.com/Eliastik/snakeia-server/">Server</a> / <a href="https://github.com/Eliastik/snakeia/">Game</a></p>
+                <h2><%= __("version") %> <%= version %></h2>
+                <h3><%= __("engineVersion") %> <%= engineVersion %></h3>
+                <p class="lead"><%= __("githubRepos") %> <a href="https://github.com/Eliastik/snakeia-server/"><%= __("server") %></a> / <a href="https://github.com/Eliastik/snakeia/"><%= __("engine") %></a></p>
             </div>
         </div>
     </div>

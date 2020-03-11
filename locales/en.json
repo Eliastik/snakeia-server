@@ -1,4 +1,9 @@
 {
+    "version": "Version:",
+    "engineVersion": "Engine version:",
+    "githubRepos": "Gihub repositories:",
+    "server": "Serveur",
+    "engine": "Engine",
     "alreadyAuthentified": "You are already authentified.",
     "username": "Username:",
     "successAuthentification": "Successful authentication.",

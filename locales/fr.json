@@ -1,4 +1,9 @@
 {
+    "version": "Version :",
+    "engineVersion": "Version du moteur :",
+    "githubRepos": "Dépôts Github :",
+    "server": "Serveur",
+    "engine": "Moteur",
     "alreadyAuthentified": "Vous êtes déjà authentifié.",
     "username": "Nom d'utilisateur :",
     "successAuthentification": "Authentification réussie.",
