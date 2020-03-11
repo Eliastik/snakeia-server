@@ -64,7 +64,8 @@ i18n.configure({
 });
 
 class Player {
-  constructor(id, snake, ready) {
+  constructor(token, id, snake, ready) {
+    this.token = token;
     this.id = id;
     this.snake = snake;
     this.ready = ready;
@@ -80,8 +81,64 @@ class Player {
     return null;
   }
 
+  static getPlayerAllGames(id) {
+    const keys = Object.keys(games);
+
+    for(let i = 0; i < keys.length; i++) {
+      const game = games[keys[i]];
+
+      if(game) {
+        const p = this.getPlayer(game.players, id);
+        const p2 = this.getPlayer(game.spectators, id);
+        if(p) return p;
+        if(p2) return p2;
+      }
+    }
+
+    return null;
+  }
+
+  static getPlayerToken(array, token) {
+    for(let i = 0; i < array.length; i++) {
+      if(array[i] != null && array[i].token == token) {
+        return array[i];
+      }
+    }
+
+    return null;
+  }
+
+  static getPlayerAllGamesToken(token) {
+    const keys = Object.keys(games);
+
+    for(let i = 0; i < keys.length; i++) {
+      const game = games[keys[i]];
+
+      if(game) {
+        const p = this.getPlayerToken(game.players, token);
+        const p2 = this.getPlayerToken(game.spectators, token);
+        if(p) return p;
+        if(p2) return p2;
+      }
+    }
+
+    return null;
+  }
+
   static containsId(array, id) {
     return Player.getPlayer(array, id) != null;
+  }
+
+  static containsToken(array, token) {
+    return Player.getPlayerToken(array, token) != null;
+  }
+
+  static containsIdAllGames(id) {
+    return Player.getPlayerAllGames(id) != null;
+  }
+
+  static containsTokenAllGames(token) {
+    return Player.getPlayerAllGamesToken(token) != null;
   }
 }
 
@@ -160,7 +217,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).length < config.maxRooms) {
+  if(Object.keys(games).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -246,11 +303,19 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    socket.emit("process", {
-      success: false,
-      code: null,
-      errorCode: GameConstants.Error.MAX_ROOM_LIMIT_REACHED
-    });
+    if(Player.containsTokenAllGames(socket.request.cookies.token)) {
+      socket.emit("process", {
+        success: false,
+        code: null,
+        errorCode: "ALREADY_CREATED_ROOM"
+      });
+    } else {
+      socket.emit("process", {
+        success: false,
+        code: null,
+        errorCode: GameConstants.Error.MAX_ROOM_LIMIT_REACHED
+      });
+    }
   }
 }
 
@@ -732,13 +797,13 @@ io.on("connection", function(socket) {
   socket.on("join-room", function(code) {
     const game = games[code];
 
-    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id)) {
+    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, socket.request.cookies.token) && !Player.containsToken(game.spectators, socket.request.cookies.token)) {
       socket.join("room-" + code);
 
       if(game.players.length >= getMaxPlayers(code) || game.started) {
-        game.spectators.push(new Player(socket.id, null, false));
+        game.spectators.push(new Player(socket.request.cookies.token, socket.id, null, false));
       } else {
-        game.players.push(new Player(socket.id, null, false));
+        game.players.push(new Player(socket.request.cookies.token, socket.id, null, false));
       }
 
       socket.emit("join-room", {
@@ -816,7 +881,7 @@ io.on("connection", function(socket) {
           success: false,
           errorCode: GameConstants.Error.ROOM_NOT_FOUND
         });
-      } else if(Player.containsId(game.players, socket.id) || Player.containsId(game.spectators, socket.id)) {
+      } else if(Player.containsId(game.players, socket.id) || Player.containsId(game.spectators, socket.id) || Player.containsToken(game.players, socket.request.cookies.token) || Player.containsToken(game.spectators, socket.request.cookies.token)) {
         socket.emit("join-room", {
           success: false,
           errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
