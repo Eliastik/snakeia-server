@@ -1,6 +1,7 @@
 {
     "alreadyAuthentified": "Vous êtes déjà authentifié.",
-    "username": "Nom d'utilisateur",
+    "username": "Nom d'utilisateur :",
     "successAuthentification": "Authentification réussie.",
-    "submit": "Valider"
+    "submit": "Valider",
+    "errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot."
 }

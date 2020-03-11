@@ -617,7 +617,7 @@ app.get("/", function(req, res) {
 });
 
 app.get("/authentification", function(req, res) {
-  if(req.cookies) {
+  if(req.cookies && config.enableAuthentification) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
       res.render(__dirname + "/authentification.html", {
         publicKey: config.recaptchaPublicKey,
@@ -634,7 +634,7 @@ app.get("/authentification", function(req, res) {
 });
 
 app.post("/authentification", function(req, res) {
-  if(req.cookies) {
+  if(req.cookies && config.enableAuthentification) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
       if(err) {
         verifyRecaptcha(req.body["g-recaptcha-response"]).then(() => {
@@ -682,6 +682,7 @@ app.get("/rooms", function(req, res) {
 io.use(ioCookieParser());
 
 io.use(function(socket, next) {
+  if(!config.enableAuthentification) return next();
   jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
     if(socket.request.cookies && socket.request.cookies.token && !err) return next();
     next(new Error('auth_error'));
