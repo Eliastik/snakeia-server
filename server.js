@@ -217,7 +217,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token)) {
+  if(Object.keys(games).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -303,7 +303,7 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    if(Player.containsTokenAllGames(socket.request.cookies.token)) {
+    if(Player.containsTokenAllGames(socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
       socket.emit("process", {
         success: false,
         code: null,
@@ -797,7 +797,7 @@ io.on("connection", function(socket) {
   socket.on("join-room", function(code) {
     const game = games[code];
 
-    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, socket.request.cookies.token) && !Player.containsToken(game.spectators, socket.request.cookies.token)) {
+    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, socket.request.cookies.token) && !Player.containsToken(game.spectators, socket.request.cookies.token) && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
       socket.join("room-" + code);
 
       if(game.players.length >= getMaxPlayers(code) || game.started) {
@@ -885,6 +885,11 @@ io.on("connection", function(socket) {
         socket.emit("join-room", {
           success: false,
           errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
+        });
+      } else if(Player.containsTokenAllGames(socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
+        socket.emit("join-room", {
+          success: false,
+          errorCode: GameConstants.Error.ALREADY_CREATED_ROOM
         });
       }
     }
