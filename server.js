@@ -37,7 +37,6 @@ const GameEngine     = snakeia.GameEngine;
 const GameConstants  = snakeia.GameConstants;
 
 const games = {}; // contains all the games processed by the server
-const clients = {}; // currently connected and allowed clients
 const config = {}; // server configuration (see default config file config.json)
 
 // Load config file
@@ -64,11 +63,12 @@ i18n.configure({
 });
 
 class Player {
-  constructor(token, id, snake, ready) {
+  constructor(token, id, snake, ready, version) {
     this.token = token;
     this.id = id;
     this.snake = snake;
     this.ready = ready;
+    this.version = version;
   }
 
   static getPlayer(array, id) {
@@ -802,16 +802,18 @@ io.of("/createRoom").on("connection", function(socket) {
 });
 
 io.on("connection", function(socket) {
-  socket.on("join-room", function(code) {
+  socket.on("join-room", function(data) {
+    const code = data.code;
+    const version = data.version;
     const game = games[code];
 
     if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, socket.request.cookies.token) && !Player.containsToken(game.spectators, socket.request.cookies.token) && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
       socket.join("room-" + code);
 
       if(game.players.length >= getMaxPlayers(code) || game.started) {
-        game.spectators.push(new Player(socket.request.cookies.token, socket.id, null, false));
+        game.spectators.push(new Player(socket.request.cookies.token, socket.id, null, false, version));
       } else {
-        game.players.push(new Player(socket.request.cookies.token, socket.id, null, false));
+        game.players.push(new Player(socket.request.cookies.token, socket.id, null, false, version));
       }
 
       socket.emit("join-room", {
