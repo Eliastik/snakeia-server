@@ -227,13 +227,13 @@ function createRoom(data, socket) {
     let validSettings = true;
     let privateGame = false;
   
-    if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < 5 || data.heightGrid > 100) {
+    if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < config.minGridSize || data.heightGrid > config.maxGridSize) {
       validSettings = false;
     } else {
       heightGrid = data.heightGrid;
     }
   
-    if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < 5 || data.widthGrid > 100) {
+    if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < config.minGridSize || data.widthGrid > config.maxGridSize) {
       validSettings = false;
     } else {
       widthGrid = data.widthGrid;
@@ -258,12 +258,12 @@ function createRoom(data, socket) {
     }
   
     if(data.speed == null && data.speed == "custom") {
-      if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < 1 || data.customSpeed > 100) {
+      if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < config.minSpeed || data.customSpeed > config.maxSpeed) {
         validSettings = false;
       } else {
         speed = data.customSpeed;
       }
-    } else if(data.speed == null || isNaN(data.speed) || data.speed < 1 || data.speed > 100) {
+    } else if(data.speed == null || isNaN(data.speed) || data.speed < config.minSpeed || data.speed > config.maxSpeed) {
       validSettings = false;
     } else {
       speed = data.speed;
@@ -783,7 +783,15 @@ io.use(function(socket, next) {
 io.of("/rooms").on("connection", function(socket) {
   socket.emit("rooms", {
     rooms: getRoomsData(),
-    serverVersion: GameConstants.Setting.APP_VERSION
+    serverVersion: config.version,
+    engineVersion: GameConstants.Setting.APP_VERSION,
+    settings: {
+      maxRooms: config.maxRooms,
+      minGridSize: config.minGridSize,
+      maxGridSize: config.maxGridSize,
+      minSpeed: config.minSpeed,
+      maxSpeed: config.maxSpeed
+    }
   });
 });
 
