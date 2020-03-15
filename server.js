@@ -217,7 +217,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
+  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
