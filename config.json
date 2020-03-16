@@ -16,5 +16,9 @@
     "enableRecaptcha": true,
     "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify",
     "recaptchaPublicKey": "",
-    "recaptchaPrivateKey": ""
+    "recaptchaPrivateKey": "",
+    "authentMaxRequest": 50,
+    "authentWindowMs": 900000,
+    "ipBan": [],
+    "contactBan": ""
 }

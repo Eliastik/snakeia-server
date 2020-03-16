@@ -29,6 +29,7 @@ const fetch          = require("node-fetch");
 const cookieParser   = require("cookie-parser");
 const ioCookieParser = require("socket.io-cookie-parser");
 const i18n           = require("i18n");
+const rateLimit      = require("express-rate-limit");
 
 const snakeia        = require("snakeia");
 const Snake          = snakeia.Snake;
@@ -641,6 +642,22 @@ function exitGame(game, socket, code) {
   }
 }
 
+function ipBanned(ip) {
+  if(ip.substr(0, 7) == "::ffff:") {
+    ip = ip.substr(7, ip.length);
+  }
+
+  return new Promise((resolve, reject) => {
+    config.ipBan.forEach(ipBanned => {
+      if(ipBanned == ip) {
+        resolve();
+      }
+    });
+
+    reject();
+  });
+}
+
 function verifyRecaptcha(response) {
   if(config.enableRecaptcha && config.recaptchaPrivateKey && config.recaptchaPrivateKey.trim() != "" && config.recaptchaPublicKey && config.recaptchaPublicKey.trim() != "") {
     const params = new URLSearchParams();
@@ -690,6 +707,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(i18n.init);
+
+// Rate limiter
+app.use("/authentication", rateLimit({
+  windowMs: config.authentWindowMs,
+  max: config.authentMaxRequest
+}));
+
+// IP ban
+app.use(function(req, res, next) {
+  ipBanned(req.ip).then(() => {
+    res.render(__dirname + "/banned.html", {
+      contact: config.contactBan
+    });
+    res.end();
+  }, () => {
+    next()
+  });
+});
 
 app.get("/", function(req, res) {
   res.render(__dirname + "/index.html", {
@@ -773,10 +808,14 @@ app.get("/rooms", function(req, res) {
 io.use(ioCookieParser());
 
 io.use(function(socket, next) {
-  if(!config.enableAuthentication) return next();
-  jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
-    if(socket.request.cookies && socket.request.cookies.token && !err) return next();
-    next(new Error(GameConstants.Error.AUTHENTICATION_REQUIRED));
+  ipBanned(socket.handshake.address).then(() => {
+    next(new Error(GameConstants.Error.BANNED));
+  }, () => {
+    if(!config.enableAuthentication) return next();
+    jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+      if(socket.request.cookies && socket.request.cookies.token && !err) return next();
+      next(new Error(GameConstants.Error.AUTHENTICATION_REQUIRED));
+    });
   });
 });
 
