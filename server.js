@@ -30,6 +30,7 @@ const cookieParser   = require("cookie-parser");
 const ioCookieParser = require("socket.io-cookie-parser");
 const i18n           = require("i18n");
 const rateLimit      = require("express-rate-limit");
+const winston        = require("winston");
 
 const snakeia        = require("snakeia");
 const Snake          = snakeia.Snake;
@@ -55,6 +56,7 @@ if(configFile != null) {
 config.port = process.env.PORT || config.port;
 config.jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
 
+// Internationalization
 i18n.configure({
   locales:["fr", "en"], 
   directory: __dirname + "/locales", 
@@ -62,6 +64,22 @@ i18n.configure({
   queryParameter: "lang",
   cookie: "lang"
 });
+
+// Logging
+const logger = winston.createLogger({
+  level: config.logLevel,
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.simple()
+  ),
+  transports: config.enableLoggingFile ? [new winston.transports.File({ filename: config.logFile })] : []
+});
+
+if(process.env.NODE_ENV !== "production") {
+  logger.add(new winston.transports.Console({
+    format: winston.format.colorize()
+  }));
+}
 
 class Player {
   constructor(token, id, snake, ready, version) {
@@ -287,6 +305,14 @@ function createRoom(data, socket) {
         timeoutPlay: null,
         timeStart: null
       };
+
+      logger.info("room creation - ip: " + socket.handshake.address, {
+        "widthGrid": widthGrid,
+        "heightGrid": heightGrid,
+        "generateWalls": generateWalls,
+        "borderWalls": borderWalls,
+        "speed": speed
+      });
   
       if(socket != null) {
         socket.emit("process", {
@@ -758,8 +784,9 @@ app.post("/authentication", function(req, res) {
     jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
       if(err) {
         verifyFormAuthentication(req.body).then(() => {
+          const username = req.body["username"];
           const token = jwt.sign({
-            username: req.body["username"]
+            username: username
           }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
       
           res.cookie("token", token, { maxAge: config.authenticationTime, httpOnly: true });
@@ -774,6 +801,8 @@ app.post("/authentication", function(req, res) {
             min: config.minCharactersUsername,
             max: config.maxCharactersUsername
           });
+
+          logger.info("authentification - username: " + username + " - ip: " + req.ip);
         }, (err) => {
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,

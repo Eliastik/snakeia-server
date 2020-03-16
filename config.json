@@ -20,5 +20,8 @@
     "authentMaxRequest": 50,
     "authentWindowMs": 900000,
     "ipBan": [],
-    "contactBan": ""
+    "contactBan": "",
+    "enableLoggingFile": true,
+    "logFile": "logs/server.log",
+    "logLevel": "debug"
 }
