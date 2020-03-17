@@ -90,6 +90,10 @@ class Player {
     this.version = version;
   }
 
+  get username() {
+    return Player.getUsername(this);
+  }
+
   static getPlayer(array, id) {
     for(let i = 0; i < array.length; i++) {
       if(array[i] != null && array[i].id == id) {
@@ -158,6 +162,24 @@ class Player {
 
   static containsTokenAllGames(token) {
     return Player.getPlayerAllGamesToken(token) != null;
+  }
+
+  static getUsername(player) {
+    try {
+      const decoded_token = jwt.verify(player.token, config.jsonWebTokenSecretKey);
+      return decoded_token && decoded_token.username ? decoded_token.username : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  static getUsernameSocket(socket) {
+    try {
+      const decoded_token = jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey);
+      return decoded_token && decoded_token.username ? decoded_token.username : null;
+    } catch(e) {
+      return null;
+    }
   }
 }
 
@@ -306,7 +328,7 @@ function createRoom(data, socket) {
         timeStart: null
       };
 
-      logger.info("room creation - ip: " + socket.handshake.address, {
+      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address, {
         "widthGrid": widthGrid,
         "heightGrid": heightGrid,
         "generateWalls": generateWalls,
@@ -607,14 +629,7 @@ function startGame(code) {
     game.game.grid.init();
   
     for(let i = 0; i < game.players.length; i++) {
-      let username;
-
-      try {
-        const decoded_token = jwt.verify(game.players[i].token, config.jsonWebTokenSecretKey);
-        username = decoded_token && decoded_token.username ? decoded_token.username : null;
-      } catch(e) {
-        username = null;
-      }
+      const username = game.players[i].username;
 
       game.players[i].snake = new Snake(null, null, game.game.grid, null, null, null, username);
       game.game.snakes.push(game.players[i].snake);
@@ -654,6 +669,8 @@ function setupSpectators(code) {
 
 function exitGame(game, socket, code) {
   if(game) {
+    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
+
     if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
       Player.getPlayer(game.players, socket.id).snake.gameOver = true;
     }
@@ -962,6 +979,8 @@ io.on("connection", function(socket) {
           startGame(code);
         }
       });
+
+      logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
     } else {
       if(games[code] == null) {
         socket.emit("join-room", {
