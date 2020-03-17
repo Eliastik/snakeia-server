@@ -607,7 +607,16 @@ function startGame(code) {
     game.game.grid.init();
   
     for(let i = 0; i < game.players.length; i++) {
-      game.players[i].snake = new Snake(null, null, game.game.grid);
+      let username;
+
+      try {
+        const decoded_token = jwt.verify(game.players[i].token, config.jsonWebTokenSecretKey);
+        username = decoded_token && decoded_token.username ? decoded_token.username : null;
+      } catch(e) {
+        username = null;
+      }
+
+      game.players[i].snake = new Snake(null, null, game.game.grid, null, null, null, username);
       game.game.snakes.push(game.players[i].snake);
 
       io.to(game.players[i].id).emit("init", {
