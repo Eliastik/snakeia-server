@@ -23,5 +23,6 @@
     "contactBan": "",
     "enableLoggingFile": true,
     "logFile": "logs/server.log",
+    "errorLogFile": "logs/error.log",
     "logLevel": "debug"
 }

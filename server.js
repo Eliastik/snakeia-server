@@ -72,7 +72,8 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.simple()
   ),
-  transports: config.enableLoggingFile ? [new winston.transports.File({ filename: config.logFile })] : []
+  transports: config.enableLoggingFile ? [new winston.transports.File({ filename: config.logFile })] : [],
+  exceptionHandlers: config.enableLoggingFile ? [new winston.transports.File({ filename: config.errorLogFile })] : []
 });
 
 if(process.env.NODE_ENV !== "production") {
@@ -368,6 +369,16 @@ function createRoom(data, socket) {
   }
 }
 
+function copySnakes(snakes) {
+  const copy = JSON.parse(JSON.stringify(snakes));
+
+  copy.forEach(snake => {
+    delete snake["grid"];
+  });
+
+  return copy;
+}
+
 function setupRoom(code) {
   const game = games[code].game;
 
@@ -376,7 +387,7 @@ function setupRoom(code) {
       "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "grid": game.grid,
       "numFruit": game.numFruit,
       "ticks": game.ticks,
       "scoreMax": game.scoreMax,
@@ -386,7 +397,7 @@ function setupRoom(code) {
       "starting": game.starting,
       "initialSpeed": game.initialSpeed,
       "speed": game.speed,
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
+      "snakes": copySnakes(game.snakes),
       "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
       "confirmReset": false,
       "confirmExit": false,
@@ -398,8 +409,8 @@ function setupRoom(code) {
 
   game.onStart(function() {
     io.to("room-" + code).emit("start", {
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "snakes": copySnakes(game.snakes),
+      "grid": game.grid,
       "starting": game.starting,
       "countBeforePlay": game.countBeforePlay,
       "paused": game.paused,
@@ -472,9 +483,9 @@ function setupRoom(code) {
       "paused": game.paused,
       "gameOver": game.gameOver,
       "killed": game.killed,
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
+      "snakes": copySnakes(game.snakes),
       "gameFinished": game.gameFinished,
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "grid": game.grid,
       "confirmReset": false,
       "confirmExit": false,
       "getInfos": false,
@@ -485,8 +496,8 @@ function setupRoom(code) {
 
   game.onScoreIncreased(function() {
     io.to("room-" + code).emit("scoreIncreased", {
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "snakes": copySnakes(game.snakes),
+      "grid": game.grid,
       "scoreMax": game.scoreMax,
       "gameFinished": game.gameFinished,
       "errorOccurred": game.errorOccurred
@@ -497,7 +508,7 @@ function setupRoom(code) {
     io.to("room-" + code).emit("update", {
       "isReseted": game.isReseted,
       "exited": game.exited,
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "grid": game.grid,
       "numFruit": game.numFruit,
       "ticks": game.ticks,
       "scoreMax": game.scoreMax,
@@ -507,7 +518,7 @@ function setupRoom(code) {
       "starting": game.starting,
       "initialSpeed": game.initialSpeed,
       "speed": game.speed,
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
+      "snakes": copySnakes(game.snakes),
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
       "offsetFrame": 0,
@@ -520,7 +531,7 @@ function setupRoom(code) {
       "paused": game.paused,
       "isReseted": game.isReseted,
       "exited": game.exited,
-      "grid": JSON.parse(JSON.stringify(game.grid)),
+      "grid": game.grid,
       "numFruit": game.numFruit,
       "ticks": game.ticks,
       "scoreMax": game.scoreMax,
@@ -530,7 +541,7 @@ function setupRoom(code) {
       "starting": game.starting,
       "initialSpeed": game.initialSpeed,
       "speed": game.speed,
-      "snakes": JSON.parse(JSON.stringify(game.snakes)),
+      "snakes": copySnakes(game.snakes),
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
       "errorOccurred": game.errorOccurred,
