@@ -125,6 +125,7 @@ class Player {
   }
 
   static getPlayerToken(array, token) {
+    if(!token) return null;
     for(let i = 0; i < array.length; i++) {
       if(array[i] != null && array[i].token == token) {
         return array[i];
@@ -135,6 +136,7 @@ class Player {
   }
 
   static getPlayerAllGamesToken(token) {
+    if(!token) return null;
     const keys = Object.keys(games);
 
     for(let i = 0; i < keys.length; i++) {
@@ -178,7 +180,7 @@ class Player {
 
   static getUsernameSocket(socket) {
     try {
-      const decoded_token = jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey);
+      const decoded_token = jwt.verify(socket.handshake.query.token || socket.request.cookies.token, config.jsonWebTokenSecretKey);
       return decoded_token && decoded_token.username ? decoded_token.username : null;
     } catch(e) {
       return null;
@@ -261,7 +263,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
+  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.handshake.query.token || socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -355,7 +357,7 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    if(Player.containsTokenAllGames(socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
+    if(Player.containsTokenAllGames(socket.handshake.query.token || socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
       socket.emit("process", {
         success: false,
         code: null,
@@ -841,11 +843,14 @@ app.post("/authentication", function(req, res) {
       if(err) {
         verifyFormAuthentication(req.body).then(() => {
           const username = req.body["username"];
+          const id = req.query.id;
+
           const token = jwt.sign({
             username: username
           }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
       
           res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: true  });
+
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
@@ -860,6 +865,10 @@ app.post("/authentication", function(req, res) {
           });
 
           logger.info("authentification - username: " + username + " - ip: " + req.ip);
+
+          if(id != null) {
+            io.to("" + id).emit("token", token);
+          }
         }, (err) => {
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
@@ -895,166 +904,195 @@ app.get("/rooms", function(req, res) {
 io.use(ioCookieParser());
 io.origins("*:*"); // CORS
 
+function checkAuthentication(socket) {
+  return new Promise((resolve, reject) => {
+    if(!config.enableAuthentication) {
+      resolve();
+    } else {
+      const token = socket.handshake.query.token || socket.request.cookies.token;
+      console.log(token);
+  
+      jwt.verify(token, config.jsonWebTokenSecretKey, function(err, data) {
+        if(!err) {
+          resolve(token);
+        } else {
+          reject();
+        }
+      });
+    }
+  });
+}
+
 io.use(function(socket, next) {
   ipBanned(socket.handshake.address).then(() => {
     next(new Error(GameConstants.Error.BANNED));
   }, () => {
-    if(!config.enableAuthentication) return next();
-    jwt.verify(socket.request.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
-      if(socket.request.cookies && socket.request.cookies.token && !err) return next();
-      next(new Error(GameConstants.Error.AUTHENTICATION_REQUIRED));
-    });
+    next();
   });
 });
 
 io.of("/rooms").on("connection", function(socket) {
-  socket.emit("rooms", {
-    rooms: getRoomsData(),
-    serverVersion: config.version,
-    engineVersion: GameConstants.Setting.APP_VERSION,
-    settings: {
-      maxRooms: config.maxRooms,
-      minGridSize: config.minGridSize,
-      maxGridSize: config.maxGridSize,
-      minSpeed: config.minSpeed,
-      maxSpeed: config.maxSpeed
-    }
+  checkAuthentication(socket).then(() => {
+    socket.emit("rooms", {
+      rooms: getRoomsData(),
+      serverVersion: config.version,
+      engineVersion: GameConstants.Setting.APP_VERSION,
+      settings: {
+        maxRooms: config.maxRooms,
+        minGridSize: config.minGridSize,
+        maxGridSize: config.maxGridSize,
+        minSpeed: config.minSpeed,
+        maxSpeed: config.maxSpeed
+      }
+    });
+  }, () => {
+    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
   });
 });
 
 io.of("/createRoom").on("connection", function(socket) {
-  socket.on("create", function(data) {
-    createRoom(data, socket);
+  checkAuthentication(socket).then(() => {
+    socket.on("create", function(data) {
+      createRoom(data, socket);
+    });
+  }, () => {
+    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
   });
 });
 
 io.on("connection", function(socket) {
-  socket.on("join-room", function(data) {
-    const code = data.code;
-    const version = data.version;
-    const game = games[code];
+  checkAuthentication(socket).then((token) => {
+    socket.emit("authent", "AUTHENT_SUCCESS");
 
-    if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, socket.request.cookies.token) && !Player.containsToken(game.spectators, socket.request.cookies.token) && !Player.containsTokenAllGames(socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
-      socket.join("room-" + code);
-
-      if(game.players.length >= getMaxPlayers(code) || game.started) {
-        game.spectators.push(new Player(socket.request.cookies.token, socket.id, null, false, version));
-      } else {
-        game.players.push(new Player(socket.request.cookies.token, socket.id, null, false, version));
-      }
-
-      socket.emit("join-room", {
-        success: true
-      });
-      
-      socket.emit("init", {
-        "paused": game.paused,
-        "isReseted": game.isReseted,
-        "exited": game.exited,
-        "grid": game.grid,
-        "numFruit": game.numFruit,
-        "ticks": game.ticks,
-        "scoreMax": game.scoreMax,
-        "gameOver": game.gameOver,
-        "gameFinished": game.gameFinished,
-        "gameMazeWin": game.gameMazeWin,
-        "starting": game.starting,
-        "initialSpeed": game.initialSpeed,
-        "speed": game.speed,
-        "snakes": game.snakes,
-        "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-        "confirmReset": false,
-        "confirmExit": false,
-        "getInfos": false,
-        "getInfosGame": false,
-        "errorOccurred": game.errorOccurred
-      });
-    
-      socket.once("start", function() {
-        if(Player.containsId(game.players, socket.id)) {
-          Player.getPlayer(game.players, socket.id).ready = true;
+    socket.on("join-room", function(data) {
+      const code = data.code;
+      const version = data.version;
+      const game = games[code];
+  
+      if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token) && !Player.containsIdAllGames(socket.id)) {
+        socket.join("room-" + code);
+  
+        if(game.players.length >= getMaxPlayers(code) || game.started) {
+          game.spectators.push(new Player(token, socket.id, null, false, version));
+        } else {
+          game.players.push(new Player(token, socket.id, null, false, version));
         }
-
+  
+        socket.emit("join-room", {
+          success: true
+        });
+        
         socket.emit("init", {
-          "enablePause": game.game.enablePause,
-          "enableRetry": game.game.enableRetry,
-          "progressiveSpeed": game.game.progressiveSpeed,
-          "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
+          "paused": game.paused,
+          "isReseted": game.isReseted,
+          "exited": game.exited,
+          "grid": game.grid,
+          "numFruit": game.numFruit,
+          "ticks": game.ticks,
+          "scoreMax": game.scoreMax,
+          "gameOver": game.gameOver,
+          "gameFinished": game.gameFinished,
+          "gameMazeWin": game.gameMazeWin,
+          "starting": game.starting,
+          "initialSpeed": game.initialSpeed,
+          "speed": game.speed,
+          "snakes": game.snakes,
+          "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+          "confirmReset": false,
+          "confirmExit": false,
+          "getInfos": false,
+          "getInfosGame": false,
+          "errorOccurred": game.errorOccurred
         });
-
-        gameMatchmaking(game, code);
-
-        socket.on("start", function() {
-          socket.emit("start", {
-            "paused": false
+      
+        socket.once("start", function() {
+          if(Player.containsId(game.players, socket.id)) {
+            Player.getPlayer(game.players, socket.id).ready = true;
+          }
+  
+          socket.emit("init", {
+            "enablePause": game.game.enablePause,
+            "enableRetry": game.game.enableRetry,
+            "progressiveSpeed": game.game.progressiveSpeed,
+            "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
           });
-        });
-      });
-    
-      socket.once("exit", function() {
-        exitGame(game, socket, code);
-      });
-    
-      socket.once("kill", function() {
-        exitGame(game, socket, code);
-      });
-    
-      socket.on("key", function(key) {
-        if(game != null && Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake) {
-          Player.getPlayer(game.players, socket.id).snake.lastKey = key;
-        }
-      });
-
-      socket.on("pause", function() {
-        socket.emit("pause", {
-          "paused": true
-        });
-      });
-
-      socket.on("reset", function() {
-        if(!game.started) {
+  
           gameMatchmaking(game, code);
-
-          socket.emit("reset", {
-            "gameOver": false,
-            "gameFinished": false
+  
+          socket.on("start", function() {
+            socket.emit("start", {
+              "paused": false
+            });
+          });
+        });
+      
+        socket.once("exit", function() {
+          exitGame(game, socket, code);
+        });
+      
+        socket.once("kill", function() {
+          exitGame(game, socket, code);
+        });
+      
+        socket.on("key", function(key) {
+          if(game != null && Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake) {
+            Player.getPlayer(game.players, socket.id).snake.lastKey = key;
+          }
+        });
+  
+        socket.on("pause", function() {
+          socket.emit("pause", {
+            "paused": true
+          });
+        });
+  
+        socket.on("reset", function() {
+          if(!game.started) {
+            gameMatchmaking(game, code);
+  
+            socket.emit("reset", {
+              "gameOver": false,
+              "gameFinished": false
+            });
+          }
+        });
+  
+        socket.once("error", function() {
+          exitGame(game, socket, code);
+        });
+  
+        socket.once("disconnect", function() {
+          exitGame(game, socket, code);
+        });
+  
+        socket.on("forceStart", function() {
+          if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id) {
+            startGame(code);
+          }
+        });
+  
+        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
+      } else {
+        if(games[code] == null) {
+          socket.emit("join-room", {
+            success: false,
+            errorCode: GameConstants.Error.ROOM_NOT_FOUND
+          });
+        } else if(Player.containsId(game.players, socket.id) || Player.containsId(game.spectators, socket.id) || Player.containsToken(game.players, token) || Player.containsToken(game.spectators, token)) {
+          socket.emit("join-room", {
+            success: false,
+            errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
+          });
+        } else if(Player.containsTokenAllGames(token) || Player.containsIdAllGames(socket.id)) {
+          socket.emit("join-room", {
+            success: false,
+            errorCode: GameConstants.Error.ALREADY_CREATED_ROOM
           });
         }
-      });
-
-      socket.once("error", function() {
-        exitGame(game, socket, code);
-      });
-
-      socket.once("disconnect", function() {
-        exitGame(game, socket, code);
-      });
-
-      socket.on("forceStart", function() {
-        if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id) {
-          startGame(code);
-        }
-      });
-
-      logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
-    } else {
-      if(games[code] == null) {
-        socket.emit("join-room", {
-          success: false,
-          errorCode: GameConstants.Error.ROOM_NOT_FOUND
-        });
-      } else if(Player.containsId(game.players, socket.id) || Player.containsId(game.spectators, socket.id) || Player.containsToken(game.players, socket.request.cookies.token) || Player.containsToken(game.spectators, socket.request.cookies.token)) {
-        socket.emit("join-room", {
-          success: false,
-          errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
-        });
-      } else if(Player.containsTokenAllGames(socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
-        socket.emit("join-room", {
-          success: false,
-          errorCode: GameConstants.Error.ALREADY_CREATED_ROOM
-        });
       }
-    }
+    });
+  }, () => {
+    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
   });
 });
 
