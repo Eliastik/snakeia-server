@@ -910,7 +910,6 @@ function checkAuthentication(socket) {
       resolve();
     } else {
       const token = socket.handshake.query.token || socket.request.cookies.token;
-      console.log(token);
   
       jwt.verify(token, config.jsonWebTokenSecretKey, function(err, data) {
         if(!err) {
@@ -951,18 +950,18 @@ io.of("/rooms").on("connection", function(socket) {
 });
 
 io.of("/createRoom").on("connection", function(socket) {
-  checkAuthentication(socket).then(() => {
-    socket.on("create", function(data) {
+  socket.on("create", function(data) {
+    checkAuthentication(socket).then(() => {
       createRoom(data, socket);
+    }, () => {
+      socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
     });
-  }, () => {
-    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
   });
 });
 
 io.on("connection", function(socket) {
   checkAuthentication(socket).then((token) => {
-    socket.emit("authent", "AUTHENT_SUCCESS");
+    socket.emit("authent", GameConstants.GameState.AUTHENTICATION_SUCCESS);
 
     socket.on("join-room", function(data) {
       const code = data.code;
