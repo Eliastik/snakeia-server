@@ -935,7 +935,7 @@ io.of("/rooms").on("connection", function(socket) {
     socket.emit("rooms", {
       rooms: getRoomsData(),
       serverVersion: config.version,
-      engineVersion: GameConstants.Setting.APP_VERSION,
+      version: GameConstants.Setting.APP_VERSION,
       settings: {
         maxRooms: config.maxRooms,
         minGridSize: config.minGridSize,

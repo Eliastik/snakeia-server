@@ -1,5 +1,5 @@
 {
-    "version": "1.0",
+    "version": "1.0.1",
     "port": 3000,
     "maxPlayers": 20,
     "maxRooms": 20,

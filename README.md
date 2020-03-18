@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.0
+* Version 1.0.1
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -83,7 +83,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.0
+* Version 1.0.1
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
