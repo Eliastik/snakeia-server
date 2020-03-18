@@ -14,6 +14,7 @@
 	"submit": "Submit",
 	"errorRecaptcha": "Please click on I'm not a robot.",
 	"errorUsername": "Invalid username.",
+	"errorUsernameBanned": "Banned username.",
 	"banned": "You're banned",
 	"bannedContact": "Contact the server administrator if you think this is a mistake"
 }

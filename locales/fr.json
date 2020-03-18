@@ -14,6 +14,7 @@
     "submit": "Valider",
     "errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot.",
     "errorUsername": "Nom d'utilisateur invalide.",
+	"errorUsernameBanned": "Nom d'utilisateur banni.",
     "banned": "Vous êtes banni",
     "bannedContact": "Contactez l'administrateur du serveur si vous pensez qu'il s'agit d'une erreur"
 }

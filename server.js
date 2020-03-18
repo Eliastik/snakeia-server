@@ -721,6 +721,18 @@ function ipBanned(ip) {
   });
 }
 
+function usernameBanned(username) {
+  return new Promise((resolve, reject) => {
+    config.usernameBan.forEach(usernameBanned => {
+      if(username.toLowerCase().indexOf(usernameBanned.toLowerCase()) > -1) {
+        resolve();
+      }
+    });
+
+    reject();
+  });
+}
+
 function verifyRecaptcha(response) {
   if(config.enableRecaptcha && config.recaptchaPrivateKey && config.recaptchaPrivateKey.trim() != "" && config.recaptchaPublicKey && config.recaptchaPublicKey.trim() != "") {
     const params = new URLSearchParams();
@@ -752,10 +764,14 @@ function verifyFormAuthentication(body) {
       const username = body["username"];
 
       if(username && username.trim() != "" && username.length >= config.minCharactersUsername && username.length <= config.maxCharactersUsername) {
-        resolve();
+        usernameBanned(username).then(() => {
+          reject("BANNED_USERNAME");
+        }, () => {
+          resolve();
+        });
+      } else {
+        reject("BAD_USERNAME");
       }
-
-      reject("BAD_USERNAME");
     }, () => {
       reject("INVALID_RECAPTCHA");
     });
@@ -804,6 +820,7 @@ app.get("/authentication", function(req, res) {
         enableRecaptcha: config.enableRecaptcha,
         errorRecaptcha: false,
         errorUsername: false,
+        errorUsernameBanned: false,
         success: false,
         authent: !err,
         locale: i18n.getLocale(req),
@@ -832,6 +849,7 @@ app.post("/authentication", function(req, res) {
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: false,
             errorUsername: false,
+            errorUsernameBanned: false,
             success: true,
             authent: false,
             locale: i18n.getLocale(req),
@@ -846,6 +864,7 @@ app.post("/authentication", function(req, res) {
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: err == "INVALID_RECAPTCHA",
             errorUsername: err == "BAD_USERNAME",
+            errorUsernameBanned: err == "BANNED_USERNAME",
             success: false,
             authent: false,
             locale: i18n.getLocale(req),
@@ -923,6 +942,29 @@ io.on("connection", function(socket) {
 
       socket.emit("join-room", {
         success: true
+      });
+      
+      socket.emit("init", {
+        "paused": game.paused,
+        "isReseted": game.isReseted,
+        "exited": game.exited,
+        "grid": game.grid,
+        "numFruit": game.numFruit,
+        "ticks": game.ticks,
+        "scoreMax": game.scoreMax,
+        "gameOver": game.gameOver,
+        "gameFinished": game.gameFinished,
+        "gameMazeWin": game.gameMazeWin,
+        "starting": game.starting,
+        "initialSpeed": game.initialSpeed,
+        "speed": game.speed,
+        "snakes": game.snakes,
+        "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+        "confirmReset": false,
+        "confirmExit": false,
+        "getInfos": false,
+        "getInfosGame": false,
+        "errorOccurred": game.errorOccurred
       });
     
       socket.once("start", function() {
