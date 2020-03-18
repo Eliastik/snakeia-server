@@ -847,9 +847,9 @@ app.post("/authentication", function(req, res) {
 
           const token = jwt.sign({
             username: username
-          }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
+          }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
       
-          res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: true  });
+          res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: (req.protocol == "https" ? true : false)  });
 
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
