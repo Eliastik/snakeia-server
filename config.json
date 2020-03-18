@@ -8,6 +8,7 @@
     "minSpeed": 1,
     "maxSpeed": 100,
     "playerWaitTime": 60000,
+    "maxTimeGame": 300000,
     "enableAuthentication": true,
     "authenticationTime": 86400000,
     "jsonWebTokenSecretKey": "",

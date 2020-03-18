@@ -424,7 +424,8 @@ function setupRoom(code) {
       "getInfos": false,
       "getInfosGame": false,
       "errorOccurred": game.errorOccurred,
-      "searchingPlayers": false
+      "searchingPlayers": false,
+      "timerToDisplay": config.maxTimeGame
     });
   });
 
@@ -526,7 +527,8 @@ function setupRoom(code) {
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
       "offsetFrame": 0,
-      "errorOccurred": game.errorOccurred
+      "errorOccurred": game.errorOccurred,
+      "timerToDisplay": config.maxTimeGame
     });
   });
 
