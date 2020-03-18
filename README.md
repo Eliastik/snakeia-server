@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/Eliastik/snakeia-server/master/logo.png" width="300" alt="SnakeIA Server" />
+<img src="https://raw.githubusercontent.com/Eliastik/snakeia-server/master/assets/img/logo.png" width="300" alt="SnakeIA Server" />
 
 # English
 
@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Still in development
+* Version 1.0
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -31,10 +31,49 @@ npm install
 
 Then to run the server:
 ````
-npm run server
+npm start
 ````
 
 The server will by default run on the port 3000.
+
+You can load a config file (example in config.json file) when you run the server. For example:
+````
+npm start config.json
+````
+
+## Config file explanations (default config)
+
+````
+{
+    "version": "1.0", // The server version
+    "port": 3000, // The port where the server runs
+    "maxPlayers": 20, // The maximum number of players for each room
+    "maxRooms": 20, // The maximum number of room
+    "minGridSize": 5, // The minimum size for a grid (width and height)
+    "maxGridSize": 50, // The maximum size for a grid (width and height)
+    "minSpeed": 1, // The minimum speed
+    "maxSpeed": 100, // The maximum speed
+    "playerWaitTime": 45000, // The time while waiting for players to join a room
+    "enableAuthentication": true, // Enable authentification when connecting to the server
+    "authenticationTime": 86400000, // The duration of authentication token
+    "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
+    "minCharactersUsername": 3, // The minimum number of characters for the username
+    "maxCharactersUsername": 15, // The maximum number of characters for the username
+    "enableRecaptcha": true, // Enable ReCaptcha
+    "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // ReCaptcha API URL
+    "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
+    "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
+    "authentMaxRequest": 50, // Maximum request for authentication
+    "authentWindowMs": 900000, // Time when the authentication requests are saved
+    "ipBan": [], // A list of IP to ban
+    "usernameBan": [], // A list of usernames to ban
+    "contactBan": "", // A contact URL displayed when an user is banned
+    "enableLoggingFile": true, // Enable logging into file
+    "logFile": "logs/server.log", // Log file
+    "errorLogFile": "logs/error.log", // Error log file
+    "logLevel": "debug" // Log level (see Winston documentation)
+}
+````
 
 # Français
 
@@ -44,7 +83,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Encore en développement
+* Version 1.0
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -71,6 +110,45 @@ npm run server
 ````
 
 Le serveur va se lancer sur le port 3000 par défaut.
+
+Vous pouvez charger un fichier de configuration (un exemple dans le fichier config.json) lorsque vous lancez le serveur. Par exemple :
+````
+npm start config.json
+````
+
+## Explications du fichier de configuration (configuration par défaut)
+
+````
+{
+    "version": "1.0", // La version du serveur
+    "port": 3000, // Le port sur lequel lancer le server
+    "maxPlayers": 20, // Le nombre maximal d'utilisateur par salle
+    "maxRooms": 20, // Le nombre maximal de salles
+    "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
+    "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
+    "minSpeed": 1, // La vitesse minimale
+    "maxSpeed": 100, // La vitesse maximale
+    "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle
+    "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
+    "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
+    "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clée sera générée au hasard)
+    "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
+    "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
+    "enableRecaptcha": true, // Activer le ReCaptcha
+    "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // URL de l'API ReCaptcha
+    "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+    "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+    "authentMaxRequest": 50, // Nombre maximal de requêtes lors de l'authentification
+    "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrée
+    "ipBan": [], // Une liste d'IPs à bannir
+    "usernameBan": [], // Une liste de noms d'utilisateur à bannir
+    "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni
+    "enableLoggingFile": true, // Activer le log dans un fichier
+    "logFile": "logs/server.log", // Fichier de log
+    "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
+    "logLevel": "debug" // Niveau de log (voir la documentation de Winston)
+}
+````
 
 ## Déclaration de licence
 

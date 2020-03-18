@@ -24,7 +24,7 @@
     "express-rate-limit": "^5.1.1",
     "fs": "0.0.1-security",
     "html-entities": "^1.2.1",
-    "i18n": "^0.8.5",
+    "i18n": "^0.8.6",
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "snakeia": "git+https://git@github.com/Eliastik/snakeia.git",

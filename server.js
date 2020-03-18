@@ -50,6 +50,8 @@ if(configFile != null) {
     Object.assign(config, JSON.parse(file));
   } catch(e) {
     console.log("Error while loading config file \"" + configFile + "\": " + e);
+    const file = fs.readFileSync("config.json", "utf-8");
+    Object.assign(config, JSON.parse(file));
   }
 }
 
