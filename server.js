@@ -845,7 +845,7 @@ app.post("/authentication", function(req, res) {
             username: username
           }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime });
       
-          res.cookie("token", token, { maxAge: config.authenticationTime, httpOnly: true });
+          res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: true  });
           res.render(__dirname + "/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
@@ -893,6 +893,7 @@ app.get("/rooms", function(req, res) {
 });
 
 io.use(ioCookieParser());
+io.origins("*:*"); // CORS
 
 io.use(function(socket, next) {
   ipBanned(socket.handshake.address).then(() => {
