@@ -1067,7 +1067,7 @@ io.on("connection", function(socket) {
         });
   
         socket.on("forceStart", function() {
-          if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id) {
+          if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id && !game.started) {
             startGame(code);
           }
         });
