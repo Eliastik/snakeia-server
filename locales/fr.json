@@ -1,20 +1,30 @@
 {
-    "version": "Version :",
-    "engineVersion": "Version du moteur :",
-    "githubRepos": "Dépôts Github :",
-    "server": "Serveur",
-    "engine": "Moteur",
-    "alreadyAuthentified": "Vous êtes déjà authentifié.",
-    "username": "Nom d'utilisateur (%s max, %s min) :",
+	"version": "Version :",
+	"engineVersion": "Version du moteur :",
+	"githubRepos": "Dépôts Github :",
+	"server": "Serveur",
+	"engine": "Moteur",
+	"alreadyAuthentified": "Vous êtes déjà authentifié.",
+	"username": "Nom d'utilisateur (%s max, %s min) :",
 	"characters": {
-        "one": "%s caractère",
-        "other": "%s caractères"
-    },
-    "successAuthentification": "Authentification réussie.",
-    "submit": "Valider",
-    "errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot.",
-    "errorUsername": "Nom d'utilisateur invalide.",
+		"one": "%s caractère",
+		"other": "%s caractères"
+	},
+	"successAuthentification": "Authentification réussie.",
+	"submit": "Valider",
+	"errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot.",
+	"errorUsername": "Nom d'utilisateur invalide.",
 	"errorUsernameBanned": "Nom d'utilisateur banni.",
-    "banned": "Vous êtes banni",
-    "bannedContact": "Contactez l'administrateur du serveur si vous pensez qu'il s'agit d'une erreur"
+	"banned": "Vous êtes banni",
+	"bannedContact": "Contactez l'administrateur du serveur si vous pensez qu'il s'agit d'une erreur",
+	"maxTimeGame": "Une partie dure au maximum %s.",
+	"maxTimeGameTwo": "Une partie dure au maximum %s et %s.",
+	"minutes": {
+		"one": "%s minute",
+		"other": "%s minutes"
+	},
+	"seconds": {
+		"one": "%s seconde",
+		"other": "%s secondes"
+	}
 }

@@ -54,6 +54,19 @@
               <button type="submit" name="submit" class="btn btn-lg btn-primary"><span class="fui-check mr-2"></span> <%= __("submit") %></button>
             </div>
           </div>
+          <% if(enableMaxTimeGame) { %>
+          <div class="form-group row">
+            <div class="col-12 small">
+              <% if((maxTimeGame / 1000 % 60) < 1) { %>
+              <%= __("maxTimeGame", __n("minutes", (maxTimeGame / 1000 / 60))) %>
+              <% } else if((maxTimeGame / 1000 / 60) < 1) { %>
+              <%= __("maxTimeGame", __n("seconds", (maxTimeGame / 1000 % 60))) %>
+              <% } else { %>
+              <%= __("maxTimeGameTwo", __n("minutes", (maxTimeGame / 1000 / 60)), __n("seconds", (maxTimeGame / 1000 % 60))) %>
+              <% } %>
+            </div>
+          </div>
+          <% } %>
         </fieldset>
       </form>
       <% } else { %>

@@ -842,7 +842,9 @@ app.get("/authentication", function(req, res) {
         authent: !err,
         locale: i18n.getLocale(req),
         min: config.minCharactersUsername,
-        max: config.maxCharactersUsername
+        max: config.maxCharactersUsername,
+        enableMaxTimeGame: config.enableMaxTimeGame,
+        maxTimeGame: config.maxTimeGame
       });
     });
   } else {
@@ -874,7 +876,9 @@ app.post("/authentication", function(req, res) {
             authent: false,
             locale: i18n.getLocale(req),
             min: config.minCharactersUsername,
-            max: config.maxCharactersUsername
+            max: config.maxCharactersUsername,
+            enableMaxTimeGame: config.enableMaxTimeGame,
+            maxTimeGame: config.maxTimeGame
           });
 
           logger.info("authentification - username: " + username + " - ip: " + req.ip);
@@ -893,7 +897,9 @@ app.post("/authentication", function(req, res) {
             authent: false,
             locale: i18n.getLocale(req),
             min: config.minCharactersUsername,
-            max: config.maxCharactersUsername
+            max: config.maxCharactersUsername,
+            enableMaxTimeGame: config.enableMaxTimeGame,
+            maxTimeGame: config.maxTimeGame
           });
         });
       }

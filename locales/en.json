@@ -16,5 +16,15 @@
 	"errorUsername": "Invalid username.",
 	"errorUsernameBanned": "Banned username.",
 	"banned": "You're banned",
-	"bannedContact": "Contact the server administrator if you think this is a mistake"
+	"bannedContact": "Contact the server administrator if you think this is a mistake",
+	"maxTimeGame": "A game lasts at most %s.",
+	"maxTimeGameTwo": "A game lasts at most %s and %s.",
+	"minutes": {
+		"one": "%s minute",
+		"other": "%s minutes"
+	},
+	"seconds": {
+		"one": "%s second",
+		"other": "%s seconds"
+	}
 }
