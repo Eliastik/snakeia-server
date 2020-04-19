@@ -408,7 +408,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
-      "errorOccurred": game.errorOccurred
+      "errorOccurred": game.errorOccurred,
+      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
     });
   });
 
@@ -425,8 +426,7 @@ function setupRoom(code) {
       "getInfos": false,
       "getInfosGame": false,
       "errorOccurred": game.errorOccurred,
-      "searchingPlayers": false,
-      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
+      "searchingPlayers": false
     });
   });
 
@@ -467,6 +467,7 @@ function setupRoom(code) {
     if(games[code] != null) {
       games[code].started = false;
       games[code].searchingPlayers = true;
+      clearTimeout(games[code].timeoutMaxTimePlay);
     }
   });
 
@@ -552,7 +553,8 @@ function setupRoom(code) {
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
       "errorOccurred": game.errorOccurred,
-      "searchingPlayers": false
+      "searchingPlayers": false,
+      "timerToDisplay": config.enableMaxTimeGame ? config.maxTimeGame / 1000 : -1
     });
   });
 }
@@ -687,7 +689,7 @@ function setupSpectators(code) {
       io.to(game.spectators[i].id).emit("init", {
         "spectatorMode": true,
         "onlineMode": true,
-        "enableRetryPauseMenu": false
+        "enableRetryPauseMenu": false,
       });
     }
   }
@@ -992,28 +994,31 @@ io.on("connection", function(socket) {
           success: true
         });
         
-        socket.emit("init", {
-          "paused": game.paused,
-          "isReseted": game.isReseted,
-          "exited": game.exited,
-          "grid": game.grid,
-          "numFruit": game.numFruit,
-          "ticks": game.ticks,
-          "scoreMax": game.scoreMax,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "gameMazeWin": game.gameMazeWin,
-          "starting": game.starting,
-          "initialSpeed": game.initialSpeed,
-          "speed": game.speed,
-          "snakes": game.snakes,
-          "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
-        });
+        if(game.started) {
+          socket.emit("init", {
+            "paused": game.game.paused,
+            "isReseted": game.game.isReseted,
+            "exited": game.game.exited,
+            "snakes": copySnakes(game.game.snakes),
+            "grid": game.game.grid,
+            "numFruit": game.game.numFruit,
+            "ticks": game.game.ticks,
+            "scoreMax": game.game.scoreMax,
+            "gameOver": game.game.gameOver,
+            "gameFinished": game.game.gameFinished,
+            "gameMazeWin": game.game.gameMazeWin,
+            "starting": game.game.starting,
+            "initialSpeed": game.game.initialSpeed,
+            "speed": game.game.speed,
+            "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.game.errorOccurred,
+            "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
+          });
+        }
       
         socket.once("start", () => {
           if(Player.containsId(game.players, socket.id)) {
