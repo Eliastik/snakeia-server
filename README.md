@@ -53,9 +53,11 @@ npm start config.json
     "maxGridSize": 50, // The maximum size for a grid (width and height)
     "minSpeed": 1, // The minimum speed
     "maxSpeed": 100, // The maximum speed
-    "playerWaitTime": 45000, // The time while waiting for players to join a room
+    "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
+    "enableMaxTimeGame": true, // Enable time limit for each game
+    "maxTimeGame": 300000, // The time limit for each game (ms)
     "enableAuthentication": true, // Enable authentification when connecting to the server
-    "authenticationTime": 86400000, // The duration of authentication token
+    "authenticationTime": 86400000, // The duration of authentication token (ms)
     "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
     "minCharactersUsername": 3, // The minimum number of characters for the username
     "maxCharactersUsername": 15, // The maximum number of characters for the username
@@ -64,7 +66,7 @@ npm start config.json
     "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
     "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
     "authentMaxRequest": 50, // Maximum request for authentication
-    "authentWindowMs": 900000, // Time when the authentication requests are saved
+    "authentWindowMs": 900000, // Time when the authentication requests are saved (ms)
     "ipBan": [], // A list of IP to ban
     "usernameBan": [], // A list of usernames to ban
     "contactBan": "", // A contact URL displayed when an user is banned
@@ -122,16 +124,18 @@ npm start config.json
 {
     "version": "1.0", // La version du serveur
     "port": 3000, // Le port sur lequel lancer le server
-    "maxPlayers": 20, // Le nombre maximal d'utilisateur par salle
+    "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
     "maxRooms": 20, // Le nombre maximal de salles
     "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
     "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
     "minSpeed": 1, // La vitesse minimale
     "maxSpeed": 100, // La vitesse maximale
-    "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle
+    "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
+    "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
+    "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
     "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
     "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
-    "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clée sera générée au hasard)
+    "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clé sera générée au hasard)
     "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
     "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
     "enableRecaptcha": true, // Activer le ReCaptcha
@@ -139,7 +143,7 @@ npm start config.json
     "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
     "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
     "authentMaxRequest": 50, // Nombre maximal de requêtes lors de l'authentification
-    "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrée
+    "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrées (ms)
     "ipBan": [], // Une liste d'IPs à bannir
     "usernameBan": [], // Une liste de noms d'utilisateur à bannir
     "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni
