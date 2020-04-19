@@ -198,7 +198,7 @@ function getRoomsData() {
     rooms.push({});
     rooms[i]["borderWalls"] = false;
     rooms[i]["generateWalls"] = false;
-    rooms[i]["players"] = Object.keys(game["players"]).length;
+    rooms[i]["players"] = Object.keys(game["players"]).length + games[code].numberAIToAdd;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
     rooms[i]["speed"] = game["game"].speed;
@@ -270,6 +270,7 @@ function createRoom(data, socket) {
     let generateWalls = false;
     let speed = 8;
     let enableAI = false;
+    let levelAI = null;
     let validSettings = true;
     let privateGame = false;
   
@@ -303,7 +304,7 @@ function createRoom(data, socket) {
       privateGame = data.private ? true : false;
     }
   
-    if(data.speed == null && data.speed == "custom") {
+    if(data.speed == "custom") {
       if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < config.minSpeed || data.customSpeed > config.maxSpeed) {
         validSettings = false;
       } else {
@@ -313,6 +314,16 @@ function createRoom(data, socket) {
       validSettings = false;
     } else {
       speed = data.speed;
+    }
+
+    if(data.enableAI) {
+      enableAI = true;
+
+      if(data.levelAI && ["AI_LEVEL_RANDOM", "AI_LEVEL_LOW", "AI_LEVEL_DEFAULT", "AI_LEVEL_HIGH", "AI_LEVEL_ULTRA"].includes(data.levelAI)) {
+        levelAI = data.levelAI;
+      } else {
+        validSettings = false;
+      }
     }
   
     if(validSettings) {
@@ -326,6 +337,8 @@ function createRoom(data, socket) {
         private: privateGame,
         players: [],
         spectators: [],
+        enableAI: enableAI,
+        levelAI: levelAI,
         searchingPlayers: true,
         started: false,
         alreadyInit: false,
@@ -334,12 +347,16 @@ function createRoom(data, socket) {
         timeoutMaxTimePlay: null
       };
 
+      games[code].numberAIToAdd = enableAI ? Math.round(getMaxPlayers(code) / 2 - 1) : 0;
+
       logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address, {
         "widthGrid": widthGrid,
         "heightGrid": heightGrid,
         "generateWalls": generateWalls,
         "borderWalls": borderWalls,
-        "speed": speed
+        "speed": speed,
+        "enableAI": enableAI,
+        "private": privateGame
       });
   
       if(socket != null) {
@@ -583,7 +600,7 @@ function cleanRooms() {
 
 function gameMatchmaking(game, code) {
   if(game != null && games[code] != null && games[code].searchingPlayers) {
-    let numberPlayers = game.players.length;
+    let numberPlayers = game.players.length + games[code].numberAIToAdd;
 
     if(numberPlayers < getMaxPlayers(code)) {
       const toAdd = getMaxPlayers(code) - numberPlayers;
@@ -597,17 +614,17 @@ function gameMatchmaking(game, code) {
       game.spectators = game.spectators.filter(spectator => spectator != null);
     }
 
-    numberPlayers = game.players.length;
+    numberPlayers = game.players.length + games[code].numberAIToAdd;
 
-    if(numberPlayers > 0) {
-      if(numberPlayers > 1 && game.timeoutPlay == null) {
+    if(numberPlayers - games[code].numberAIToAdd > 0) {
+      if(numberPlayers - games[code].numberAIToAdd > 1 && game.timeoutPlay == null) {
         game.timeStart = Date.now() + config.playerWaitTime + 1000;
     
         game.timeoutPlay = setTimeout(() => {
           game.timeoutPlay = null;
           startGame(code);
         }, config.playerWaitTime);
-      } else if(numberPlayers <= 1 && game.timeoutPlay != null) {
+      } else if(numberPlayers - games[code].numberAIToAdd <= 1 && game.timeoutPlay != null) {
         clearTimeout(game.timeoutPlay);
         game.timeoutPlay = null;
         game.timeStart = 0;
@@ -658,6 +675,13 @@ function startGame(code) {
         "currentPlayer": (i + 1),
         "spectatorMode": false
       });
+    }
+
+    if(game.enableAI) {
+      for(let i = 0; i < game.numberAIToAdd; i++) {
+        const snakeAI = new Snake(null, null, game.game.grid, GameConstants.PlayerType.AI, game.levelAI);
+        game.game.snakes.push(snakeAI);
+      }
     }
 
     if(config.enableMaxTimeGame) {
