@@ -7,6 +7,7 @@
     "maxGridSize": 50,
     "minSpeed": 1,
     "maxSpeed": 100,
+    "enableAI": true,
     "playerWaitTime": 60000,
     "enableMaxTimeGame": true,
     "maxTimeGame": 300000,

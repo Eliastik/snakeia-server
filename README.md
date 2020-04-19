@@ -53,6 +53,7 @@ npm start config.json
     "maxGridSize": 50, // The maximum size for a grid (width and height)
     "minSpeed": 1, // The minimum speed
     "maxSpeed": 100, // The maximum speed
+    "enableAI": false, // Disable or enable AIs
     "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
     "enableMaxTimeGame": true, // Enable time limit for each game
     "maxTimeGame": 300000, // The time limit for each game (ms)
@@ -130,6 +131,7 @@ npm start config.json
     "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
     "minSpeed": 1, // La vitesse minimale
     "maxSpeed": 100, // La vitesse maximale
+    "enableAI": false, // Désactiver ou activer les IA
     "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
     "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
     "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
@@ -159,6 +161,8 @@ npm start config.json
 ### À faire
 
 * Multithreading
+* Panel d'administration
+* Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
 
 ### Fait
 

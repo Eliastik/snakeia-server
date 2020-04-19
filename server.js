@@ -316,7 +316,7 @@ function createRoom(data, socket) {
       speed = data.speed;
     }
 
-    if(data.enableAI) {
+    if(data.enableAI && config.enableAI) {
       enableAI = true;
 
       if(data.levelAI && ["AI_LEVEL_RANDOM", "AI_LEVEL_LOW", "AI_LEVEL_DEFAULT", "AI_LEVEL_HIGH", "AI_LEVEL_ULTRA"].includes(data.levelAI)) {
@@ -324,6 +324,8 @@ function createRoom(data, socket) {
       } else {
         validSettings = false;
       }
+    } else if(data.enableAI && !config.enableAI) {
+      validSettings = false;
     }
   
     if(validSettings) {
@@ -984,7 +986,8 @@ io.of("/rooms").on("connection", function(socket) {
         minGridSize: config.minGridSize,
         maxGridSize: config.maxGridSize,
         minSpeed: config.minSpeed,
-        maxSpeed: config.maxSpeed
+        maxSpeed: config.maxSpeed,
+        enableAI: config.enableAI
       }
     });
   }, () => {
