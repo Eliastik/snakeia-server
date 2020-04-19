@@ -330,7 +330,8 @@ function createRoom(data, socket) {
         started: false,
         alreadyInit: false,
         timeoutPlay: null,
-        timeStart: null
+        timeStart: null,
+        timeoutMaxTimePlay: null
       };
 
       logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address, {
@@ -386,7 +387,7 @@ function copySnakes(snakes) {
 function setupRoom(code) {
   const game = games[code].game;
 
-  game.onReset(function() {
+  game.onReset(() => {
     io.to("room-" + code).emit("reset", {
       "paused": game.paused,
       "isReseted": game.isReseted,
@@ -411,7 +412,7 @@ function setupRoom(code) {
     });
   });
 
-  game.onStart(function() {
+  game.onStart(() => {
     io.to("room-" + code).emit("start", {
       "snakes": copySnakes(game.snakes),
       "grid": game.grid,
@@ -425,11 +426,11 @@ function setupRoom(code) {
       "getInfosGame": false,
       "errorOccurred": game.errorOccurred,
       "searchingPlayers": false,
-      "timerToDisplay": config.maxTimeGame
+      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
     });
   });
 
-  game.onPause(function() {
+  game.onPause(() => {
     io.to("room-" + code).emit("pause", {
       "paused": game.paused,
       "confirmReset": false,
@@ -440,7 +441,7 @@ function setupRoom(code) {
     });
   });
 
-  game.onContinue(function() {
+  game.onContinue(() => {
     io.to("room-" + code).emit("continue", {
       "confirmReset": false,
       "confirmExit": false,
@@ -450,7 +451,7 @@ function setupRoom(code) {
     });
   });
 
-  game.onStop(function() {
+  game.onStop(() => {
     io.to("room-" + code).emit("stop", {
       "paused": game.paused,
       "scoreMax": game.scoreMax,
@@ -469,7 +470,7 @@ function setupRoom(code) {
     }
   });
 
-  game.onExit(function() {
+  game.onExit(() => {
     io.to("room-" + code).emit("exit", {
       "paused": game.paused,
       "gameOver": game.gameOver,
@@ -483,7 +484,7 @@ function setupRoom(code) {
     });
   });
 
-  game.onKill(function() {
+  game.onKill(() => {
     io.to("room-" + code).emit("kill", {
       "paused": game.paused,
       "gameOver": game.gameOver,
@@ -499,7 +500,7 @@ function setupRoom(code) {
     });
   });
 
-  game.onScoreIncreased(function() {
+  game.onScoreIncreased(() => {
     io.to("room-" + code).emit("scoreIncreased", {
       "snakes": copySnakes(game.snakes),
       "grid": game.grid,
@@ -509,7 +510,7 @@ function setupRoom(code) {
     });
   });
   
-  game.onUpdate(function() {
+  game.onUpdate(() => {
     io.to("room-" + code).emit("update", {
       "isReseted": game.isReseted,
       "exited": game.exited,
@@ -528,11 +529,11 @@ function setupRoom(code) {
       "numFruit": game.numFruit,
       "offsetFrame": 0,
       "errorOccurred": game.errorOccurred,
-      "timerToDisplay": config.maxTimeGame
+      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
     });
   });
 
-  game.onUpdateCounter(function() {
+  game.onUpdateCounter(() => {
     io.to("room-" + code).emit("updateCounter", {
       "paused": game.paused,
       "isReseted": game.isReseted,
@@ -600,7 +601,7 @@ function gameMatchmaking(game, code) {
       if(numberPlayers > 1 && game.timeoutPlay == null) {
         game.timeStart = Date.now() + config.playerWaitTime + 1000;
     
-        game.timeoutPlay = setTimeout(function() {
+        game.timeoutPlay = setTimeout(() => {
           game.timeoutPlay = null;
           startGame(code);
         }, config.playerWaitTime);
@@ -655,6 +656,14 @@ function startGame(code) {
         "currentPlayer": (i + 1),
         "spectatorMode": false
       });
+    }
+
+    if(config.enableMaxTimeGame) {
+      clearTimeout(game.timeoutMaxTimePlay);
+      game.game.timeStart = Date.now() + 5000;
+      game.timeoutMaxTimePlay = setTimeout(() => {
+        game.game.stop(true);
+      }, config.maxTimeGame + 5000);
     }
   
     if(!game.alreadyInit) {
@@ -1006,7 +1015,7 @@ io.on("connection", function(socket) {
           "errorOccurred": game.errorOccurred
         });
       
-        socket.once("start", function() {
+        socket.once("start", () => {
           if(Player.containsId(game.players, socket.id)) {
             Player.getPlayer(game.players, socket.id).ready = true;
           }
@@ -1020,18 +1029,18 @@ io.on("connection", function(socket) {
   
           gameMatchmaking(game, code);
   
-          socket.on("start", function() {
+          socket.on("start", () => {
             socket.emit("start", {
               "paused": false
             });
           });
         });
       
-        socket.once("exit", function() {
+        socket.once("exit", () => {
           exitGame(game, socket, code);
         });
       
-        socket.once("kill", function() {
+        socket.once("kill", () => {
           exitGame(game, socket, code);
         });
       
@@ -1041,13 +1050,13 @@ io.on("connection", function(socket) {
           }
         });
   
-        socket.on("pause", function() {
+        socket.on("pause", () => {
           socket.emit("pause", {
             "paused": true
           });
         });
   
-        socket.on("reset", function() {
+        socket.on("reset", () => {
           if(!game.started) {
             gameMatchmaking(game, code);
   
@@ -1058,15 +1067,15 @@ io.on("connection", function(socket) {
           }
         });
   
-        socket.once("error", function() {
+        socket.once("error", () => {
           exitGame(game, socket, code);
         });
   
-        socket.once("disconnect", function() {
+        socket.once("disconnect", () => {
           exitGame(game, socket, code);
         });
   
-        socket.on("forceStart", function() {
+        socket.on("forceStart", () => {
           if(game != null && Player.containsId(game.players, socket.id) && game.players[0].id == socket.id && !game.started) {
             startGame(code);
           }
