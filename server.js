@@ -198,7 +198,7 @@ function getRoomsData() {
     rooms.push({});
     rooms[i]["borderWalls"] = false;
     rooms[i]["generateWalls"] = false;
-    rooms[i]["players"] = Object.keys(game["players"]).length + games[code].numberAIToAdd;
+    rooms[i]["players"] = Object.keys(game["players"]).length + game.numberAIToAdd;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
     rooms[i]["speed"] = game["game"].speed;
@@ -1014,7 +1014,7 @@ io.on("connection", function(socket) {
       if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token) && !Player.containsIdAllGames(socket.id)) {
         socket.join("room-" + code);
   
-        if(game.players.length >= getMaxPlayers(code) || game.started) {
+        if(game.players.length + game.numberAIToAdd >= getMaxPlayers(code) || game.started) {
           game.spectators.push(new Player(token, socket.id, null, false, version));
         } else {
           game.players.push(new Player(token, socket.id, null, false, version));
