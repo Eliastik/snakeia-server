@@ -359,7 +359,7 @@ function createRoom(data, socket) {
 
       games[code].numberAIToAdd = enableAI ? Math.round(getMaxPlayers(code) / 2 - 1) : 0;
 
-      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address, {
+      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address + " - socket: " + socket.id, {
         "widthGrid": widthGrid,
         "heightGrid": heightGrid,
         "generateWalls": generateWalls,
@@ -731,7 +731,7 @@ function setupSpectators(code) {
 
 function exitGame(game, socket, code) {
   if(game) {
-    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
+    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address + " - socket: " + socket.id);
 
     if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
       Player.getPlayer(game.players, socket.id).snake.gameOver = true;
@@ -988,6 +988,7 @@ app.get("/rooms", function(req, res) {
 // Admin panel
 function kickUser(socketId, token) {
   if(io.sockets.connected[socketId]) {
+    logger.info("user kicked (socket: " + socketId + ") - ip: " + io.sockets.connected[socketId].handshake.address);
     io.sockets.connected[socketId].disconnect(true);
     invalidatedUserToken(token);
   }
@@ -1011,7 +1012,11 @@ function banUserIP(socketId) {
       ip = ip.substr(7, ip.length);
     }
 
-    if(ip) config.ipBan.push(ip);
+    if(ip) {
+      config.ipBan.push(ip);
+      logger.info("user banned (socket: " + socketId + ") - ip: " + ip);
+    }
+
     updateConfigToFile();
   }
 }
@@ -1019,7 +1024,11 @@ function banUserIP(socketId) {
 function banUserName(token) {
   jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
     if(!err && data) {
-      if(data.username) config.usernameBan.push(data.username);
+      if(data.username) {
+        config.usernameBan.push(data.username);
+        logger.info("username banned (" + data.username + ")");
+      }
+
       updateConfigToFile();
     }
   });
@@ -1332,7 +1341,7 @@ io.on("connection", function(socket) {
           }
         });
   
-        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address);
+        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address + " - socket: " + socket.id);
       } else {
         if(games[code] == null) {
           socket.emit("join-room", {
