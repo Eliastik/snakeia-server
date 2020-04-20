@@ -31,6 +31,8 @@ const ioCookieParser = require("socket.io-cookie-parser");
 const i18n           = require("i18n");
 const rateLimit      = require("express-rate-limit");
 const winston        = require("winston");
+const csrf           = require("csurf");
+const bodyParser     = require("body-parser");
 
 const snakeia        = require("snakeia");
 const Snake          = snakeia.Snake;
@@ -246,7 +248,7 @@ function getRandomRoomKey() {
 
 function generateRandomJsonWebTokenSecretKey(precValue) {
   let key;
-  
+
   do {
     key = require("crypto").randomBytes(256).toString("base64");
   } while(precValue && precValue == key);
@@ -1071,7 +1073,33 @@ function verifyFormAuthenticationAdmin(body) {
   });
 }
 
-app.get("/admin", function(req, res) {
+const csrfProtection = csrf({ cookie: true });
+
+app.get("/admin", csrfProtection, function(req, res) {
+  if(req.cookies) {
+    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
+      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
+      const usernames = Object.keys(config.adminAccounts);
+
+      res.render(__dirname + "/admin.html", {
+        publicKey: config.recaptchaPublicKey,
+        enableRecaptcha: config.enableRecaptcha,
+        authent: !err && data && data.username && usernames.includes(data.username),
+        success: false,
+        errorAuthent: false,
+        errorRecaptcha: false,
+        locale: i18n.getLocale(req),
+        games: games,
+        io: io,
+        csrfToken: req.csrfToken()
+      });
+    });
+  } else {
+    res.end();
+  }
+});
+
+function adminAction(req, res, action) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
@@ -1079,22 +1107,18 @@ app.get("/admin", function(req, res) {
 
       if(!err && data) {
         const username = data.username;
-  
+
         if(username && usernames.includes(username)) {
-          const queryParameter = req.query;
-  
-          if(queryParameter.disconnect) {
+          if(action == "disconnect") {
             invalidatedAdminTokens.push(req.cookies.tokenAdmin);
             res.cookie("tokenAdmin", { expires: -1 });
             res.redirect("/admin");
             return;
           } else {
-            const action = queryParameter.action;
-
             if(action) {
-              const socket = queryParameter.socket;
-              const token = queryParameter.token;
-  
+              const socket = req.body.socket;
+              const token = req.body.token;
+
               switch(action) {
                 case "kick":
                   kickUser(socket, token);
@@ -1121,21 +1145,40 @@ app.get("/admin", function(req, res) {
         }
       }
 
-      res.render(__dirname + "/admin.html", {
-        publicKey: config.recaptchaPublicKey,
-        enableRecaptcha: config.enableRecaptcha,
-        authent: !err && data && data.username && usernames.includes(data.username),
-        success: false,
-        errorAuthent: false,
-        errorRecaptcha: false,
-        locale: i18n.getLocale(req),
-        games: games,
-        io: io
-      });
+      res.redirect("/admin");
+      return;
     });
   } else {
     res.end();
   }
+}
+
+const jsonParser = bodyParser.json();
+
+app.post("/admin/disconnect", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "disconnect");
+});
+
+app.post("/admin/kick", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "kick");
+});
+
+app.post("/admin/banIP", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "banIP");
+});
+
+app.post("/admin/banUserName", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "banUserName");
+});
+
+app.post("/admin/banIPUserName", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "banIPUserName");
+});
+
+app.use(function (err, req, res, next) {
+  if(err.code !== "EBADCSRFTOKEN") return next(err);
+  res.status(403);
+  res.send("Error");
 });
 
 app.post("/admin", function(req, res) {
@@ -1164,7 +1207,8 @@ app.post("/admin", function(req, res) {
             errorRecaptcha: err == "INVALID_RECAPTCHA",
             locale: i18n.getLocale(req),
             games: null,
-            io: io
+            io: io,
+            csrfToken: null
           });
         });
       }

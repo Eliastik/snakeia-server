@@ -20,6 +20,7 @@
   <head>
     <meta charset="UTF-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<%= csrfToken %>">
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
@@ -68,10 +69,10 @@
                       <strong><%= __("idSocket") %></strong> <%= user.id %><br />
                       <strong><%= __("ip") %></strong> <%= user.id && io.sockets.connected[user.id] && io.sockets.connected[user.id].handshake.address %><br />
                       <strong><%= __("clientVersion") %></strong> <%= user.version %><br />
-                      <a href="?action=kick&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
-                      <a href="?action=banIP&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
-                      <a href="?action=banUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsername") %></a>
-                      <a href="?action=banIPUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsernameIP") %></a>
+                      <a href="#" data-action="kick" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
+                      <a href="#" data-action="banIP" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
+                      <a href="#" data-action="banUserName" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsername") %></a>
+                      <a href="#" data-action="banIPUserName" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsernameIP") %></a>
                     </li>
                   <% }); %>
                     </ul>
@@ -86,7 +87,7 @@
                   <strong><%= __("noRoomFound"); %></strong>
                 <% } %>
             </div>
-            <p><a href="?disconnect=true" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
+            <p><a href="#" data-action="disconnect" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
             <% } else { %>
             <form action="" method="post">
               <fieldset class="form-group">
@@ -128,5 +129,47 @@
           </div>
         </div>
     </div>
+    <% if(authent && games) { %>
+    <script type="text/javascript">
+      var token = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+
+      var elements = document.querySelectorAll("[data-action]");
+
+      elements.forEach(function(element) {
+        var action = element.dataset.action;
+        var form = element.dataset.form;
+        var data = {};
+
+        if(form) {
+          form.split("&").forEach(function(element) {
+            if(element) {
+              var key = element.split("=")[0];
+              var value = element.split("=")[1];
+              data[key] = value;
+            }
+          });
+        }
+
+        element.addEventListener("click", function() {
+          element.classList.add("disabled");
+
+          fetch("/admin/" + action, {
+            credentials: "same-origin",
+            headers: {
+              "CSRF-Token": token,
+              "Content-Type": "application/json",
+            },
+            method: "POST",
+            body: JSON.stringify(data),
+            redirect: "follow"
+          }).then((response) => {
+            if(response.ok && response.redirected) {
+              location.href = response.url;
+            }
+          });
+        });
+      });
+    </script>
+    <% } %>
   </body>
 </html>
