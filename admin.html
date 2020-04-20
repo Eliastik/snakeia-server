@@ -23,6 +23,8 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.bundle.min.js"></script>
     <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
     <title>SnakeIA Server</title>
   </head>
@@ -32,37 +34,59 @@
           <div class="col">
             <p><img class="logo" src="/img/logo.png" alt="SnakeIA Server" /></p>
             <h2><%= __("adminTitle") %></h2>
-            <% if(authent && games) {
-              const gamesKeys = Object.keys(games);
-              let currentRoom = 1;
-
-              gamesKeys.forEach(key => {
-                if(games[key]) { %>
-                <h3><%= __("roomAdmin", currentRoom, key) %></h3>
-              <%
-                const users = [];
-                  games[key].players.forEach(player => users.push(player));
-                  games[key].spectators.forEach(player => users.push(player));
-              %>
-              <ul class="list-group">
-                <% users.forEach(user => { %>
-                  <li class="list-group-item">
-                    <strong><%= __("usernameAdmin") %></strong> <%= user.username %><br />
-                    <strong><%= __("idSocket") %></strong> <%= user.id %><br />
-                    <strong><%= __("ip") %></strong> <%= user.id && io.sockets.connected[user.id] && io.sockets.connected[user.id].handshake.address %><br />
-                    <strong><%= __("clientVersion") %></strong> <%= user.version %><br />
-                    <a href="?action=kick&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
-                    <a href="?action=banIP&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
-                    <a href="?action=banUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsername") %></a>
-                    <a href="?action=banIPUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsernameIP") %></a>
-                  </li>
-                <% });
-                currentRoom++;
-              } %>
-              <% }); %>
+            <% if(authent && games) { %>
+            <ul class="nav nav-tabs">
+              <li class="nav-item">
+                <a class="nav-link active" href="#roomList"><%= __("roomList") %></a>
+              </li>
             </ul>
-            <hr />
-            <p><a href="?disconnect=true" class="btn btn-primary"><%= __("disconnectAdmin") %></a></p>
+            <div class="tab-content" id="roomList">
+              <% 
+                const gamesKeys = Object.keys(games);
+                let currentRoom = 1;
+
+                gamesKeys.forEach(key => {
+                  if(games[key]) { %>
+                  <div class="accordion" id="accordion">
+                    <div class="card">
+                      <div class="card-header" id="heading<%= currentRoom %>">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse<%= currentRoom %>" aria-expanded="true" aria-controls="collapseOne">
+                          <%= __("roomAdmin", currentRoom, key) %>
+                        </button>
+                      </div>
+                      <div id="collapse<%= currentRoom %>" class="collapse" aria-labelledby="heading<%= currentRoom %>" data-parent="#accordion">
+                        <div class="card-body">
+                <%
+                  const users = [];
+                    games[key].players.forEach(player => users.push(player));
+                    games[key].spectators.forEach(player => users.push(player));
+                %>
+                <ul class="list-group">
+                  <% users.forEach(user => { %>
+                    <li class="list-group-item">
+                      <strong><%= __("usernameAdmin") %></strong> <%= user.username %><br />
+                      <strong><%= __("idSocket") %></strong> <%= user.id %><br />
+                      <strong><%= __("ip") %></strong> <%= user.id && io.sockets.connected[user.id] && io.sockets.connected[user.id].handshake.address %><br />
+                      <strong><%= __("clientVersion") %></strong> <%= user.version %><br />
+                      <a href="?action=kick&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
+                      <a href="?action=banIP&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
+                      <a href="?action=banUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsername") %></a>
+                      <a href="?action=banIPUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsernameIP") %></a>
+                    </li>
+                  <% }); %>
+                    </ul>
+                  </div>
+                  </div>
+                </div>
+                </div>
+                <% currentRoom++;
+                } %>
+                <% });
+                if(currentRoom <= 1) { %>
+                  <strong><%= __("noRoomFound"); %></strong>
+                <% } %>
+            </div>
+            <p><a href="?disconnect=true" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
             <% } else { %>
             <form action="" method="post">
               <fieldset class="form-group">
