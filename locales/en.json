@@ -15,6 +15,7 @@
 	"errorRecaptcha": "Please click on I'm not a robot.",
 	"errorUsername": "Invalid username.",
 	"errorUsernameBanned": "Banned username.",
+	"errorUsernameAlreadyInUse": "This username is already in use.",
 	"banned": "You're banned",
 	"bannedContact": "Contact the server administrator if you think this is a mistake",
 	"maxTimeGame": "A game lasts at most %s.",

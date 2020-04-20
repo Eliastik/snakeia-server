@@ -162,13 +162,13 @@ npm start config.json
 
 * Multithreading
 * Panel d'administration
-* Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
 
 ### Fait
 
 * Limite de temps maximale par partie
 * Envoyer directement l'état d'une partie aux spectateurs (actuellement il y a un délai)
 * Ajouter possibilité de remplir une partie avec des IAs
+* Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
 
 ## Déclaration de licence
 

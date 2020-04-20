@@ -15,6 +15,7 @@
 	"errorRecaptcha": "Veuillez cliquer sur Je ne suis pas un robot.",
 	"errorUsername": "Nom d'utilisateur invalide.",
 	"errorUsernameBanned": "Nom d'utilisateur banni.",
+	"errorUsernameAlreadyInUse": "Ce nom d'utilisateur n'est pas disponible actuellement car il a été choisi par un autre utilisateur.",
 	"banned": "Vous êtes banni",
 	"bannedContact": "Contactez l'administrateur du serveur si vous pensez qu'il s'agit d'une erreur",
 	"maxTimeGame": "Une partie dure au maximum %s.",

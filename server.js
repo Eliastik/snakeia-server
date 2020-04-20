@@ -40,6 +40,7 @@ const GameConstants  = snakeia.GameConstants;
 
 const games = {}; // contains all the games processed by the server
 const config = {}; // server configuration (see default config file config.json)
+const tokens = []; // user tokens
 
 // Load config file
 const configFile = process.argv.splice(2)[0] || "config.json";
@@ -776,6 +777,24 @@ function usernameBanned(username) {
   });
 }
 
+function usernameAlreadyInUse(username) {
+  return new Promise((resolve, reject) => {
+    tokens.forEach(token => {
+      try {
+        const otherUsername = jwt.verify(token, config.jsonWebTokenSecretKey).username;
+
+        if(otherUsername) {
+          if(otherUsername.toLowerCase().indexOf(username.toLowerCase()) > -1) {
+            resolve();
+          }
+        }
+      } catch(e) {}
+    });
+
+    reject();
+  });
+}
+
 function verifyRecaptcha(response) {
   if(config.enableRecaptcha && config.recaptchaPrivateKey && config.recaptchaPrivateKey.trim() != "" && config.recaptchaPublicKey && config.recaptchaPublicKey.trim() != "") {
     const params = new URLSearchParams();
@@ -810,7 +829,11 @@ function verifyFormAuthentication(body) {
         usernameBanned(username).then(() => {
           reject("BANNED_USERNAME");
         }, () => {
-          resolve();
+          usernameAlreadyInUse(username).then(() => {
+            reject("USERNAME_ALREADY_IN_USE");
+          }, () => {
+            resolve();
+          });
         });
       } else {
         reject("BAD_USERNAME");
@@ -864,6 +887,7 @@ app.get("/authentication", function(req, res) {
         errorRecaptcha: false,
         errorUsername: false,
         errorUsernameBanned: false,
+        errorUsernameAlreadyInUse: false,
         success: false,
         authent: !err,
         locale: i18n.getLocale(req),
@@ -898,6 +922,7 @@ app.post("/authentication", function(req, res) {
             errorRecaptcha: false,
             errorUsername: false,
             errorUsernameBanned: false,
+            errorUsernameAlreadyInUse: false,
             success: true,
             authent: false,
             locale: i18n.getLocale(req),
@@ -919,6 +944,7 @@ app.post("/authentication", function(req, res) {
             errorRecaptcha: err == "INVALID_RECAPTCHA",
             errorUsername: err == "BAD_USERNAME",
             errorUsernameBanned: err == "BANNED_USERNAME",
+            errorUsernameAlreadyInUse: err == "USERNAME_ALREADY_IN_USE",
             success: false,
             authent: false,
             locale: i18n.getLocale(req),
@@ -1008,6 +1034,7 @@ io.of("/createRoom").on("connection", function(socket) {
 io.on("connection", function(socket) {
   checkAuthentication(socket).then((token) => {
     socket.emit("authent", GameConstants.GameState.AUTHENTICATION_SUCCESS);
+    tokens.push(token);
 
     socket.on("join-room", function(data) {
       const code = data.code;
