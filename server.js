@@ -1043,6 +1043,16 @@ function banUserName(token) {
   });
 }
 
+function unbanUsername(value) {
+  config.usernameBan = config.usernameBan.filter(username => username != value);
+  updateConfigToFile();
+}
+
+function unbanIP(value) {
+  config.ipBan = config.ipBan.filter(ip => ip != value);
+  updateConfigToFile();
+}
+
 function verifyFormAuthenticationAdmin(body) {
   return new Promise((resolve, reject) => {
     verifyRecaptcha(body["g-recaptcha-response"]).then(() => {
@@ -1091,6 +1101,7 @@ app.get("/admin", csrfProtection, function(req, res) {
         locale: i18n.getLocale(req),
         games: games,
         io: io,
+        config: config,
         csrfToken: req.csrfToken()
       });
     });
@@ -1118,6 +1129,7 @@ function adminAction(req, res, action) {
             if(action) {
               const socket = req.body.socket;
               const token = req.body.token;
+              const value = req.body.value;
 
               switch(action) {
                 case "kick":
@@ -1135,6 +1147,12 @@ function adminAction(req, res, action) {
                   banUserIP(socket);
                   banUserName(token);
                   kickUser(socket, token);
+                  break;
+                case "unbanUsername":
+                  unbanUsername(value);
+                  break;
+                case "unbanIP":
+                  unbanIP(value);
                   break;
               }
 
@@ -1175,6 +1193,14 @@ app.post("/admin/banIPUserName", jsonParser, csrfProtection, function(req, res) 
   adminAction(req, res, "banIPUserName");
 });
 
+app.post("/admin/unbanUsername", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "unbanUsername");
+});
+
+app.post("/admin/unbanIP", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, "unbanIP");
+});
+
 app.use(function (err, req, res, next) {
   if(err.code !== "EBADCSRFTOKEN") return next(err);
   res.status(403);
@@ -1208,6 +1234,7 @@ app.post("/admin", function(req, res) {
             locale: i18n.getLocale(req),
             games: null,
             io: io,
+            config: config,
             csrfToken: null
           });
         });

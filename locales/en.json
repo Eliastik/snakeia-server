@@ -42,5 +42,10 @@
 	"banUsernameIP": "Ban IP + username",
 	"roomAdmin": "Room n°%s (key: %s)",
 	"noRoomFound": "No room found…",
-	"roomList": "Room list"
+	"roomList": "Room list",
+	"banList": "Ban list",
+	"bannedUsernames": "Banned username(s):",
+	"unban": "Unban",
+	"ipsBanned": "Banned IP(s):",
+	"noElement": "No element…"
 }

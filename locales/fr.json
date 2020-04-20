@@ -42,5 +42,10 @@
 	"banUsernameIP": "Ban IP + nom d'utilisateur",
 	"roomAdmin": "Salle n°%s (clé : %s)",
 	"noRoomFound": "Aucune salle trouvée…",
-	"roomList": "Liste des salles"
+	"roomList": "Liste des salles",
+	"banList": "Liste de bans",
+	"bannedUsernames": "Nom d'utilisateurs banni(s) :",
+	"unban": "Débannir",
+	"ipsBanned": "Adresses IP bannie(s) :",
+	"noElement": "Aucun élément…"
 }
