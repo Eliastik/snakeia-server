@@ -47,5 +47,8 @@
 	"bannedUsernames": "Banned username(s):",
 	"unban": "Unban",
 	"ipsBanned": "Banned IP(s):",
-	"noElement": "No element…"
+	"noElement": "No element…",
+	"manualBan": "Manual ban",
+	"ban": "Ban",
+	"usernameTwo": "Username:"
 }

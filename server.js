@@ -1003,11 +1003,21 @@ function kickUser(socketId, token) {
   if(io.sockets.connected[socketId]) {
     logger.info("user kicked (socket: " + socketId + ") - ip: " + io.sockets.connected[socketId].handshake.address);
     io.sockets.connected[socketId].disconnect(true);
-    invalidatedUserToken(token);
+    invalidateUserToken(token);
   }
 }
 
-function invalidatedUserToken(token) {
+function kickUsername(username) {
+  tokens.forEach(token => {
+    jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
+      if(!err && data && data.username && data.username == username) {
+        invalidateUserToken(token);
+      }
+    });
+  });
+}
+
+function invalidateUserToken(token) {
   invalidatedUserTokens.push(token);
 
   for(let i = tokens.length - 1; i >= 0; i--) {
@@ -1049,11 +1059,25 @@ function banUserName(token) {
 
 function unbanUsername(value) {
   config.usernameBan = config.usernameBan.filter(username => username != value);
+  logger.info("username unbanned (" + value + ")");
   updateConfigToFile();
 }
 
 function unbanIP(value) {
   config.ipBan = config.ipBan.filter(ip => ip != value);
+  logger.info("ip unbanned (" + value + ")");
+  updateConfigToFile();
+}
+
+function manualUsernameBan(value) {
+  config.usernameBan.push(value);
+  logger.info("username banned (" + value + ")");
+  updateConfigToFile();
+}
+
+function manualIPBan(value) {
+  config.ipBan.push(value);
+  logger.info("ip banned (" + value + ")");
   updateConfigToFile();
 }
 
@@ -1140,12 +1164,21 @@ function adminAction(req, res, action) {
                   kickUser(socket, token);
                   break;
                 case "banIP":
-                  banUserIP(socket);
-                  kickUser(socket, token);
+                  if(value) {
+                    manualIPBan(value);
+                  } else {
+                    banUserIP(socket);
+                    kickUser(socket, token);
+                  }
                   break;
                 case "banUserName":
-                  banUserName(token);
-                  kickUser(socket, token);
+                  if(value) {
+                    manualUsernameBan(value);
+                    kickUsername(value);
+                  } else {
+                    banUserName(token);
+                    kickUser(socket, token);
+                  }
                   break;
                 case "banIPUserName":
                   banUserIP(socket);

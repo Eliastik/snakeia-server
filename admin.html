@@ -39,9 +39,10 @@
             <ul class="nav nav-tabs" role="tablist">
               <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#roomList"><%= __("roomList") %></a></li>
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#banList"><%= __("banList") %></a></li>
+              <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#manualBan"><%= __("manualBan") %></a></li>
             </ul>
             <div class="tab-content">
-              <div class="tab-pane fade show active" id="roomList" role="tabpanel" aria-labelledby="roomList">
+              <div class="tab-pane fade show active" id="roomList" role="tabpanel">
               <%
                 const gamesKeys = Object.keys(games);
                 let currentRoom = 1;
@@ -87,43 +88,66 @@
                   <strong><%= __("noRoomFound"); %></strong>
                 <% } %>
               </div>
-              <div class="tab-pane fade" id="banList" role="tabpanel" aria-labelledby="banList">
-                <div class="form-inline">
-                  <div class="form-group mb-2">
-                    <label for="usernamesBanned"><%= __("bannedUsernames") %></label>
+              <div class="tab-pane fade" id="banList" role="tabpanel">
+                <form method="POST" action="/admin/unbanUsername">
+                  <div class="form-group row">
+                    <label for="usernamesBanned" class="col-sm-4 col-form-label"><%= __("bannedUsernames") %></label>
+                      <div class="input-group col-sm-6">
+                        <% if(config && config.usernameBan && config.usernameBan.length > 0) { %>
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                          <select class="form-control" id="usernamesBanned" name="value">
+                            <% config.usernameBan.forEach(username => { %>
+                              <option value="<%= username %>"><%= username %></option>
+                            <% }); %>
+                          </select>
+                          <input type="submit" class="btn btn-primary mb-2" value="<%= __("unban") %>" />
+                        <% } else { %>
+                          <strong><%= __("noElement") %></strong>
+                        <% } %>
+                    </div>
                   </div>
-                  <div class="form-group mx-sm-3 mb-2">
-                    <% if(config && config.usernameBan && config.usernameBan.length > 0) { %>
-                    <select class="form-control" id="usernamesBanned">
-                      <% config.usernameBan.forEach(username => { %>
-                        <option value="<%= username %>"><%= username %></option>
-                      <% }); %>
-                    </select>
-                    </div>
-                    <a href="#" id="unbanUsername" class="btn btn-primary mb-2"><%= __("unban") %></a>
-                    <% } else { %>
-                      <strong><%= __("noElement") %></strong>
-                    </div>
-                    <% } %>
-                </div>
-                <div class="form-inline">
-                  <div class="form-group mb-2">
-                    <label for="ipsBanned"><%= __("ipsBanned") %></label>
+                </form>
+                <form method="POST" action="/admin/unbanIP">
+                  <div class="form-group row">
+                    <label for="ipsBanned" class="col-sm-4 col-form-label"><%= __("ipsBanned") %></label>
+                      <div class="input-group col-sm-6">
+                        <% if(config && config.ipBan && config.ipBan.length > 0) { %>
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                          <select class="form-control" id="ipsBanned" name="value">
+                            <% config.ipBan.forEach(ip => { %>
+                              <option value="<%= ip %>"><%= ip %></option>
+                            <% }); %>
+                          </select>
+                          <input type="submit" class="btn btn-primary mb-2" value="<%= __("unban") %>" />
+                        </form>
+                        <% } else { %>
+                          <strong><%= __("noElement") %></strong>
+                        <% } %>
+                      </div>
                   </div>
-                  <div class="form-group mx-sm-3 mb-2">
-                    <% if(config && config.ipBan && config.ipBan.length > 0) { %>
-                    <select class="form-control" id="ipsBanned">
-                      <% config.ipBan.forEach(ip => { %>
-                        <option value="<%= ip %>"><%= ip %></option>
-                      <% }); %>
-                    </select>
+                </form>
+              </div>
+              <div class="tab-pane fade" id="manualBan" role="tabpanel">
+                <form method="POST" action="/admin/banUserName">
+                  <div class="form-group row">
+                    <label for="usernameToBan" class="col-sm-4 col-form-label"><%= __("usernameTwo") %></label>
+                    <div class="input-group col-sm-6">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input class="form-control" type="text" id="usernameToBan" name="value" />
+                      <input type="submit" class="btn btn-primary mb-2" value="<%= __("ban") %>" />
                     </div>
-                    <a href="#" id="unbanIP" class="btn btn-primary mb-2"><%= __("unban") %></a>
-                    <% } else { %>
-                      <strong><%= __("noElement") %></strong>
+                  </div>
+                </form>
+                <form method="POST" action="/admin/banIP">
+                  <div class="form-group row">
+                    <label for="ipToBan" class="col-sm-4 col-form-label"><%= __("ip") %></label>
+                    <div class="input-group col-sm-6">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                      <input class="form-control" type="text" id="ipToBan" name="value" />
+                      <input type="submit" class="btn btn-primary mb-2" value="<%= __("ban") %>" />
                     </div>
-                    <% } %>
-                </div>
+                  </div>
+                </form>
               </div>
             </div>
             <p><a href="#" data-action="disconnect" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
@@ -211,22 +235,6 @@
           requestAction(action, data);
         });
       });
-
-      if(document.getElementById("unbanUsername")) {
-        document.getElementById("unbanUsername").addEventListener("click", function() {
-          this.classList.add("disabled");
-          var username = document.getElementById("usernamesBanned").value;
-          requestAction("unbanUsername", { value: username });
-        });
-      }
-
-      if(document.getElementById("unbanIP")) {
-        document.getElementById("unbanIP").addEventListener("click", function() {
-          this.classList.add("disabled");
-          var username = document.getElementById("ipsBanned").value;
-          requestAction("unbanIP", { value: username });
-        });
-      }
     </script>
     <% } %>
   </body>
