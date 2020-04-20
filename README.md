@@ -74,7 +74,10 @@ npm start config.json
     "enableLoggingFile": true, // Enable logging into file
     "logFile": "logs/server.log", // Log file
     "errorLogFile": "logs/error.log", // Error log file
-    "logLevel": "debug" // Log level (see Winston documentation)
+    "logLevel": "debug" // Log level (see Winston documentation),
+    "adminAccounts": { // User accounts of the administrator panel
+        "test": "" // "Username": "SHA-512 password hash"
+    }
 }
 ````
 
@@ -152,7 +155,10 @@ npm start config.json
     "enableLoggingFile": true, // Activer le log dans un fichier
     "logFile": "logs/server.log", // Fichier de log
     "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
-    "logLevel": "debug" // Niveau de log (voir la documentation de Winston)
+    "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
+    "adminAccounts": { // Compte utilisateurs du panel d'administration
+        "test": "" // "Nom d'utilisateur": "Hash SHA-512 du mot de passe"
+    }
 }
 ````
 
@@ -161,7 +167,6 @@ npm start config.json
 ### À faire
 
 * Multithreading
-* Panel d'administration
 
 ### Fait
 
@@ -169,6 +174,7 @@ npm start config.json
 * Envoyer directement l'état d'une partie aux spectateurs (actuellement il y a un délai)
 * Ajouter possibilité de remplir une partie avec des IAs
 * Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
+* Panel d'administration
 
 ## Déclaration de licence
 

@@ -27,5 +27,18 @@
 	"seconds": {
 		"one": "%s seconde",
 		"other": "%s secondes"
-	}
+	},
+	"usernameAdmin": "Nom d'utilisateur :",
+	"passwordAdmin": "Mot de passe :",
+	"errorAuthentAdmin": "L'authentification a échoué.",
+	"adminTitle": "Administration",
+	"disconnectAdmin": "Se déconnecter",
+	"idSocket": "ID socket :",
+	"ip": "IP :",
+	"clientVersion": "Version client :",
+	"kick": "Kick",
+	"banIP": "Ban IP",
+	"banUsername": "Ban nom d'utilisateur",
+	"banUsernameIP": "Ban IP + nom d'utilisateur",
+	"roomAdmin": "Salle n°%s (clé : %s)"
 }

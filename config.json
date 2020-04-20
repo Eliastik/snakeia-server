@@ -28,5 +28,6 @@
     "enableLoggingFile": true,
     "logFile": "logs/server.log",
     "errorLogFile": "logs/error.log",
-    "logLevel": "debug"
+    "logLevel": "debug",
+    "adminAccounts": {}
 }

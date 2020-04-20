@@ -41,6 +41,7 @@ const GameConstants  = snakeia.GameConstants;
 const games = {}; // contains all the games processed by the server
 const config = {}; // server configuration (see default config file config.json)
 const tokens = []; // user tokens
+const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 // Load config file
 const configFile = process.argv.splice(2)[0] || "config.json";
@@ -57,7 +58,7 @@ if(configFile != null) {
 }
 
 config.port = process.env.PORT || config.port;
-config.jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
+const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
 
 // Internationalization
 i18n.configure({
@@ -83,6 +84,11 @@ if(process.env.NODE_ENV !== "production") {
   logger.add(new winston.transports.Console({
     format: winston.format.colorize()
   }));
+}
+
+// Update config to file
+function updateConfigToFile() {
+  fs.writeFileSync(configFile, JSON.stringify(config, null, 4), "UTF-8");
 }
 
 class Player {
@@ -172,7 +178,7 @@ class Player {
 
   static getUsername(player) {
     try {
-      const decoded_token = jwt.verify(player.token, config.jsonWebTokenSecretKey);
+      const decoded_token = jwt.verify(player.token, jsonWebTokenSecretKey);
       return decoded_token && decoded_token.username ? decoded_token.username : null;
     } catch(e) {
       return null;
@@ -181,7 +187,7 @@ class Player {
 
   static getUsernameSocket(socket) {
     try {
-      const decoded_token = jwt.verify(socket.handshake.query.token || socket.request.cookies.token, config.jsonWebTokenSecretKey);
+      const decoded_token = jwt.verify(socket.handshake.query.token || socket.request.cookies.token, jsonWebTokenSecretKey);
       return decoded_token && decoded_token.username ? decoded_token.username : null;
     } catch(e) {
       return null;
@@ -781,7 +787,7 @@ function usernameAlreadyInUse(username) {
   return new Promise((resolve, reject) => {
     tokens.forEach(token => {
       try {
-        const otherUsername = jwt.verify(token, config.jsonWebTokenSecretKey).username;
+        const otherUsername = jwt.verify(token, jsonWebTokenSecretKey).username;
 
         if(otherUsername) {
           if(otherUsername.toLowerCase().indexOf(username.toLowerCase()) > -1) {
@@ -846,6 +852,7 @@ function verifyFormAuthentication(body) {
 
 app.engine("html", ejs.renderFile);
 app.set("view engine", "html");
+app.disable("view cache");
 
 app.use(express.static("assets"));
 app.use(express.json());
@@ -855,6 +862,11 @@ app.use(i18n.init);
 
 // Rate limiter
 app.use("/authentication", rateLimit({
+  windowMs: config.authentWindowMs,
+  max: config.authentMaxRequest
+}));
+
+app.use("/admin", rateLimit({
   windowMs: config.authentWindowMs,
   max: config.authentMaxRequest
 }));
@@ -880,7 +892,7 @@ app.get("/", function(req, res) {
 
 app.get("/authentication", function(req, res) {
   if(req.cookies && config.enableAuthentication) {
-    jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+    jwt.verify(req.cookies.token, jsonWebTokenSecretKey, function(err, data) {
       res.render(__dirname + "/authentication.html", {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
@@ -904,7 +916,7 @@ app.get("/authentication", function(req, res) {
 
 app.post("/authentication", function(req, res) {
   if(req.cookies && config.enableAuthentication) {
-    jwt.verify(req.cookies.token, config.jsonWebTokenSecretKey, function(err, data) {
+    jwt.verify(req.cookies.token, jsonWebTokenSecretKey, function(err, data) {
       if(err) {
         verifyFormAuthentication(req.body).then(() => {
           const username = req.body["username"];
@@ -912,7 +924,7 @@ app.post("/authentication", function(req, res) {
 
           const token = jwt.sign({
             username: username
-          }, config.jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
+          }, jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
       
           res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: (req.protocol == "https" ? true : false)  });
 
@@ -972,6 +984,167 @@ app.get("/rooms", function(req, res) {
   }
 });
 
+// Admin panel
+function kickUser(socketId) {
+  if(io.sockets.connected[socketId]) {
+    io.sockets.connected[socketId].disconnect(true);
+  }
+}
+
+function banUserIP(socketId) {
+  if(io.sockets.connected[socketId]) {
+    let ip = io.sockets.connected[socketId].handshake.address;
+
+    if(ip && ip.substr(0, 7) == "::ffff:") {
+      ip = ip.substr(7, ip.length);
+    }
+
+    if(ip) config.ipBan.push(ip);
+    updateConfigToFile();
+  }
+}
+
+function banUserName(token) {
+  jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
+    if(!err && data) {
+      if(data.username) config.usernameBan.push(data.username);
+      updateConfigToFile();
+    }
+  });
+}
+
+function verifyFormAuthenticationAdmin(body) {
+  return new Promise((resolve, reject) => {
+    verifyRecaptcha(body["g-recaptcha-response"]).then(() => {
+      const username = body["username"];
+      const password = body["password"];
+      
+      const accounts = config.adminAccounts;
+
+      if(accounts) {
+        const usernames = Object.keys(accounts);
+
+        if(usernames.includes(username)) {
+          const hashPassword = accounts[username];
+          const enteredPasswordHash = require("crypto").createHash("sha512").update(password).digest("hex");
+
+          if(hashPassword === enteredPasswordHash) {
+            resolve();
+          } else {
+            reject("INVALID");
+          }
+        } else {
+          reject("INVALID");
+        }
+      }
+    }, () => {
+      reject("INVALID_RECAPTCHA");
+    });
+  });
+}
+
+app.get("/admin", function(req, res) {
+  if(req.cookies) {
+    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKey, function(err, data) {
+      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
+      const usernames = Object.keys(config.adminAccounts);
+
+      if(!err && data) {
+        const username = data.username;
+  
+        if(username && usernames.includes(username)) {
+          const queryParameter = req.query;
+  
+          if(queryParameter.disconnect) {
+            invalidatedAdminTokens.push(req.cookies.tokenAdmin);
+            res.cookie("tokenAdmin", { expires: -1 });
+            res.redirect("/admin");
+            return;
+          } else {
+            const action = queryParameter.action;
+
+            if(action) {
+              const socket = queryParameter.socket;
+              const token = queryParameter.token;
+  
+              switch(action) {
+                case "kick":
+                  kickUser(socket);
+                  break;
+                case "banIP":
+                  banUserIP(socket);
+                  kickUser(socket);
+                  break;
+                case "banUserName":
+                  banUserName(token);
+                  kickUser(socket);
+                  break;
+                case "banIPUserName":
+                  banUserIP(socket);
+                  banUserName(token);
+                  kickUser(socket);
+                  break;
+              }
+
+              res.redirect("/admin");
+              return;
+            }
+          }
+        }
+      }
+
+      res.render(__dirname + "/admin.html", {
+        publicKey: config.recaptchaPublicKey,
+        enableRecaptcha: config.enableRecaptcha,
+        authent: !err && data && data.username && usernames.includes(data.username),
+        success: false,
+        errorAuthent: false,
+        errorRecaptcha: false,
+        locale: i18n.getLocale(req),
+        games: games,
+        io: io
+      });
+    });
+  } else {
+    res.end();
+  }
+});
+
+app.post("/admin", function(req, res) {
+  if(req.cookies) {
+    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKey, function(err, data) {
+      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) res = true;
+
+      if(err) {
+        verifyFormAuthenticationAdmin(req.body).then(() => {
+          const username = req.body["username"];
+
+          const token = jwt.sign({
+            username: username
+          }, jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
+      
+          res.cookie("tokenAdmin", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "strict", secure: (req.protocol == "https" ? true : false)  });
+          res.redirect("/admin");
+          return;
+        }, (err) => {
+          res.render(__dirname + "/admin.html", {
+            publicKey: config.recaptchaPublicKey,
+            enableRecaptcha: config.enableRecaptcha,
+            authent: false,
+            errorAuthent: true,
+            errorRecaptcha: err == "INVALID_RECAPTCHA",
+            locale: i18n.getLocale(req),
+            games: null,
+            io: io
+          });
+        });
+      }
+    });
+  } else {
+    res.end();
+  }
+});
+
 io.use(ioCookieParser());
 io.origins("*:*"); // CORS
 
@@ -982,7 +1155,7 @@ function checkAuthentication(socket) {
     } else {
       const token = socket.handshake.query.token || socket.request.cookies.token;
   
-      jwt.verify(token, config.jsonWebTokenSecretKey, function(err, data) {
+      jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
         if(!err) {
           resolve(token);
         } else {

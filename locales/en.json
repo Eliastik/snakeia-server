@@ -27,5 +27,18 @@
 	"seconds": {
 		"one": "%s second",
 		"other": "%s seconds"
-	}
+	},
+	"usernameAdmin": "Username:",
+	"passwordAdmin": "Password:",
+	"errorAuthentAdmin": "The authentication failed.",
+	"adminTitle": "Administration",
+	"disconnectAdmin": "Logout",
+	"idSocket": "Socket ID:",
+	"ip": "IP:",
+	"clientVersion": "Client version:",
+	"kick": "Kick",
+	"banIP": "Ban IP",
+	"banUsername": "Ban username",
+	"banUsernameIP": "Ban IP + username",
+	"roomAdmin": "Room n°%s (key: %s)"
 }
