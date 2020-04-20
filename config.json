@@ -14,6 +14,7 @@
     "enableAuthentication": true,
     "authenticationTime": 86400000,
     "jsonWebTokenSecretKey": "",
+    "jsonWebTokenSecretKeyAdmin": "",
     "minCharactersUsername": 3,
     "maxCharactersUsername": 15,
     "enableRecaptcha": true,

@@ -60,6 +60,7 @@ npm start config.json
     "enableAuthentication": true, // Enable authentification when connecting to the server
     "authenticationTime": 86400000, // The duration of authentication token (ms)
     "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
+    "jsonWebTokenSecretKeyAdmin": "", // A private key for signing an admin token - should be different from previous value (if not provided, a random key will be generated)
     "minCharactersUsername": 3, // The minimum number of characters for the username
     "maxCharactersUsername": 15, // The maximum number of characters for the username
     "enableRecaptcha": true, // Enable ReCaptcha
@@ -141,6 +142,7 @@ npm start config.json
     "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
     "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
     "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clé sera générée au hasard)
+    "jsonWebTokenSecretKeyAdmin": "", // Une clée privée pour signer un token d'administration - doit être différente de la valeur précédente (si non fournie, une clé sera générée au hasard)
     "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
     "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
     "enableRecaptcha": true, // Activer le ReCaptcha

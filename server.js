@@ -60,6 +60,7 @@ if(configFile != null) {
 
 config.port = process.env.PORT || config.port;
 const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
+const jsonWebTokenSecretKeyAdmin = config.jsonWebTokenSecretKeyAdmin && config.jsonWebTokenSecretKeyAdmin.trim() != "" ? config.jsonWebTokenSecretKeyAdmin : generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKey);
 
 // Internationalization
 i18n.configure({
@@ -243,8 +244,14 @@ function getRandomRoomKey() {
   return r;
 }
 
-function generateRandomJsonWebTokenSecretKey() {
-  return require("crypto").randomBytes(256).toString("base64");
+function generateRandomJsonWebTokenSecretKey(precValue) {
+  let key;
+  
+  do {
+    key = require("crypto").randomBytes(256).toString("base64");
+  } while(precValue && precValue == key);
+
+  return key;
 }
 
 function getMaxPlayers(code) {
@@ -1066,7 +1073,7 @@ function verifyFormAuthenticationAdmin(body) {
 
 app.get("/admin", function(req, res) {
   if(req.cookies) {
-    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKey, function(err, data) {
+    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
       const usernames = Object.keys(config.adminAccounts);
 
@@ -1133,7 +1140,7 @@ app.get("/admin", function(req, res) {
 
 app.post("/admin", function(req, res) {
   if(req.cookies) {
-    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKey, function(err, data) {
+    jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) res = true;
 
       if(err) {
@@ -1142,10 +1149,11 @@ app.post("/admin", function(req, res) {
 
           const token = jwt.sign({
             username: username
-          }, jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
+          }, jsonWebTokenSecretKeyAdmin, { expiresIn: config.authenticationTime / 1000 });
       
           res.cookie("tokenAdmin", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "strict", secure: (req.protocol == "https" ? true : false)  });
           res.redirect("/admin");
+          logger.info("admin authent - username: " + username + " - ip: " + req.ip);
           return;
         }, (err) => {
           res.render(__dirname + "/admin.html", {
