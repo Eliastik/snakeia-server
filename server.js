@@ -902,7 +902,9 @@ app.get("/", function(req, res) {
 
 app.get("/authentication", function(req, res) {
   if(req.cookies && config.enableAuthentication) {
-    jwt.verify(req.cookies.token, jsonWebTokenSecretKey, function(err, data) {
+    let err = false;
+
+    checkAuthenticationExpress(req).catch(() => err = true).finally(() => {
       res.render(__dirname + "/authentication.html", {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
@@ -926,7 +928,9 @@ app.get("/authentication", function(req, res) {
 
 app.post("/authentication", function(req, res) {
   if(req.cookies && config.enableAuthentication) {
-    jwt.verify(req.cookies.token, jsonWebTokenSecretKey, function(err, data) {
+    let err = false;
+    
+    checkAuthenticationExpress(req).catch(() => err = true).finally(() => {
       if(err) {
         verifyFormAuthentication(req.body).then(() => {
           const username = req.body["username"];
@@ -1248,12 +1252,11 @@ app.post("/admin", function(req, res) {
 io.use(ioCookieParser());
 io.origins("*:*"); // CORS
 
-function checkAuthentication(socket) {
+function checkAuthentication(token) {
   return new Promise((resolve, reject) => {
     if(!config.enableAuthentication) {
       resolve();
     } else {
-      const token = socket.handshake.query.token || socket.request.cookies.token;
       if(token && invalidatedUserTokens.includes(token)) reject();
   
       jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
@@ -1267,6 +1270,14 @@ function checkAuthentication(socket) {
   });
 }
 
+function checkAuthenticationSocket(socket) {
+  return checkAuthentication(socket.handshake.query.token || socket.request.cookies.token);
+}
+
+function checkAuthenticationExpress(req) {
+  return checkAuthentication(req.cookies.token);
+}
+
 io.use(function(socket, next) {
   ipBanned(socket.handshake.address).then(() => {
     next(new Error(GameConstants.Error.BANNED));
@@ -1276,7 +1287,7 @@ io.use(function(socket, next) {
 });
 
 io.of("/rooms").on("connection", function(socket) {
-  checkAuthentication(socket).then(() => {
+  checkAuthenticationSocket(socket).then(() => {
     socket.emit("rooms", {
       rooms: getRoomsData(),
       serverVersion: config.version,
@@ -1297,7 +1308,7 @@ io.of("/rooms").on("connection", function(socket) {
 
 io.of("/createRoom").on("connection", function(socket) {
   socket.on("create", function(data) {
-    checkAuthentication(socket).then(() => {
+    checkAuthenticationSocket(socket).then(() => {
       createRoom(data, socket);
     }, () => {
       socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
@@ -1306,7 +1317,7 @@ io.of("/createRoom").on("connection", function(socket) {
 });
 
 io.on("connection", function(socket) {
-  checkAuthentication(socket).then((token) => {
+  checkAuthenticationSocket(socket).then((token) => {
     socket.emit("authent", GameConstants.GameState.AUTHENTICATION_SUCCESS);
     tokens.push(token);
 
