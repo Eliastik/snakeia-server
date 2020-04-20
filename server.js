@@ -41,6 +41,7 @@ const GameConstants  = snakeia.GameConstants;
 const games = {}; // contains all the games processed by the server
 const config = {}; // server configuration (see default config file config.json)
 const tokens = []; // user tokens
+const invalidatedUserTokens = []; // Invalidated admin tokens
 const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 // Load config file
@@ -985,9 +986,20 @@ app.get("/rooms", function(req, res) {
 });
 
 // Admin panel
-function kickUser(socketId) {
+function kickUser(socketId, token) {
   if(io.sockets.connected[socketId]) {
     io.sockets.connected[socketId].disconnect(true);
+    invalidatedUserToken(token);
+  }
+}
+
+function invalidatedUserToken(token) {
+  invalidatedUserTokens.push(token);
+
+  for(let i = tokens.length - 1; i >= 0; i--) {
+    if(tokens[i] == token) {
+      tokens.splice(i, 1);
+    }
   }
 }
 
@@ -1069,20 +1081,20 @@ app.get("/admin", function(req, res) {
   
               switch(action) {
                 case "kick":
-                  kickUser(socket);
+                  kickUser(socket, token);
                   break;
                 case "banIP":
                   banUserIP(socket);
-                  kickUser(socket);
+                  kickUser(socket, token);
                   break;
                 case "banUserName":
                   banUserName(token);
-                  kickUser(socket);
+                  kickUser(socket, token);
                   break;
                 case "banIPUserName":
                   banUserIP(socket);
                   banUserName(token);
-                  kickUser(socket);
+                  kickUser(socket, token);
                   break;
               }
 
@@ -1154,6 +1166,7 @@ function checkAuthentication(socket) {
       resolve();
     } else {
       const token = socket.handshake.query.token || socket.request.cookies.token;
+      if(token && invalidatedUserTokens.includes(token)) reject();
   
       jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
         if(!err) {

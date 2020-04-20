@@ -51,8 +51,8 @@
                     <strong><%= __("idSocket") %></strong> <%= user.id %><br />
                     <strong><%= __("ip") %></strong> <%= user.id && io.sockets.connected[user.id] && io.sockets.connected[user.id].handshake.address %><br />
                     <strong><%= __("clientVersion") %></strong> <%= user.version %><br />
-                    <a href="?action=kick&socket=<%= user.id %>" class="btn btn-primary"><%= __("kick") %></a>
-                    <a href="?action=banIP&socket=<%= user.id %>" class="btn btn-primary"><%= __("banIP") %></a>
+                    <a href="?action=kick&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
+                    <a href="?action=banIP&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
                     <a href="?action=banUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsername") %></a>
                     <a href="?action=banIPUserName&socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banUsernameIP") %></a>
                   </li>
