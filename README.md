@@ -77,7 +77,7 @@ npm start config.json
     "logFile": "logs/server.log", // Log file
     "errorLogFile": "logs/error.log", // Error log file
     "logLevel": "debug" // Log level (see Winston documentation),
-    "adminAccounts": { // User accounts of the administrator panel
+    "adminAccounts": { // User accounts of the administrator panel (can be accessed at serverDomain/admin)
         "test": { // Username
             "password": "", // Password SHA-512 hash
             "role": "administrator" // Role (administrator or moderator) - defaults to moderator
@@ -163,7 +163,7 @@ npm start config.json
     "logFile": "logs/server.log", // Fichier de log
     "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
     "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
-    "adminAccounts": { // Compte utilisateurs du panel d'administration
+    "adminAccounts": { // Compte utilisateurs du panel d'administration (peut être accédé à serverDomain/admin)
         "test": { // Nom d'utilisateur
             "password": "", // Hash SHA-512 du mot de passe
             "role": "administrator" // Rôle (administrator ou moderator) - par défaut moderator
@@ -174,17 +174,12 @@ npm start config.json
 
 ## TO-DO
 
-### À faire
-
-* Multithreading
-
-### Fait
-
-* Limite de temps maximale par partie
-* Envoyer directement l'état d'une partie aux spectateurs (actuellement il y a un délai)
-* Ajouter possibilité de remplir une partie avec des IAs
-* Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
-* Panel d'administration
+- [ ] Multithreading
+- [x] Limite de temps maximale par partie
+- [x] Envoyer directement l'état d'une partie aux spectateurs (actuellement il y a un délai)
+- [x] Ajouter possibilité de remplir une partie avec des IAs
+- [x] Empêcher choix du même nom d'utilisateur qu'un autre utilisateur
+- [x] Panel d'administration
 
 ## Déclaration de licence
 

@@ -880,11 +880,6 @@ app.use("/authentication", rateLimit({
   max: config.authentMaxRequest
 }));
 
-app.use("/admin", rateLimit({
-  windowMs: config.authentWindowMs,
-  max: config.authentMaxRequest
-}));
-
 // IP ban
 app.use(function(req, res, next) {
   ipBanned(req.ip).then(() => {
@@ -1274,7 +1269,12 @@ app.use(function (err, req, res, next) {
   res.send("Error");
 });
 
-app.post("/admin", function(req, res) {
+const adminRateLimiter = rateLimit({
+  windowMs: config.authentWindowMs,
+  max: config.authentMaxRequest
+});
+
+app.post("/admin", adminRateLimiter, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) res = true;
