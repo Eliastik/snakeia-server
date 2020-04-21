@@ -41,7 +41,7 @@
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#banList"><%= __("banList") %></a></li>
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#manualBan"><%= __("manualBan") %></a></li>
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#logs"><%= __("logs") %></a></li>
-              <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#config"><%= __("config") %></a></li>
+              <% if(role === "administrator") { %><li class="nav-item"><a class="nav-link" data-toggle="tab" href="#config"><%= __("config") %></a></li><% } %>
             </ul>
             <div class="tab-content">
               <div class="tab-pane fade show active" id="roomList" role="tabpanel">
@@ -163,7 +163,7 @@
                       <div class="card-body">
                         <% if(serverLog && serverLog.trim() != "") { %>
                           <pre class="pre-scrollable text-left mb-0"><%= serverLog %></pre>
-                          <button data-action="resetLog" data-confirm-action="true" class="btn btn-block btn-danger"><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
+                          <button data-action="resetLog" data-confirm-action="true" class="btn btn-block btn-danger <% if(role !== "administrator") { %>disabled<% } %>" <% if(role !== "administrator") { %>disabled="true"<% } %>><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
                         <% } else { %>
                           <%= __("fileEmpty") %>
                         <% } %>
@@ -180,7 +180,7 @@
                       <div class="card-body">
                         <% if(errorLog && errorLog.trim() != "") { %>
                           <pre class="pre-scrollable text-left mb-0"><%= errorLog %></pre>
-                          <button data-action="resetErrorLog" data-confirm-action="true" class="btn btn-block btn-danger"><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
+                          <button data-action="resetErrorLog" data-confirm-action="true" class="btn btn-block btn-danger <% if(role !== "administrator") { %>disabled<% } %>" <% if(role !== "administrator") { %>disabled="true"<% } %>><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
                         <% } else { %>
                           <%= __("fileEmpty") %>
                         <% } %>
@@ -189,6 +189,7 @@
                   </div>
                 </div>
               </div>
+              <% if(role === "administrator") { %>
               <div class="tab-pane fade" id="config" role="tabpanel">
                 <form method="POST" action="/admin/updateConfig">
                 <% if(config) { %>
@@ -203,7 +204,9 @@
                 <% } %>
                 </form>
               </div>
+              <% } %>
             </div>
+            <p><%= __("loggedInAs") %> <strong><%= username %></strong> – <%= __("role") %> <strong><%= __(role) %></strong></p>
             <p><a href="#" data-action="disconnect" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
             <% } else { %>
             <form action="" method="post">

@@ -57,5 +57,9 @@
 	"generalLogFile": "General log file",
 	"errorLogFile": "Error log file",
 	"fileEmpty": "This file is empty.",
-	"config": "Configuration du serveur"
+	"config": "Server configuration",
+	"moderator": "Moderator",
+	"administrator": "Administrator",
+	"role": "Role:",
+	"loggedInAs": "Logged in as"
 }

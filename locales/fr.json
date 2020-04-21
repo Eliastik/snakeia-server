@@ -57,5 +57,9 @@
 	"generalLogFile": "Fichier journal général",
 	"errorLogFile": "Fichier journal des erreurs",
 	"fileEmpty": "Ce fichier est vide.",
-	"config": "Configuration"
+	"config": "Configuration du serveur",
+	"moderator": "Modérateur",
+	"administrator": "Administrateur",
+	"role": "Rôle :",
+	"loggedInAs": "Connecté en tant que"
 }

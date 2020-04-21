@@ -77,7 +77,10 @@ npm start config.json
     "errorLogFile": "logs/error.log", // Error log file
     "logLevel": "debug" // Log level (see Winston documentation),
     "adminAccounts": { // User accounts of the administrator panel
-        "test": "" // "Username": "SHA-512 password hash"
+        "test": { // Username
+            "password": "", // Password SHA-512 hash
+            "role": "administrator" // Role (administrator or moderator) - defaults to moderator
+        }
     }
 }
 ````
@@ -159,7 +162,10 @@ npm start config.json
     "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
     "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
     "adminAccounts": { // Compte utilisateurs du panel d'administration
-        "test": "" // "Nom d'utilisateur": "Hash SHA-512 du mot de passe"
+        "test": { // Nom d'utilisateur
+            "password": "", // Hash SHA-512 du mot de passe
+            "role": "administrator" // Rôle (administrator ou moderator) - par défaut moderator
+        }
     }
 }
 ````
