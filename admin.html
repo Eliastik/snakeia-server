@@ -40,6 +40,8 @@
               <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#roomList"><%= __("roomList") %></a></li>
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#banList"><%= __("banList") %></a></li>
               <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#manualBan"><%= __("manualBan") %></a></li>
+              <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#logs"><%= __("logs") %></a></li>
+              <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#config"><%= __("config") %></a></li>
             </ul>
             <div class="tab-content">
               <div class="tab-pane fade show active" id="roomList" role="tabpanel">
@@ -52,7 +54,7 @@
                   <div class="accordion" id="accordion">
                     <div class="card">
                       <div class="card-header" id="heading<%= currentRoom %>">
-                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse<%= currentRoom %>" aria-expanded="true" aria-controls="collapseOne">
+                        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse<%= currentRoom %>" aria-expanded="true" aria-controls="collapse<%= currentRoom %>">
                           <%= __("roomAdmin", currentRoom, key) %>
                         </button>
                       </div>
@@ -149,6 +151,58 @@
                   </div>
                 </form>
               </div>
+              <div class="tab-pane fade" id="logs" role="tabpanel">
+                <div class="accordion" id="accordionLogs">
+                  <div class="card">
+                    <div class="card-header" id="headingLogFile">
+                      <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseLogFile" aria-expanded="true" aria-controls="collapseLogFile">
+                        <%= __("generalLogFile") %>
+                      </button>
+                    </div>
+                    <div id="collapseLogFile" class="collapse" aria-labelledby="headingLogFile" data-parent="#accordionLogs">
+                      <div class="card-body">
+                        <% if(serverLog && serverLog.trim() != "") { %>
+                          <pre class="pre-scrollable text-left mb-0"><%= serverLog %></pre>
+                          <button data-action="resetLog" data-confirm-action="true" class="btn btn-block btn-danger"><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
+                        <% } else { %>
+                          <%= __("fileEmpty") %>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <div class="card-header" id="headingErrorLogFile">
+                      <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseErrorLogFile" aria-expanded="true" aria-controls="collapseErrorLogFile">
+                        <%= __("errorLogFile") %>
+                      </button>
+                    </div>
+                    <div id="collapseErrorLogFile" class="collapse" aria-labelledby="headingErrorLogFile" data-parent="#accordionLogs">
+                      <div class="card-body">
+                        <% if(errorLog && errorLog.trim() != "") { %>
+                          <pre class="pre-scrollable text-left mb-0"><%= errorLog %></pre>
+                          <button data-action="resetErrorLog" data-confirm-action="true" class="btn btn-block btn-danger"><span class="fui-trash mr-2"></span> <%= __("reset") %></button>
+                        <% } else { %>
+                          <%= __("fileEmpty") %>
+                        <% } %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="config" role="tabpanel">
+                <form method="POST" action="/admin/updateConfig">
+                <% if(config) { %>
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <textarea name="value" spellcheck="false" class="form-control" rows="20"><%= JSON.stringify(config, null, 4) %></textarea>
+                  <div class="form-group row">
+                    <div class="btn-group col">
+                      <button type="reset" class="btn btn-danger"><span class="fui-cross mr-2"></span> <%= __("reset") %></button>
+                      <button type="submit" class="btn btn-primary"><span class="fui-check mr-2"></span> <%= __("submit") %></button>
+                    </div>
+                  </div>
+                <% } %>
+                </form>
+              </div>
             </div>
             <p><a href="#" data-action="disconnect" class="btn btn-lg btn-danger"><span class="fui-power mr-2"></span> <%= __("disconnectAdmin") %></a></p>
             <% } else { %>
@@ -219,6 +273,7 @@
         var action = element.dataset.action;
         var form = element.dataset.form;
         var data = {};
+        var confirmAction = element.dataset.confirmAction;
 
         if(form) {
           form.split("&").forEach(function(element) {
@@ -231,8 +286,11 @@
         }
 
         element.addEventListener("click", function() {
-          element.classList.add("disabled");
-          requestAction(action, data);
+          if((confirmAction && confirm("<%= __("actionConfirmAdmin") %>")) || !confirmAction) {
+            element.classList.add("disabled");
+            element.disabled = true;
+            requestAction(action, data);
+          }
         });
       });
     </script>

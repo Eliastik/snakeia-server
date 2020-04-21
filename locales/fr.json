@@ -50,5 +50,12 @@
 	"noElement": "Aucun élément…",
 	"manualBan": "Ban manuel",
 	"ban": "Bannir",
-	"usernameTwo": "Nom d'utilisateur :"
+	"usernameTwo": "Nom d'utilisateur :",
+	"logs": "Fichiers journaux",
+	"actionConfirmAdmin": "Êtes-vous sûr de vouloir effectuer cette action ?",
+	"reset": "Réinitialiser",
+	"generalLogFile": "Fichier journal général",
+	"errorLogFile": "Fichier journal des erreurs",
+	"fileEmpty": "Ce fichier est vide.",
+	"config": "Configuration"
 }

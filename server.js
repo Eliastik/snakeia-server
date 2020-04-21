@@ -958,7 +958,7 @@ app.post("/authentication", function(req, res) {
             maxTimeGame: config.maxTimeGame
           });
 
-          logger.info("authentification - username: " + username + " - ip: " + req.ip);
+          logger.info("authentication - username: " + username + " - ip: " + req.ip);
 
           if(id != null) {
             io.to("" + id).emit("token", token);
@@ -1081,6 +1081,32 @@ function manualIPBan(value) {
   updateConfigToFile();
 }
 
+function resetLog() {
+  fs.writeFileSync(config.logFile, "", "UTF-8");
+  logger.info("log file reseted");
+}
+
+function resetErrorLog() {
+  fs.writeFileSync(config.errorLogFile, "", "UTF-8");
+  logger.info("error log file reseted");
+}
+
+function updateConfig(value) {
+  try {
+    const parsed = JSON.parse(value);
+    const keys = Object.keys(parsed);
+
+    for(let i = 0; i < keys.length; i++) {
+      config[keys[i]] = parsed[keys[i]];
+    }
+
+    updateConfigToFile();
+    logger.info("updated config file");
+  } catch(e) {
+    logger.info("update config file - exception: " + e);
+  }
+}
+
 function verifyFormAuthenticationAdmin(body) {
   return new Promise((resolve, reject) => {
     verifyRecaptcha(body["g-recaptcha-response"]).then(() => {
@@ -1118,19 +1144,25 @@ app.get("/admin", csrfProtection, function(req, res) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
       const usernames = Object.keys(config.adminAccounts);
-
-      res.render(__dirname + "/admin.html", {
-        publicKey: config.recaptchaPublicKey,
-        enableRecaptcha: config.enableRecaptcha,
-        authent: !err && data && data.username && usernames.includes(data.username),
-        success: false,
-        errorAuthent: false,
-        errorRecaptcha: false,
-        locale: i18n.getLocale(req),
-        games: games,
-        io: io,
-        config: config,
-        csrfToken: req.csrfToken()
+      
+      fs.readFile(config.logFile, "UTF-8", function(e1, logFile) {
+        fs.readFile(config.errorLogFile, "UTF-8", function(e2, errorLogFile) {
+          res.render(__dirname + "/admin.html", {
+            publicKey: config.recaptchaPublicKey,
+            enableRecaptcha: config.enableRecaptcha,
+            authent: !err && data && data.username && usernames.includes(data.username),
+            success: false,
+            errorAuthent: false,
+            errorRecaptcha: false,
+            locale: i18n.getLocale(req),
+            games: games,
+            io: io,
+            config: config,
+            csrfToken: req.csrfToken(),
+            serverLog: logFile,
+            errorLog: errorLogFile
+          });
+        });
       });
     });
   } else {
@@ -1191,6 +1223,15 @@ function adminAction(req, res, action) {
                 case "unbanIP":
                   unbanIP(value);
                   break;
+                case "resetLog":
+                  resetLog();
+                  break;
+                case "resetErrorLog":
+                  resetErrorLog();
+                  break;
+                case "updateConfig":
+                  updateConfig(value);
+                  break;
               }
 
               res.redirect("/admin");
@@ -1210,32 +1251,8 @@ function adminAction(req, res, action) {
 
 const jsonParser = bodyParser.json();
 
-app.post("/admin/disconnect", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "disconnect");
-});
-
-app.post("/admin/kick", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "kick");
-});
-
-app.post("/admin/banIP", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "banIP");
-});
-
-app.post("/admin/banUserName", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "banUserName");
-});
-
-app.post("/admin/banIPUserName", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "banIPUserName");
-});
-
-app.post("/admin/unbanUsername", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "unbanUsername");
-});
-
-app.post("/admin/unbanIP", jsonParser, csrfProtection, function(req, res) {
-  adminAction(req, res, "unbanIP");
+app.post("/admin/:action", jsonParser, csrfProtection, function(req, res) {
+  adminAction(req, res, req.params.action);
 });
 
 app.use(function (err, req, res, next) {
@@ -1270,9 +1287,11 @@ app.post("/admin", function(req, res) {
             errorRecaptcha: err == "INVALID_RECAPTCHA",
             locale: i18n.getLocale(req),
             games: null,
-            io: io,
-            config: config,
-            csrfToken: null
+            io: null,
+            config: null,
+            csrfToken: null,
+            serverLog: null,
+            errorLog: null
           });
         });
       }

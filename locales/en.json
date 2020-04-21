@@ -50,5 +50,12 @@
 	"noElement": "No element…",
 	"manualBan": "Manual ban",
 	"ban": "Ban",
-	"usernameTwo": "Username:"
+	"usernameTwo": "Username:",
+	"logs": "Log files",
+	"actionConfirmAdmin": "Are you sure you want to perform this action?",
+	"reset": "Reset",
+	"generalLogFile": "General log file",
+	"errorLogFile": "Error log file",
+	"fileEmpty": "This file is empty.",
+	"config": "Configuration du serveur"
 }

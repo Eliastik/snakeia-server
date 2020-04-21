@@ -100,3 +100,11 @@ textarea {
   border-bottom: 1px solid #dee2e6;
   margin-bottom: 8px;
 }
+
+pre {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
