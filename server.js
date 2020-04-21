@@ -90,6 +90,10 @@ if(process.env.NODE_ENV !== "production") {
   }));
 }
 
+if(config.proxyMode) {
+  app.enable("trust proxy");
+}
+
 // Update config to file
 function updateConfigToFile() {
   fs.writeFileSync(configFile, JSON.stringify(config, null, 4), "UTF-8");
@@ -368,7 +372,7 @@ function createRoom(data, socket) {
 
       games[code].numberAIToAdd = enableAI ? Math.round(getMaxPlayers(code) / 2 - 1) : 0;
 
-      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + socket.handshake.address + " - socket: " + socket.id, {
+      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id, {
         "widthGrid": widthGrid,
         "heightGrid": heightGrid,
         "generateWalls": generateWalls,
@@ -740,7 +744,7 @@ function setupSpectators(code) {
 
 function exitGame(game, socket, code) {
   if(game) {
-    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address + " - socket: " + socket.id);
+    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
 
     if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
       Player.getPlayer(game.players, socket.id).snake.gameOver = true;
@@ -1001,7 +1005,7 @@ app.get("/rooms", function(req, res) {
 // Admin panel
 function kickUser(socketId, token) {
   if(io.sockets.connected[socketId]) {
-    logger.info("user kicked (socket: " + socketId + ") - ip: " + io.sockets.connected[socketId].handshake.address);
+    logger.info("user kicked (socket: " + socketId + ") - ip: " + getIPSocketIO(io.sockets.connected[socketId].handshake));
     io.sockets.connected[socketId].disconnect(true);
     invalidateUserToken(token);
   }
@@ -1029,7 +1033,7 @@ function invalidateUserToken(token) {
 
 function banUserIP(socketId) {
   if(io.sockets.connected[socketId]) {
-    let ip = io.sockets.connected[socketId].handshake.address;
+    let ip = getIPSocketIO(io.sockets.connected[socketId].handshake);
 
     if(ip && ip.substr(0, 7) == "::ffff:") {
       ip = ip.substr(7, ip.length);
@@ -1169,7 +1173,8 @@ app.get("/admin", csrfProtection, function(req, res) {
             config: config,
             csrfToken: req.csrfToken(),
             serverLog: logFile,
-            errorLog: errorLogFile
+            errorLog: errorLogFile,
+            getIPSocketIO: getIPSocketIO
           });
         });
       });
@@ -1299,7 +1304,8 @@ app.post("/admin", function(req, res) {
             config: null,
             csrfToken: null,
             serverLog: null,
-            errorLog: null
+            errorLog: null,
+            getIPSocketIO: getIPSocketIO
           });
         });
       }
@@ -1311,6 +1317,25 @@ app.post("/admin", function(req, res) {
 
 io.use(ioCookieParser());
 io.origins("*:*"); // CORS
+
+function getIPSocketIO(req) {
+  let ipAddress;
+
+  if(req && req.headers) {
+    const forwardedIpsStr = req.headers["x-forwarded-for"];
+  
+    if(forwardedIpsStr && forwardedIpsStr !== undefined && config.proxyMode) {
+      const forwardedIps = forwardedIpsStr.split(",");
+      ipAddress = forwardedIps[0];
+    }
+  
+    if(!ipAddress) {
+      ipAddress = req.address;
+    }
+  }
+
+  return ipAddress;
+}
 
 function checkAuthentication(token) {
   return new Promise((resolve, reject) => {
@@ -1339,7 +1364,7 @@ function checkAuthenticationExpress(req) {
 }
 
 io.use(function(socket, next) {
-  ipBanned(socket.handshake.address).then(() => {
+  ipBanned(getIPSocketIO(socket.handshake)).then(() => {
     next(new Error(GameConstants.Error.BANNED));
   }, () => {
     next();
@@ -1491,7 +1516,7 @@ io.on("connection", function(socket) {
           }
         });
   
-        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + socket.handshake.address + " - socket: " + socket.id);
+        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
       } else {
         if(games[code] == null) {
           socket.emit("join-room", {

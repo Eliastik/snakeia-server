@@ -47,6 +47,7 @@ npm start config.json
 {
     "version": "1.0", // The server version
     "port": 3000, // The port where the server runs
+    "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
     "maxPlayers": 20, // The maximum number of players for each room
     "maxRooms": 20, // The maximum number of room
     "minGridSize": 5, // The minimum size for a grid (width and height)
@@ -132,6 +133,7 @@ npm start config.json
 {
     "version": "1.0", // La version du serveur
     "port": 3000, // Le port sur lequel lancer le server
+    "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
     "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
     "maxRooms": 20, // Le nombre maximal de salles
     "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
