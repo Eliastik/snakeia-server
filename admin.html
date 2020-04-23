@@ -253,7 +253,7 @@
     <script type="text/javascript">
       var token = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
-      function requestAction(action, data) {
+      function requestAction(action, data, element) {
         fetch("/admin/" + action, {
           credentials: "same-origin",
           headers: {
@@ -267,6 +267,9 @@
           if(response.ok && response.redirected) {
             location.href = response.url;
           }
+        }).catch(() => {
+          element.classList.remove("disabled");
+          element.disabled = false;
         });
       }
 
