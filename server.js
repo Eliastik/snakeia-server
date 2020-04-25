@@ -568,7 +568,6 @@ function setupRoom(code) {
       "snakes": copySnakes(game.snakes),
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
-      "offsetFrame": 0,
       "errorOccurred": game.errorOccurred,
       "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
     });
