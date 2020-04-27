@@ -661,7 +661,8 @@ function gameMatchmaking(game, code) {
         "errorOccurred": game.game.errorOccurred,
         "onlineMaster": false,
         "onlineMode": true,
-        "enableRetryPauseMenu": false
+        "enableRetryPauseMenu": false,
+        "countBeforePlay": game.countBeforePlay
       });
 
       io.to(game.players[0].id).emit("init", {
@@ -719,6 +720,7 @@ function startGame(code) {
       game.game.start();
       game.alreadyInit = true;
     } else {
+      game.game.countBeforePlay = 3;
       game.game.init();
       game.game.reset();
     }
@@ -735,7 +737,7 @@ function setupSpectators(code) {
       io.to(game.spectators[i].id).emit("init", {
         "spectatorMode": true,
         "onlineMode": true,
-        "enableRetryPauseMenu": false,
+        "enableRetryPauseMenu": false
       });
     }
   }
@@ -1422,44 +1424,45 @@ io.on("connection", function(socket) {
         socket.emit("join-room", {
           success: true
         });
-        
-        if(game.started) {
-          socket.emit("init", {
-            "paused": game.game.paused,
-            "isReseted": game.game.isReseted,
-            "exited": game.game.exited,
-            "snakes": copySnakes(game.game.snakes),
-            "grid": game.game.grid,
-            "numFruit": game.game.numFruit,
-            "ticks": game.game.ticks,
-            "scoreMax": game.game.scoreMax,
-            "gameOver": game.game.gameOver,
-            "gameFinished": game.game.gameFinished,
-            "gameMazeWin": game.game.gameMazeWin,
-            "starting": game.game.starting,
-            "initialSpeed": game.game.initialSpeed,
-            "speed": game.game.speed,
-            "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-            "confirmReset": false,
-            "confirmExit": false,
-            "getInfos": false,
-            "getInfosGame": false,
-            "errorOccurred": game.game.errorOccurred,
-            "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
-          });
-        }
       
         socket.once("start", () => {
           if(Player.containsId(game.players, socket.id)) {
             Player.getPlayer(game.players, socket.id).ready = true;
           }
-  
-          socket.emit("init", {
-            "enablePause": game.game.enablePause,
-            "enableRetry": game.game.enableRetry,
-            "progressiveSpeed": game.game.progressiveSpeed,
-            "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
-          });
+        
+          if(game.started) {
+            socket.emit("init", {
+              "paused": game.game.paused,
+              "isReseted": game.game.isReseted,
+              "exited": game.game.exited,
+              "snakes": copySnakes(game.game.snakes),
+              "grid": game.game.grid,
+              "numFruit": game.game.numFruit,
+              "ticks": game.game.ticks,
+              "scoreMax": game.game.scoreMax,
+              "gameOver": game.game.gameOver,
+              "gameFinished": game.game.gameFinished,
+              "gameMazeWin": game.game.gameMazeWin,
+              "starting": game.game.starting,
+              "initialSpeed": game.game.initialSpeed,
+              "speed": game.game.speed,
+              "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+              "confirmReset": false,
+              "confirmExit": false,
+              "getInfos": false,
+              "getInfosGame": false,
+              "errorOccurred": game.game.errorOccurred,
+              "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
+              "countBeforePlay": game.game.countBeforePlay
+            });
+          } else {
+            socket.emit("init", {
+              "enablePause": game.game.enablePause,
+              "enableRetry": game.game.enableRetry,
+              "progressiveSpeed": game.game.progressiveSpeed,
+              "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
+            });
+          }
   
           gameMatchmaking(game, code);
   
