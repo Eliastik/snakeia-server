@@ -417,9 +417,11 @@ function createRoom(data, socket) {
 function copySnakes(snakes) {
   const copy = JSON.parse(JSON.stringify(snakes));
 
-  copy.forEach(snake => {
-    delete snake["grid"];
-  });
+  if(copy) {
+    copy.forEach(snake => {
+      delete snake["grid"];
+    });
+  }
 
   return copy;
 }
@@ -611,6 +613,10 @@ function cleanRooms() {
   
       if(nb <= 0) {
         toRemove.push(keys[i]);
+
+        if(game.game && game.game.kill) {
+          game.game.kill();
+        }
       }
     }
   }
