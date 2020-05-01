@@ -1505,7 +1505,9 @@ io.on("connection", function(socket) {
   
             socket.emit("reset", {
               "gameOver": false,
-              "gameFinished": false
+              "gameFinished": false,
+              "scoreMax": false,
+              "gameMazeWin": false
             });
           }
         });
