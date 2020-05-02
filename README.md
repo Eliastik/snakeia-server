@@ -48,6 +48,7 @@ npm start config.json
     "version": "1.0", // The server version
     "port": 3000, // The port where the server runs
     "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
+    "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
     "maxPlayers": 20, // The maximum number of players for each room
     "maxRooms": 20, // The maximum number of room
     "minGridSize": 5, // The minimum size for a grid (width and height)
@@ -134,6 +135,7 @@ npm start config.json
     "version": "1.0", // La version du serveur
     "port": 3000, // Le port sur lequel lancer le server
     "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
+    "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
     "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
     "maxRooms": 20, // Le nombre maximal de salles
     "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
@@ -174,7 +176,7 @@ npm start config.json
 
 ## TO-DO
 
-- [ ] Multithreading
+- [x] Multithreading
 - [x] Limite de temps maximale par partie
 - [x] Envoyer directement l'état d'une partie aux spectateurs (actuellement il y a un délai)
 - [x] Ajouter possibilité de remplir une partie avec des IAs

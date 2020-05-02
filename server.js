@@ -749,6 +749,18 @@ function setupSpectators(code) {
   }
 }
 
+function sendKeys(code) {
+  if(config.enableMultithreading) {
+    const game = games[code];
+
+    if(game != null) {
+      for(let i = 0; i < game.players.length; i++) {
+        game.game.key(game.players[i].snake.lastKey, i + 1);
+      }
+    }
+  }
+}
+
 function exitGame(game, socket, code) {
   if(game) {
     logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
@@ -1490,6 +1502,7 @@ io.on("connection", function(socket) {
         socket.on("key", function(key) {
           if(game != null && Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake) {
             Player.getPlayer(game.players, socket.id).snake.lastKey = key;
+            sendKeys(code);
           }
         });
   

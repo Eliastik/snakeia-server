@@ -82,193 +82,199 @@ function parseSnakes(snakes, grid) {
 if(!isMainThread) {
   parentPort.on("message", (data) => {
     const type = data.type;
+    const keys = Object.keys(data);
 
-    if(type == "init" && !game) {
+    if(type == "init") {
       const parsed = parseSnakes(data.snakes, data.grid);
       const grid = parsed["grid"];
       const snakes = parsed["snakes"];
 
-      game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
-
-      parentPort.postMessage({
-        type: "init",
-        "snakes": copySnakes(game.snakes),
-        "grid": copyGrid(game.grid),
-        "enablePause": game.enablePause,
-        "enableRetry": game.enableRetry,
-        "progressiveSpeed": game.progressiveSpeed,
-        "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-        "errorOccurred": game.errorOccurred
-      });
+      if(!game) {
+        game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
+        game.init();
   
-      game.onReset(function() {
         parentPort.postMessage({
-          type: "reset",
-          "paused": game.paused,
-          "isReseted": game.isReseted,
-          "exited": game.exited,
+          type: "init",
           "snakes": copySnakes(game.snakes),
           "grid": copyGrid(game.grid),
-          "numFruit": game.numFruit,
-          "ticks": game.ticks,
-          "scoreMax": game.scoreMax,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "gameMazeWin": game.gameMazeWin,
-          "starting": game.starting,
-          "initialSpeed": game.initialSpeed,
-          "speed": game.speed,
+          "enablePause": game.enablePause,
+          "enableRetry": game.enableRetry,
+          "progressiveSpeed": game.progressiveSpeed,
           "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
           "errorOccurred": game.errorOccurred
         });
-      });
-  
-      game.onStart(function() {
-        parentPort.postMessage({
-          type: "start",
-          "snakes": copySnakes(game.snakes),
-          "grid": copyGrid(game.grid),
-          "starting": game.starting,
-          "countBeforePlay": game.countBeforePlay,
-          "paused": game.paused,
-          "isReseted": game.isReseted,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onReset(function() {
+          parentPort.postMessage({
+            type: "reset",
+            "paused": game.paused,
+            "isReseted": game.isReseted,
+            "exited": game.exited,
+            "snakes": copySnakes(game.snakes),
+            "grid": copyGrid(game.grid),
+            "numFruit": game.numFruit,
+            "ticks": game.ticks,
+            "scoreMax": game.scoreMax,
+            "gameOver": game.gameOver,
+            "gameFinished": game.gameFinished,
+            "gameMazeWin": game.gameMazeWin,
+            "starting": game.starting,
+            "initialSpeed": game.initialSpeed,
+            "speed": game.speed,
+            "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onPause(function() {
-        parentPort.postMessage({
-          type: "pause",
-          "paused": game.paused,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onStart(function() {
+          parentPort.postMessage({
+            type: "start",
+            "snakes": copySnakes(game.snakes),
+            "grid": copyGrid(game.grid),
+            "starting": game.starting,
+            "countBeforePlay": game.countBeforePlay,
+            "paused": game.paused,
+            "isReseted": game.isReseted,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onContinue(function() {
-        parentPort.postMessage({
-          type: "continue",
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onPause(function() {
+          parentPort.postMessage({
+            type: "pause",
+            "paused": game.paused,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onStop(function() {
-        parentPort.postMessage({
-          type: "stop",
-          "paused": game.paused,
-          "scoreMax": game.scoreMax,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onContinue(function() {
+          parentPort.postMessage({
+            type: "continue",
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onExit(function() {
-        parentPort.postMessage({
-          type: "exit",
-          "paused": game.paused,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "exited": game.exited,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onStop(function() {
+          parentPort.postMessage({
+            type: "stop",
+            "paused": game.paused,
+            "scoreMax": game.scoreMax,
+            "gameOver": game.gameOver,
+            "gameFinished": game.gameFinished,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onKill(function() {
-        parentPort.postMessage({
-          type: "kill",
-          "paused": game.paused,
-          "gameOver": game.gameOver,
-          "killed": game.killed,
-          "snakes": copySnakes(game.snakes),
-          "grid": copyGrid(game.grid),
-          "gameFinished": game.gameFinished,
-          "confirmReset": false,
-          "confirmExit": false,
-          "getInfos": false,
-          "getInfosGame": false,
-          "errorOccurred": game.errorOccurred
+    
+        game.onExit(function() {
+          parentPort.postMessage({
+            type: "exit",
+            "paused": game.paused,
+            "gameOver": game.gameOver,
+            "gameFinished": game.gameFinished,
+            "exited": game.exited,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onScoreIncreased(function() {
-        parentPort.postMessage({ type: "scoreIncreased" });
-      });
-      
-      game.onUpdate(function() {
-        parentPort.postMessage({
-          type: "update",
-          "paused": game.paused,
-          "isReseted": game.isReseted,
-          "exited": game.exited,
-          "snakes": copySnakes(game.snakes),
-          "grid": copyGrid(game.grid),
-          "numFruit": game.numFruit,
-          "ticks": game.ticks,
-          "scoreMax": game.scoreMax,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "gameMazeWin": game.gameMazeWin,
-          "starting": game.starting,
-          "initialSpeed": game.initialSpeed,
-          "speed": game.speed,
-          "countBeforePlay": game.countBeforePlay,
-          "numFruit": game.numFruit,
-          "offsetFrame": 0,
-          "errorOccurred": game.errorOccurred
+    
+        game.onKill(function() {
+          parentPort.postMessage({
+            type: "kill",
+            "paused": game.paused,
+            "gameOver": game.gameOver,
+            "killed": game.killed,
+            "snakes": copySnakes(game.snakes),
+            "grid": copyGrid(game.grid),
+            "gameFinished": game.gameFinished,
+            "confirmReset": false,
+            "confirmExit": false,
+            "getInfos": false,
+            "getInfosGame": false,
+            "errorOccurred": game.errorOccurred
+          });
         });
-      });
-  
-      game.onUpdateCounter(function() {
-        parentPort.postMessage({
-          type: "updateCounter",
-          "paused": game.paused,
-          "isReseted": game.isReseted,
-          "exited": game.exited,
-          "snakes": copySnakes(game.snakes),
-          "grid": copyGrid(game.grid),
-          "numFruit": game.numFruit,
-          "ticks": game.ticks,
-          "scoreMax": game.scoreMax,
-          "gameOver": game.gameOver,
-          "gameFinished": game.gameFinished,
-          "gameMazeWin": game.gameMazeWin,
-          "starting": game.starting,
-          "initialSpeed": game.initialSpeed,
-          "speed": game.speed,
-          "countBeforePlay": game.countBeforePlay,
-          "numFruit": game.numFruit,
-          "errorOccurred": game.errorOccurred
+    
+        game.onScoreIncreased(function() {
+          parentPort.postMessage({ type: "scoreIncreased" });
         });
-      });
+        
+        game.onUpdate(function() {
+          parentPort.postMessage({
+            type: "update",
+            "paused": game.paused,
+            "isReseted": game.isReseted,
+            "exited": game.exited,
+            "snakes": copySnakes(game.snakes),
+            "grid": copyGrid(game.grid),
+            "numFruit": game.numFruit,
+            "ticks": game.ticks,
+            "scoreMax": game.scoreMax,
+            "gameOver": game.gameOver,
+            "gameFinished": game.gameFinished,
+            "gameMazeWin": game.gameMazeWin,
+            "starting": game.starting,
+            "initialSpeed": game.initialSpeed,
+            "speed": game.speed,
+            "countBeforePlay": game.countBeforePlay,
+            "numFruit": game.numFruit,
+            "offsetFrame": 0,
+            "errorOccurred": game.errorOccurred
+          });
+        });
+    
+        game.onUpdateCounter(function() {
+          parentPort.postMessage({
+            type: "updateCounter",
+            "paused": game.paused,
+            "isReseted": game.isReseted,
+            "exited": game.exited,
+            "snakes": copySnakes(game.snakes),
+            "grid": copyGrid(game.grid),
+            "numFruit": game.numFruit,
+            "ticks": game.ticks,
+            "scoreMax": game.scoreMax,
+            "gameOver": game.gameOver,
+            "gameFinished": game.gameFinished,
+            "gameMazeWin": game.gameMazeWin,
+            "starting": game.starting,
+            "initialSpeed": game.initialSpeed,
+            "speed": game.speed,
+            "countBeforePlay": game.countBeforePlay,
+            "numFruit": game.numFruit,
+            "errorOccurred": game.errorOccurred
+          });
+        });
+      } else {
+        game.snakes = snakes;
+        game.grid = grid;
+        game.countBeforePlay = 3;
+        game.init();
+      }
     } else if(game) {
       switch(type) {
-        case "init":
-          game.init();
-          break;
         case "reset":
           game.reset();
           break;
@@ -302,13 +308,13 @@ if(!isMainThread) {
           game.forceStart();
           break;
         case "key":
-          if(data.length > 1) {
+          if(keys.length > 1) {
             const key = data.key;
             const numSnake = data.numSnake;
   
             var playerSnake = game.getPlayer(numSnake, GameConstants.PlayerType.HUMAN) || game.getPlayer(numSnake, GameConstants.PlayerType.HYBRID_HUMAN_AI);
   
-            if(playerSnake != null && playerSnake.lastKey != null) {
+            if(playerSnake) {
               playerSnake.lastKey = key;
             }
           }
