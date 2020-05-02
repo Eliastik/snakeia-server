@@ -130,8 +130,8 @@ class GameEngineMultithreadingController extends GameEngine {
     if(this.worker) this.worker.postMessage({ type: "start" });
   }
 
-  stop() {
-    if(this.worker) this.worker.postMessage({ type: "stop" });
+  stop(finish) {
+    if(this.worker) this.worker.postMessage({ type: finish ? "finish" : "stop" });
   }
 
   finish(finish) {
