@@ -34,16 +34,10 @@ const winston        = require("winston");
 const csrf           = require("csurf");
 const bodyParser     = require("body-parser");
 
-const snakeia        = require("snakeia");
-const Snake          = snakeia.Snake;
-const Grid           = snakeia.Grid;
-const GameEngine     = snakeia.GameEngine;
-const GameConstants  = snakeia.GameConstants;
-
-const games = {}; // contains all the games processed by the server
-const config = {}; // server configuration (see default config file config.json)
-const tokens = []; // user tokens
-const invalidatedUserTokens = []; // Invalidated admin tokens
+const games = {}; // Contains all the games processed by the server
+const config = {}; // Server configuration (see default config file config.json)
+const tokens = []; // User tokens
+const invalidatedUserTokens = []; // Invalidated user tokens
 const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 // Load config file
@@ -59,6 +53,12 @@ if(configFile != null) {
     Object.assign(config, JSON.parse(file));
   }
 }
+
+const snakeia        = require("snakeia");
+const Snake          = snakeia.Snake;
+const Grid           = snakeia.Grid;
+const GameConstants  = snakeia.GameConstants;
+const GameEngine     = config.enableMultithreading ? require("./GameEngineMultithreadingController") : snakeia.GameEngine;
 
 config.port = process.env.PORT || config.port;
 const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
@@ -890,7 +890,7 @@ app.use("/authentication", rateLimit({
 // IP ban
 app.use(function(req, res, next) {
   ipBanned(req.ip).then(() => {
-    res.render(__dirname + "/banned.html", {
+    res.render(__dirname + "/views/banned.html", {
       contact: config.contactBan
     });
     res.end();
@@ -900,7 +900,7 @@ app.use(function(req, res, next) {
 });
 
 app.get("/", function(req, res) {
-  res.render(__dirname + "/index.html", {
+  res.render(__dirname + "/views/index.html", {
     version: config.version,
     engineVersion: GameConstants.Setting.APP_VERSION
   });
@@ -911,7 +911,7 @@ app.get("/authentication", function(req, res) {
     let err = false;
 
     checkAuthenticationExpress(req).catch(() => err = true).finally(() => {
-      res.render(__dirname + "/authentication.html", {
+      res.render(__dirname + "/views/authentication.html", {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
         errorRecaptcha: false,
@@ -948,7 +948,7 @@ app.post("/authentication", function(req, res) {
       
           res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: (req.protocol == "https" ? true : false)  });
 
-          res.render(__dirname + "/authentication.html", {
+          res.render(__dirname + "/views/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: false,
@@ -970,7 +970,7 @@ app.post("/authentication", function(req, res) {
             io.to("" + id).emit("token", token);
           }
         }, (err) => {
-          res.render(__dirname + "/authentication.html", {
+          res.render(__dirname + "/views/authentication.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             errorRecaptcha: err == "INVALID_RECAPTCHA",
@@ -1160,7 +1160,7 @@ app.get("/admin", csrfProtection, function(req, res) {
       
       fs.readFile(config.logFile, "UTF-8", function(e1, logFile) {
         fs.readFile(config.errorLogFile, "UTF-8", function(e2, errorLogFile) {
-          res.render(__dirname + "/admin.html", {
+          res.render(__dirname + "/views/admin.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             authent: authenticated,
@@ -1299,7 +1299,7 @@ app.post("/admin", adminRateLimiter, function(req, res) {
           logger.info("admin authent - username: " + username + " - ip: " + req.ip);
           return;
         }, (err) => {
-          res.render(__dirname + "/admin.html", {
+          res.render(__dirname + "/views/admin.html", {
             publicKey: config.recaptchaPublicKey,
             enableRecaptcha: config.enableRecaptcha,
             authent: false,
