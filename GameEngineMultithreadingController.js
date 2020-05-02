@@ -106,8 +106,10 @@ class GameEngineMultithreadingController extends GameEngine {
       this.eventsInit = true;
     }
 
-    if(this.grid && this.grid.rngGrid) this.grid.rngGrid = null;
-    if(this.grid && this.grid.rngGame) this.grid.rngGame = null;
+    if(this.grid) {
+      this.grid.rngGrid = null;
+      this.grid.rngGame = null;
+    }
 
     this.worker.postMessage({
       type: "init",

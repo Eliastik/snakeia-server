@@ -33,6 +33,7 @@ const rateLimit      = require("express-rate-limit");
 const winston        = require("winston");
 const csrf           = require("csurf");
 const bodyParser     = require("body-parser");
+const seedrandom     = require("seedrandom");
 
 const games = {}; // Contains all the games processed by the server
 const config = {}; // Server configuration (see default config file config.json)
@@ -692,6 +693,8 @@ function startGame(code) {
     game.searchingPlayers = false;
     game.started = true;
     game.game.snakes = [];
+    game.game.grid.rngGrid = seedrandom(game.game.grid.seedGrid);
+    game.game.grid.rngGame = seedrandom(game.game.grid.seedGame);
     game.game.grid.init();
   
     for(let i = 0; i < game.players.length; i++) {
