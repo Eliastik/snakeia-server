@@ -143,7 +143,11 @@ class GameEngineMultithreadingController extends GameEngine {
   }
 
   kill() {
-    if(this.worker) this.worker.postMessage({ type: "kill" });
+    if(this.worker) {
+      this.worker.postMessage({ type: "kill" });
+      this.worker.terminate();
+      this.worker = null;
+    }
   }
 
   tick() {
