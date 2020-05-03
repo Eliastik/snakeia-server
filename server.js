@@ -669,7 +669,9 @@ function gameMatchmaking(game, code) {
         "onlineMaster": false,
         "onlineMode": true,
         "enableRetryPauseMenu": false,
-        "countBeforePlay": game.countBeforePlay
+        "countBeforePlay": game.countBeforePlay,
+        "initialSpeed": game.game.initialSpeed,
+        "speed": game.game.speed,
       });
 
       io.to(game.players[0].id).emit("init", {
