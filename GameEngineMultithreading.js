@@ -104,7 +104,7 @@ if(!isMainThread) {
           "errorOccurred": game.errorOccurred
         });
     
-        game.onReset(function() {
+        game.onReset(() => {
           parentPort.postMessage({
             type: "reset",
             "paused": game.paused,
@@ -130,7 +130,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onStart(function() {
+        game.onStart(() => {
           parentPort.postMessage({
             type: "start",
             "snakes": copySnakes(game.snakes),
@@ -147,7 +147,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onPause(function() {
+        game.onPause(() => {
           parentPort.postMessage({
             type: "pause",
             "paused": game.paused,
@@ -159,7 +159,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onContinue(function() {
+        game.onContinue(() => {
           parentPort.postMessage({
             type: "continue",
             "confirmReset": false,
@@ -170,7 +170,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onStop(function() {
+        game.onStop(() => {
           parentPort.postMessage({
             type: "stop",
             "paused": game.paused,
@@ -185,7 +185,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onExit(function() {
+        game.onExit(() => {
           parentPort.postMessage({
             type: "exit",
             "paused": game.paused,
@@ -200,7 +200,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onKill(function() {
+        game.onKill(() => {
           parentPort.postMessage({
             type: "kill",
             "paused": game.paused,
@@ -217,11 +217,11 @@ if(!isMainThread) {
           });
         });
     
-        game.onScoreIncreased(function() {
+        game.onScoreIncreased(() => {
           parentPort.postMessage({ type: "scoreIncreased" });
         });
         
-        game.onUpdate(function() {
+        game.onUpdate(() => {
           parentPort.postMessage({
             type: "update",
             "paused": game.paused,
@@ -245,7 +245,7 @@ if(!isMainThread) {
           });
         });
     
-        game.onUpdateCounter(function() {
+        game.onUpdateCounter(() => {
           parentPort.postMessage({
             type: "updateCounter",
             "paused": game.paused,
@@ -319,6 +319,16 @@ if(!isMainThread) {
             }
           }
           break;
+        case "setGameOver":
+          if(keys.length > 1) {
+            const numSnake = data.numSnake;
+  
+            var playerSnake = game.getPlayer(numSnake, GameConstants.PlayerType.HUMAN) || game.getPlayer(numSnake, GameConstants.PlayerType.HYBRID_HUMAN_AI);
+  
+            if(playerSnake) {
+              playerSnake.gameOver = true;
+            }
+          }
         case "init":
           if(data.length > 1) {
             if(data.key == "snakes") {

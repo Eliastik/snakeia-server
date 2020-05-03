@@ -752,13 +752,14 @@ function setupSpectators(code) {
   }
 }
 
-function sendKeys(code) {
+function sendStatus(code) {
   if(config.enableMultithreading) {
     const game = games[code];
 
     if(game != null) {
       for(let i = 0; i < game.players.length; i++) {
         game.game.key(game.players[i].snake.lastKey, i + 1);
+        if(game.players[i].snake.gameOver) game.game.setGameOver(i + 1);
       }
     }
   }
@@ -770,6 +771,7 @@ function exitGame(game, socket, code) {
 
     if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
       Player.getPlayer(game.players, socket.id).snake.gameOver = true;
+      sendStatus(code);
     }
   
     socket.emit("kill", {
@@ -1505,7 +1507,7 @@ io.on("connection", function(socket) {
         socket.on("key", function(key) {
           if(game != null && Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake) {
             Player.getPlayer(game.players, socket.id).snake.lastKey = key;
-            sendKeys(code);
+            sendStatus(code);
           }
         });
   

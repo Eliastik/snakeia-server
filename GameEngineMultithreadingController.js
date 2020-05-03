@@ -89,7 +89,6 @@ class GameEngineMultithreadingController extends GameEngine {
             break;
           case "kill":
             this.reactor.dispatchEvent("onKill");
-            this.worker.terminate();
             break;
           case "scoreIncreased":
             this.reactor.dispatchEvent("onScoreIncreased");
@@ -160,6 +159,10 @@ class GameEngineMultithreadingController extends GameEngine {
 
   key(key, numSnake) {
     if(this.worker) this.worker.postMessage({ type: "key", key: key, numSnake: numSnake });
+  }
+
+  setGameOver(numSnake) {
+    if(this.worker) this.worker.postMessage({ type: "setGameOver", numSnake: numSnake });
   }
   
   forceStart() {
