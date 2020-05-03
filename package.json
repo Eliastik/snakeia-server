@@ -1,6 +1,6 @@
 {
   "name": "snakeia-server",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Server for multiplaying in SnakeIA (https://github.com/Eliastik/snakeia)",
   "main": "server.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.0",
     "seedrandom": "^3.0.5",
-    "snakeia": "git+https://git@github.com/Eliastik/snakeia.git",
+    "snakeia": "git+https://git@github.com/Eliastik/snakeia.git#2.1",
     "socket.io": "^2.3.0",
     "socket.io-cookie-parser": "^1.0.0",
     "winston": "^3.2.1"

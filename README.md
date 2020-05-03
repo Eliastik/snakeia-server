@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.0.1
+* Version 1.1
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -87,6 +87,19 @@ npm start config.json
 }
 ````
 
+## Changelog
+
+* Version 1.1 (5/4/2020):
+    - Added an administration panel (can be accessed at serverDomain/admin). The accounts are configurable via the configuration file (two possible roles: moderator or administrator);
+    - Games are now multithreaded by default, this improves performance (can be disabled in the configuration file);
+    - Maximum time limit per game (configurable);
+    - Added the possibility of adding IAs to a game (can be disabled in the configuration file);
+    - Bug fixes and other adjustments:
+        - The state of a game is sent directly to the spectators;
+        - It's now impossible to choose the same username as another user;
+        - Corrections of other bugs and adjustments.
+    - Version based on SnakeIA version 2.1.
+
 # Français
 
 Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit en JavaScript avec la bibliothèque logicielle Socket.IO et tournant via Node.js.
@@ -95,7 +108,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.0.1
+* Version 1.1
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -118,7 +131,7 @@ npm install
 
 Puis pour lancer le serveur :
 ````
-npm run server
+npm start
 ````
 
 Le serveur va se lancer sur le port 3000 par défaut.
@@ -173,6 +186,19 @@ npm start config.json
     }
 }
 ````
+
+## Journal des changements
+
+* Version 1.1 (04/05/2020) :
+    - Ajout d'un panel d'administration (accessible à serverDomain/admin). Les comptes sont configurables via le fichier de configuration (deux rôles possibles : moderator ou administrator) ;
+    - Multithreading des parties, cela améliore les performances (désactivable dans le fichier de configuration) ;
+    - Limite de temps maximale par partie (configurable ou désactivable) ;
+    - Ajout de la possibilité de remplir une partie avec des IAs (désactivable dans le fichier de configuration) ;
+    - Correction de bugs et autres ajustements :
+        - L'état d'une partie est directement envoyée aux spectateurs (avant il y avait un délai) ;
+        - Il est désormais impossible de choisir le même nom d'utilisateur qu'un autre utilisateur ;
+        - Corrections d'autres bugs et ajustements.
+    - Version basée sur la version 2.1 de SnakeIA.
 
 ## TO-DO
 
