@@ -55,31 +55,22 @@ if(configFile != null) {
   }
 }
 
-const snakeia        = require("snakeia");
-const Snake          = snakeia.Snake;
-const Grid           = snakeia.Grid;
-const GameConstants  = snakeia.GameConstants;
-const GameEngine     = config.enableMultithreading ? require("./GameEngineMultithreadingController") : snakeia.GameEngine;
-
 config.port = process.env.PORT || config.port;
 const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
 const jsonWebTokenSecretKeyAdmin = config.jsonWebTokenSecretKeyAdmin && config.jsonWebTokenSecretKeyAdmin.trim() != "" ? config.jsonWebTokenSecretKeyAdmin : generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKey);
 
-// Internationalization
-i18n.configure({
-  locales:["fr", "en"], 
-  directory: __dirname + "/locales", 
-  defaultLocale: "en",
-  queryParameter: "lang",
-  cookie: "lang"
-});
+// Update config to file
+function updateConfigToFile() {
+  fs.writeFileSync(configFile, JSON.stringify(config, null, 4), "UTF-8");
+}
 
 // Logging
 const logger = winston.createLogger({
   level: config.logLevel,
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.simple()
+    winston.format.simple(),
+    winston.format.errors({ stack: true })
   ),
   transports: config.enableLoggingFile ? [new winston.transports.File({ filename: config.logFile })] : [],
   exceptionHandlers: config.enableLoggingFile ? [new winston.transports.File({ filename: config.errorLogFile })] : []
@@ -95,10 +86,21 @@ if(config.proxyMode) {
   app.enable("trust proxy");
 }
 
-// Update config to file
-function updateConfigToFile() {
-  fs.writeFileSync(configFile, JSON.stringify(config, null, 4), "UTF-8");
-}
+// Internationalization
+i18n.configure({
+  locales:["fr", "en"], 
+  directory: __dirname + "/locales", 
+  defaultLocale: "en",
+  queryParameter: "lang",
+  cookie: "lang"
+});
+
+// Game modules
+const snakeia        = require("snakeia");
+const Snake          = snakeia.Snake;
+const Grid           = snakeia.Grid;
+const GameConstants  = snakeia.GameConstants;
+const GameEngine     = config.enableMultithreading ? require("./GameEngineMultithreadingController")(logger) : snakeia.GameEngine;
 
 class Player {
   constructor(token, id, snake, ready, version) {

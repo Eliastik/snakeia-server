@@ -22,6 +22,7 @@ const GameEngine = snakeia.GameEngine;
 const Grid       = snakeia.Grid;
 const Snake      = snakeia.Snake;
 const Position   = snakeia.Position;
+let logger;
 
 class GameEngineMultithreadingController extends GameEngine {
   constructor(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed) {
@@ -100,6 +101,17 @@ class GameEngineMultithreadingController extends GameEngine {
             this.reactor.dispatchEvent("onUpdateCounter");
             break;
         }
+      });
+      
+      this.worker.on("error", (error) => {
+        if(logger) logger.error("Error in GameEngineMultithreading", error);
+        this.errorOccurred = true;
+        this.reactor.dispatchEvent("onStop");
+      });
+      
+      this.worker.on("exit", () => {
+        this.gameFinished = true;
+        this.reactor.dispatchEvent("onStop");
       });
 
       this.eventsInit = true;
@@ -214,4 +226,7 @@ class GameEngineMultithreadingController extends GameEngine {
   }
 }
 
-module.exports = GameEngineMultithreadingController;
+module.exports = function(l) {
+  logger = l;
+  return GameEngineMultithreadingController;
+};
