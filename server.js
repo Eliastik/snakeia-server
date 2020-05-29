@@ -423,6 +423,7 @@ function copySnakes(snakes) {
   if(copy) {
     copy.forEach(snake => {
       delete snake["grid"];
+      if(snake.snakeAI && snake.snakeAI._aiLevelText) snake.snakeAI.aiLevelText = snake.snakeAI._aiLevelText;
     });
   }
 

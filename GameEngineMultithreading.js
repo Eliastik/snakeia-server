@@ -71,6 +71,8 @@ function parseSnakes(snakes, grid) {
     for(var j = 0; j < snakes[i].queue.length; j++) {
       snakes[i].queue[j] = Object.assign(new Position(), snakes[i].queue[j]);
     }
+
+    snakes[i].initAI();
   }
 
   return {
