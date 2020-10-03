@@ -128,7 +128,9 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "aiStuck": game.aiStuck,
+            "precAiStuck": false
           });
         });
     
@@ -243,7 +245,8 @@ if(!isMainThread) {
             "countBeforePlay": game.countBeforePlay,
             "numFruit": game.numFruit,
             "offsetFrame": 0,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "aiStuck": game.aiStuck
           });
         });
     
