@@ -52,13 +52,10 @@ function copyGrid(grid) {
 
 function parseSnakes(snakes, grid) {
   if(game) {
-    var grid = grid || game.grid;
+    var grid = grid != null ? grid : game.grid;
   }
 
   grid = Object.assign(new Grid(), grid);
-
-  grid.rngGrid = seedrandom(grid.seedGrid);
-  grid.rngGame = seedrandom(grid.seedGame);
 
   if(!snakes && game) {
     snakes = game.snakes;

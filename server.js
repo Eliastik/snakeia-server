@@ -355,6 +355,7 @@ function createRoom(data, socket) {
     if(validSettings) {
       const code = getRandomRoomKey();
       const grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
+      grid.reset();
       grid.init();
       const game = new GameEngine(grid, [], speed);
       
@@ -698,8 +699,7 @@ function startGame(code) {
     game.searchingPlayers = false;
     game.started = true;
     game.game.snakes = [];
-    game.game.grid.rngGrid = seedrandom(game.game.grid.seedGrid);
-    game.game.grid.rngGame = seedrandom(game.game.grid.seedGame);
+    game.game.grid.reset();
     game.game.grid.init();
   
     for(let i = 0; i < game.players.length; i++) {
