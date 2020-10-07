@@ -456,7 +456,9 @@ function setupRoom(code) {
       "getInfos": false,
       "getInfosGame": false,
       "errorOccurred": game.errorOccurred,
-      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
+      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
+      "aiStuck": game.aiStuck,
+      "precAiStuck": false
     });
   });
 
@@ -576,7 +578,8 @@ function setupRoom(code) {
       "countBeforePlay": game.countBeforePlay,
       "numFruit": game.numFruit,
       "errorOccurred": game.errorOccurred,
-      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1
+      "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
+      "aiStuck": game.aiStuck
     });
   });
 
@@ -1481,7 +1484,9 @@ io.on("connection", function(socket) {
               "getInfosGame": false,
               "errorOccurred": game.game.errorOccurred,
               "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
-              "countBeforePlay": game.game.countBeforePlay
+              "countBeforePlay": game.game.countBeforePlay,
+              "aiStuck": game.game.aiStuck,
+              "precAiStuck": false
             });
           } else {
             socket.emit("init", {
