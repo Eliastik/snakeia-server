@@ -33,27 +33,18 @@ const rateLimit      = require("express-rate-limit");
 const winston        = require("winston");
 const csrf           = require("csurf");
 const bodyParser     = require("body-parser");
-const seedrandom     = require("seedrandom");
+const node_config    = require("config");
 
 const games = {}; // Contains all the games processed by the server
-const config = {}; // Server configuration (see default config file config.json)
+process.env["ALLOW_CONFIG_MUTATIONS"] = true;
+let config = node_config.get("ServerConfig"); // Server configuration (see default config file config.json)
 const tokens = []; // User tokens
 const invalidatedUserTokens = []; // Invalidated user tokens
 const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 // Load config file
-const configFile = process.argv.splice(2)[0] || "config.json";
-
-if(configFile != null) {
-  try {
-    const file = fs.readFileSync(configFile, "utf-8");
-    Object.assign(config, JSON.parse(file));
-  } catch(e) {
-    console.log("Error while loading config file \"" + configFile + "\": " + e);
-    const file = fs.readFileSync("config.json", "utf-8");
-    Object.assign(config, JSON.parse(file));
-  }
-}
+const configSources = node_config.util.getConfigSources();
+const configFile = configSources[configSources.length - 1].name;
 
 config.port = process.env.PORT || config.port;
 const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
@@ -61,7 +52,8 @@ const jsonWebTokenSecretKeyAdmin = config.jsonWebTokenSecretKeyAdmin && config.j
 
 // Update config to file
 function updateConfigToFile() {
-  fs.writeFileSync(configFile, JSON.stringify(config, null, 4), "UTF-8");
+  fs.writeFileSync(configFile, JSON.stringify({ "ServerConfig": config }, null, 4), "UTF-8");
+  config = node_config.get("ServerConfig");
 }
 
 // Logging

@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.1.2
+* Version 1.1.3
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -36,58 +36,62 @@ npm start
 
 The server will by default run on the port 3000.
 
-You can load a config file (example in config.json file) when you run the server. For example:
-````
-npm start config.json
-````
-
 ## Config file explanations (default config)
+
+The server uses [node-config](https://github.com/lorenwest/node-config) for the configuration files.
+You can create another configuration file in the **config** directory named **local.json** to override the default config file. [See this doc](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
 
 ````
 {
-    "version": "1.1.2", // The server version
-    "port": 3000, // The port where the server runs
-    "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
-    "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
-    "maxPlayers": 20, // The maximum number of players for each room
-    "maxRooms": 20, // The maximum number of room
-    "minGridSize": 5, // The minimum size for a grid (width and height)
-    "maxGridSize": 50, // The maximum size for a grid (width and height)
-    "minSpeed": 1, // The minimum speed
-    "maxSpeed": 100, // The maximum speed
-    "enableAI": false, // Disable or enable AIs
-    "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
-    "enableMaxTimeGame": true, // Enable time limit for each game
-    "maxTimeGame": 300000, // The time limit for each game (ms)
-    "enableAuthentication": true, // Enable authentification when connecting to the server
-    "authenticationTime": 86400000, // The duration of authentication token (ms)
-    "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
-    "jsonWebTokenSecretKeyAdmin": "", // A private key for signing an admin token - should be different from previous value (if not provided, a random key will be generated)
-    "minCharactersUsername": 3, // The minimum number of characters for the username
-    "maxCharactersUsername": 15, // The maximum number of characters for the username
-    "enableRecaptcha": true, // Enable ReCaptcha
-    "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // ReCaptcha API URL
-    "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
-    "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
-    "authentMaxRequest": 50, // Maximum request for authentication
-    "authentWindowMs": 900000, // Time when the authentication requests are saved (ms)
-    "ipBan": [], // A list of IP to ban
-    "usernameBan": [], // A list of usernames to ban
-    "contactBan": "", // A contact URL displayed when an user is banned
-    "enableLoggingFile": true, // Enable logging into file
-    "logFile": "logs/server.log", // Log file
-    "errorLogFile": "logs/error.log", // Error log file
-    "logLevel": "debug" // Log level (see Winston documentation),
-    "adminAccounts": { // User accounts of the administrator panel (can be accessed at serverDomain/admin)
-        "test": { // Username
-            "password": "", // Password SHA-512 hash
-            "role": "administrator" // Role (administrator or moderator) - defaults to moderator
+    "ServerConfig": {
+        "version": "1.1.2", // The server version
+        "port": 3000, // The port where the server runs
+        "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
+        "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
+        "maxPlayers": 20, // The maximum number of players for each room
+        "maxRooms": 20, // The maximum number of room
+        "minGridSize": 5, // The minimum size for a grid (width and height)
+        "maxGridSize": 50, // The maximum size for a grid (width and height)
+        "minSpeed": 1, // The minimum speed
+        "maxSpeed": 100, // The maximum speed
+        "enableAI": false, // Disable or enable AIs
+        "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
+        "enableMaxTimeGame": true, // Enable time limit for each game
+        "maxTimeGame": 300000, // The time limit for each game (ms)
+        "enableAuthentication": true, // Enable authentification when connecting to the server
+        "authenticationTime": 86400000, // The duration of authentication token (ms)
+        "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
+        "jsonWebTokenSecretKeyAdmin": "", // A private key for signing an admin token - should be different from previous value (if not provided, a random key will be generated)
+        "minCharactersUsername": 3, // The minimum number of characters for the username
+        "maxCharactersUsername": 15, // The maximum number of characters for the username
+        "enableRecaptcha": true, // Enable ReCaptcha
+        "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // ReCaptcha API URL
+        "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
+        "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
+        "authentMaxRequest": 50, // Maximum request for authentication
+        "authentWindowMs": 900000, // Time when the authentication requests are saved (ms)
+        "ipBan": [], // A list of IP to ban
+        "usernameBan": [], // A list of usernames to ban
+        "contactBan": "", // A contact URL displayed when an user is banned
+        "enableLoggingFile": true, // Enable logging into file
+        "logFile": "logs/server.log", // Log file
+        "errorLogFile": "logs/error.log", // Error log file
+        "logLevel": "debug" // Log level (see Winston documentation),
+        "adminAccounts": { // User accounts of the administrator panel (can be accessed at serverDomain/admin)
+            "test": { // Username
+                "password": "", // Password SHA-512 hash
+                "role": "administrator" // Role (administrator or moderator) - defaults to moderator
+            }
         }
     }
 }
 ````
 
 ## Changelog
+
+* Version 1.1.3 (3/29/2021) :
+    - Using node-config
+    - Updated dependencies
 
 * Version 1.1.2 (10/18/2020):
     - Version based on SnakeIA version 2.2.
@@ -115,7 +119,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.1.2
+* Version 1.1.3
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -143,58 +147,62 @@ npm start
 
 Le serveur va se lancer sur le port 3000 par défaut.
 
-Vous pouvez charger un fichier de configuration (un exemple dans le fichier config.json) lorsque vous lancez le serveur. Par exemple :
-````
-npm start config.json
-````
-
 ## Explications du fichier de configuration (configuration par défaut)
+
+Le serveur utilise [node-config](https://github.com/lorenwest/node-config) pour les fichiers de configuration.
+Vous pouvez créer un fichier de configuration **local.json** dans le dossier **config** pour remplacer la configuration par défaut. [Voir cette doc](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
 
 ````
 {
-    "version": "1.1.2", // La version du serveur
-    "port": 3000, // Le port sur lequel lancer le server
-    "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
-    "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
-    "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
-    "maxRooms": 20, // Le nombre maximal de salles
-    "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
-    "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
-    "minSpeed": 1, // La vitesse minimale
-    "maxSpeed": 100, // La vitesse maximale
-    "enableAI": false, // Désactiver ou activer les IA
-    "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
-    "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
-    "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
-    "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
-    "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
-    "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clé sera générée au hasard)
-    "jsonWebTokenSecretKeyAdmin": "", // Une clée privée pour signer un token d'administration - doit être différente de la valeur précédente (si non fournie, une clé sera générée au hasard)
-    "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
-    "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
-    "enableRecaptcha": true, // Activer le ReCaptcha
-    "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // URL de l'API ReCaptcha
-    "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
-    "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
-    "authentMaxRequest": 50, // Nombre maximal de requêtes lors de l'authentification
-    "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrées (ms)
-    "ipBan": [], // Une liste d'IPs à bannir
-    "usernameBan": [], // Une liste de noms d'utilisateur à bannir
-    "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni
-    "enableLoggingFile": true, // Activer le log dans un fichier
-    "logFile": "logs/server.log", // Fichier de log
-    "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
-    "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
-    "adminAccounts": { // Compte utilisateurs du panel d'administration (peut être accédé à serverDomain/admin)
-        "test": { // Nom d'utilisateur
-            "password": "", // Hash SHA-512 du mot de passe
-            "role": "administrator" // Rôle (administrator ou moderator) - par défaut moderator
+    "ServerConfig": {
+        "version": "1.1.2", // La version du serveur
+        "port": 3000, // Le port sur lequel lancer le server
+        "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
+        "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
+        "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
+        "maxRooms": 20, // Le nombre maximal de salles
+        "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
+        "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
+        "minSpeed": 1, // La vitesse minimale
+        "maxSpeed": 100, // La vitesse maximale
+        "enableAI": false, // Désactiver ou activer les IA
+        "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
+        "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
+        "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
+        "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
+        "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
+        "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clé sera générée au hasard)
+        "jsonWebTokenSecretKeyAdmin": "", // Une clée privée pour signer un token d'administration - doit être différente de la valeur précédente (si non fournie, une clé sera générée au hasard)
+        "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
+        "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
+        "enableRecaptcha": true, // Activer le ReCaptcha
+        "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // URL de l'API ReCaptcha
+        "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+        "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+        "authentMaxRequest": 50, // Nombre maximal de requêtes lors de l'authentification
+        "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrées (ms)
+        "ipBan": [], // Une liste d'IPs à bannir
+        "usernameBan": [], // Une liste de noms d'utilisateur à bannir
+        "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni
+        "enableLoggingFile": true, // Activer le log dans un fichier
+        "logFile": "logs/server.log", // Fichier de log
+        "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
+        "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
+        "adminAccounts": { // Compte utilisateurs du panel d'administration (peut être accédé à serverDomain/admin)
+            "test": { // Nom d'utilisateur
+                "password": "", // Hash SHA-512 du mot de passe
+                "role": "administrator" // Rôle (administrator ou moderator) - par défaut moderator
+            }
         }
     }
 }
 ````
 
 ## Journal des changements
+
+* Version 1.1.3 (29/03/2021) :
+    - Utilisation de node-config
+    - Mise à jour des dépendences
 
 * Version 1.1.2 (18/10/2020) :
     - Version basée sur la version 2.2 de SnakeIA.
