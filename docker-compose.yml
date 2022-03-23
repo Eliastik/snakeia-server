@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   snakeia-server:
-    image: snakeia-server
+    image: eliastik/snakeia-server:latest
     restart: unless-stopped
     # uncomment to build the image
     # build:
