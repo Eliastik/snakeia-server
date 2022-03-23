@@ -45,7 +45,7 @@ Don't forget to edit the file to include your local configuration file:
 
 ````
 volumes:
-    - ./config/default.json:/opt/snakeia-server/config/default.json
+    - ./config/default.json:/home/snakeia-server/server/config/default.json
 ````
 
 Replace ./config/default.json with the location of your configuration file.
@@ -186,7 +186,7 @@ N'oubliez pas de modifier ce fichier avec l'emplacement de votre fichier de conf
 
 ````
 volumes:
-    - ./config/default.json:/opt/snakeia-server/config/default.json
+    - ./config/default.json:/home/snakeia-server/server/config/default.json
 ````
 
 Remplacez ./config/default.json par l'emplacement du fichier de configuration.
