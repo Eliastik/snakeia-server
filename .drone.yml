@@ -1,0 +1,18 @@
+kind: pipeline
+name: default
+
+steps:
+- name: build
+  image: node
+  commands:
+    - npm install
+- name: publish
+  image: plugins/docker
+  settings:
+    repo: eliastik/snakeia-server
+    username:
+      from_secret: REGISTRY_USER
+    password:
+      from_secret: REGISTRY_PASSWORD
+    tags:
+      - latest
