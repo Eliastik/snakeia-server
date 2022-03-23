@@ -12,3 +12,5 @@ services:
       NODE_ENV: production
     volumes:
       - ./config/default.json:/opt/snakeia-server/config/default.json
+    ports:
+      - "3000:3000"

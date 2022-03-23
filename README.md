@@ -14,6 +14,8 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## How to run the server
 
+### NodeJS
+
 You can run the server on your machine. To do this, you have to install Node.js and npm.
 
 To install Node.js and npm for your OS, read this page: https://docs.npmjs.com/getting-started/installing-node
@@ -35,6 +37,34 @@ npm start
 ````
 
 The server will by default run on the port 3000.
+
+### Docker
+
+You can also run the server with the Docker image using the docker-compose.yml file.
+Don't forget to edit the file to include your local configuration file:
+
+````
+volumes:
+    - ./config/default.json:/opt/snakeia-server/config/default.json
+````
+
+Replace ./config/default.json with the location of your configuration file.
+See the section below to know how to configurate the server.
+
+Also, change the running port for the server:
+
+````
+ports:
+      - "3000:3000"
+````
+
+You can specify any port for the first part of the rule, but the second part must be the same port as configured in the config file.
+
+Then run this command in the directory of the docker-compose.yml file to run the server:
+
+````
+docker-compose up
+````
 
 ## Config file explanations (default config)
 
@@ -125,6 +155,8 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## Comment lancer le serveur
 
+### NodeJS
+
 Vous pouvez lancer le serveur sur votre machine. Pour cela, vous devez avoir installé Node.js et npm.
 
 Pour installer Node.js et npm sur votre système, suivez le guide : https://docs.npmjs.com/getting-started/installing-node
@@ -146,6 +178,34 @@ npm start
 ````
 
 Le serveur va se lancer sur le port 3000 par défaut.
+
+### Docker
+
+Vous pouvez aussi lancer le serveur en utilisant l'image Docker avec le fichier docker-compose.yml.
+N'oubliez pas de modifier ce fichier avec l'emplacement de votre fichier de configuration :
+
+````
+volumes:
+    - ./config/default.json:/opt/snakeia-server/config/default.json
+````
+
+Remplacez ./config/default.json par l'emplacement du fichier de configuration.
+Consultez la section plus bas pour savoir comment configurer le serveur.
+
+Changez également le port sur lequel le serveur écoute :
+
+````
+ports:
+      - "3000:3000"
+````
+
+Vous pouvez indiquer n'importe quel port pour la première partie de la règle, mais la seconde partie doit être cohérente avec la configuration du serveur.
+
+Ensuite, lancez cette commande pour lancer le serveur :
+
+````
+docker-compose up
+````
 
 ## Explications du fichier de configuration (configuration par défaut)
 
