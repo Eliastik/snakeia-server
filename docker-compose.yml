@@ -1,0 +1,14 @@
+version: "3.4"
+
+services:
+  snakeia-server:
+    image: snakeia-server
+    restart: unless-stopped
+    # uncomment to build the image
+    # build:
+      # context: .
+      # dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./config/default.json:/opt/snakeia-server/config/default.json
