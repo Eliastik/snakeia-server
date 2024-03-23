@@ -20,7 +20,13 @@ const express        = require("express");
 const app            = require("express")();
 const fs             = require("fs");
 const http           = require("http").createServer(app);
-const io             = require("socket.io")(http);
+const io             = require("socket.io")(http, {
+  cors: {
+    origin: true,
+    credentials: true
+  },
+  allowEIO3: true
+});
 const entities       = require("html-entities");
 const ejs            = require("ejs");
 const jwt            = require("jsonwebtoken");
@@ -189,7 +195,7 @@ class Player {
 
   static getUsernameSocket(socket) {
     try {
-      const decoded_token = jwt.verify(socket.handshake.query.token || socket.request.cookies.token, jsonWebTokenSecretKey);
+      const decoded_token = jwt.verify(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token, jsonWebTokenSecretKey);
       return decoded_token && decoded_token.username ? decoded_token.username : null;
     } catch(e) {
       return null;
@@ -278,7 +284,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.handshake.query.token || socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
+  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -393,7 +399,7 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    if(Player.containsTokenAllGames(socket.handshake.query.token || socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
+    if(Player.containsTokenAllGames(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
       socket.emit("process", {
         success: false,
         code: null,
@@ -1022,9 +1028,9 @@ app.get("/rooms", function(req, res) {
 
 // Admin panel
 function kickUser(socketId, token) {
-  if(io.sockets.connected[socketId]) {
-    logger.info("user kicked (socket: " + socketId + ") - ip: " + getIPSocketIO(io.sockets.connected[socketId].handshake));
-    io.sockets.connected[socketId].disconnect(true);
+  if(io.of("/").sockets.get(socketId)) {
+    logger.info("user kicked (socket: " + socketId + ") - ip: " + getIPSocketIO(io.of("/").sockets.get(socketId).handshake));
+    io.of("/").sockets.get(socketId).disconnect(true);
     invalidateUserToken(token);
   }
 }
@@ -1050,8 +1056,8 @@ function invalidateUserToken(token) {
 }
 
 function banUserIP(socketId) {
-  if(io.sockets.connected[socketId]) {
-    let ip = getIPSocketIO(io.sockets.connected[socketId].handshake);
+  if(io.of("/").sockets.get(socketId)) {
+    let ip = getIPSocketIO(io.of("/").sockets.get(socketId).handshake);
 
     if(ip && ip.substr(0, 7) == "::ffff:") {
       ip = ip.substr(7, ip.length);
@@ -1339,7 +1345,6 @@ app.post("/admin", adminRateLimiter, function(req, res) {
 });
 
 io.use(ioCookieParser());
-io.origins("*:*"); // CORS
 
 function getIPSocketIO(req) {
   let ipAddress;
@@ -1379,7 +1384,7 @@ function checkAuthentication(token) {
 }
 
 function checkAuthenticationSocket(socket) {
-  return checkAuthentication(socket.handshake.query.token || socket.request.cookies.token);
+  return checkAuthentication(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token);
 }
 
 function checkAuthenticationExpress(req) {

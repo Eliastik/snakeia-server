@@ -70,7 +70,7 @@
                     <li class="list-group-item">
                       <strong><%= __("usernameAdmin") %></strong> <%= user.username %><br />
                       <strong><%= __("idSocket") %></strong> <%= user.id %><br />
-                      <strong><%= __("ip") %></strong> <%= user.id && io.sockets.connected[user.id] && getIPSocketIO(io.sockets.connected[user.id].handshake) %><br />
+                      <strong><%= __("ip") %></strong> <%= user.id && io.of("/").sockets.get(user.id) && getIPSocketIO(io.of("/").sockets.get(user.id).handshake) %><br />
                       <strong><%= __("clientVersion") %></strong> <%= user.version %><br />
                       <a href="#" data-action="kick" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("kick") %></a>
                       <a href="#" data-action="banIP" data-form="socket=<%= user.id %>&token=<%= user.token %>" class="btn btn-primary"><%= __("banIP") %></a>
