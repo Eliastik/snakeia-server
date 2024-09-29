@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.1.3.7 (9/19/2024)
+* Version 1.1.3.8 (9/29/2024)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.1.3.7", // The server version
+        "version": "1.1.3.8", // The server version
         "port": 3000, // The port where the server runs
         "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
         "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
@@ -118,6 +118,9 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 1.1.3.8 (9/29/2024) :
+    - Updated dependencies
 
 * Version 1.1.3.7 (9/19/2024) :
     - Updated dependencies
@@ -170,7 +173,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.1.3.7 (19/09/2024)
+* Version 1.1.3.8 (29/09/2024)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -236,7 +239,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.1.3.7", // La version du serveur
+        "version": "1.1.3.8", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
         "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
@@ -280,6 +283,9 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 1.1.3.8 (29/09/2024) :
+    - Mise à jour des dépendences
 
 * Version 1.1.3.7 (19/09/2024) :
     - Mise à jour des dépendences
