@@ -3,6 +3,7 @@ version: "3.4"
 services:
   snakeia-server:
     image: eliastik/snakeia-server:latest
+    container_name: snakeia-server
     restart: unless-stopped
     # uncomment to build the image
     # build:
@@ -12,5 +13,8 @@ services:
       NODE_ENV: production
     volumes:
       - ./config/default.json:/home/snakeia-server/server/config/default.json
+      # - ./config/local.json:/home/snakeia-server/server/config/local.json
+      - ./error.log:/home/snakeia-server/server/logs/error.log
+      - ./server.log:/home/snakeia-server/server/logs/server.log
     ports:
       - "3000:3000"

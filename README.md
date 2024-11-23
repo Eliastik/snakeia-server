@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.1.3.8 (9/29/2024)
+* Version 1.1.4 (11/23/2024)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,9 +74,10 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.1.3.8", // The server version
+        "version": "1.1.4", // The server version
         "port": 3000, // The port where the server runs
-        "proxyMode": false, // Set this value to true if your server is behind a proxy - defaults to false
+        "proxyMode": false, // Sets this value to true if your server is behind a proxy - defaults to false
+        "numberOfProxies": 1, // Sets the number of reverse proxies in front of the server. Default to 1. See: https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
         "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
         "maxPlayers": 20, // The maximum number of players for each room
         "maxRooms": 20, // The maximum number of room
@@ -118,6 +119,11 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 1.1.4 (11/23/2024):
+    - Switched to csrf-csrf library instead of csurf (no longer maintained) for CSRF protection
+    - Added "numberOfProxies" parameter (default 1) to server configuration file
+    - Updated dependencies
 
 * Version 1.1.3.8 (9/29/2024) :
     - Updated dependencies
@@ -173,7 +179,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.1.3.8 (29/09/2024)
+* Version 1.1.4 (23/11/2024)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -239,9 +245,10 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.1.3.8", // La version du serveur
+        "version": "1.1.4", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
+        "numberOfProxies": 1, // Configure le nombre de proxies devant votre serveur. Par défaut 1. Voir : https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
         "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
         "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
         "maxRooms": 20, // Le nombre maximal de salles
@@ -283,6 +290,11 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 1.1.4 (23/11/2024) :
+    - Passage à la bibliothèque logicielle csrf-csrf au lieu de csurf (qui n'était plus maintenue) pour la protection CSRF
+    - Ajout du paramètre "numberOfProxies" (par défaut à 1) dans le fichier de configuration du serveur
+    - Mise à jour des dépendences
 
 * Version 1.1.3.8 (29/09/2024) :
     - Mise à jour des dépendences

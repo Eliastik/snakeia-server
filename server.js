@@ -36,7 +36,7 @@ const ioCookieParser = require("socket.io-cookie-parser");
 const i18n           = require("i18n");
 const rateLimit      = require("express-rate-limit");
 const winston        = require("winston");
-const csrf           = require("csurf");
+const { doubleCsrf } = require("csrf-csrf");
 const bodyParser     = require("body-parser");
 const node_config    = require("config");
 
@@ -54,6 +54,8 @@ const configFile = configSources[configSources.length - 1].name;
 config.port = process.env.PORT || config.port;
 const jsonWebTokenSecretKey = config.jsonWebTokenSecretKey && config.jsonWebTokenSecretKey.trim() != "" ? config.jsonWebTokenSecretKey : generateRandomJsonWebTokenSecretKey();
 const jsonWebTokenSecretKeyAdmin = config.jsonWebTokenSecretKeyAdmin && config.jsonWebTokenSecretKeyAdmin.trim() != "" ? config.jsonWebTokenSecretKeyAdmin : generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKey);
+
+const productionMode = process.env.NODE_ENV === "production";
 
 // Update config to file
 function updateConfigToFile() {
@@ -73,14 +75,14 @@ const logger = winston.createLogger({
   exceptionHandlers: config.enableLoggingFile ? [new winston.transports.File({ filename: config.errorLogFile })] : []
 });
 
-if(process.env.NODE_ENV !== "production") {
+if(!productionMode) {
   logger.add(new winston.transports.Console({
     format: winston.format.colorize()
   }));
 }
 
 if(config.proxyMode) {
-  app.enable("trust proxy");
+  app.enable("trust proxy", config.numberOfProxies);
 }
 
 // Internationalization
@@ -1165,9 +1167,18 @@ function verifyFormAuthenticationAdmin(body) {
   });
 }
 
-const csrfProtection = csrf({ cookie: true });
+const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
+const { doubleCsrfProtection, generateToken } = doubleCsrf({
+  getSecret: () => csrfSecret,
+  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
+  cookieOptions: {
+    sameSite: productionMode ? "strict" : "lax",
+    path: "/",
+    secure: productionMode
+  }
+});
 
-app.get("/admin", csrfProtection, function(req, res) {
+app.get("/admin", doubleCsrfProtection, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
@@ -1195,7 +1206,7 @@ app.get("/admin", csrfProtection, function(req, res) {
             games: games,
             io: io,
             config: config,
-            csrfToken: req.csrfToken(),
+            csrfToken: generateToken(req, res, true),
             serverLog: logFile,
             errorLog: errorLogFile,
             getIPSocketIO: getIPSocketIO
@@ -1288,14 +1299,14 @@ function adminAction(req, res, action) {
 
 const jsonParser = bodyParser.json();
 
-app.post("/admin/:action", jsonParser, csrfProtection, function(req, res) {
+app.post("/admin/:action", jsonParser, doubleCsrfProtection, function(req, res) {
   adminAction(req, res, req.params.action);
 });
 
 app.use(function (err, req, res, next) {
   if(err.code !== "EBADCSRFTOKEN") return next(err);
   res.status(403);
-  res.send("Error");
+  res.send("Error: invalid CSRF token");
 });
 
 const adminRateLimiter = rateLimit({
