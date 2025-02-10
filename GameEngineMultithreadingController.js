@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eliastik (eliastiksofts.com)
+ * Copyright (C) 2020-2025 Eliastik (eliastiksofts.com)
  *
  * This file is part of "SnakeIA Server".
  *
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>.
  */
-const { Worker } = require('worker_threads');
+const { Worker } = require("worker_threads");
 const snakeia    = require("snakeia");
 const GameEngine = snakeia.GameEngine;
 const Grid       = snakeia.Grid;
@@ -25,9 +25,12 @@ const Position   = snakeia.Position;
 let logger;
 
 class GameEngineMultithreadingController extends GameEngine {
+
   constructor(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed) {
     super(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed);
     this.worker = new Worker("./GameEngineMultithreading.js");
+    this.workerReady = false;
+    this.messageQueue = []; // Queue of message if the worker is still loading
     this.eventsInit = false;
   }
 
@@ -70,6 +73,10 @@ class GameEngineMultithreadingController extends GameEngine {
         }
 
         switch(type) {
+          case "init":
+            this.workerReady = true;
+            this.passQueuedMessages();
+            break;
           case "reset":
             this.reactor.dispatchEvent("onReset");
             break;
@@ -134,23 +141,23 @@ class GameEngineMultithreadingController extends GameEngine {
   }
 
   reset() {
-    if(this.worker) this.worker.postMessage({ type: "reset" });
+    this.passMessage({ type: "reset" });
   }
 
   start() {
-    if(this.worker) this.worker.postMessage({ type: "start" });
+    this.passMessage({ type: "start" });
   }
 
   stop(finish) {
-    if(this.worker) this.worker.postMessage({ type: finish ? "finish" : "stop" });
+    this.passMessage({ type: finish ? "finish" : "stop" });
   }
 
   finish(finish) {
-    if(this.worker) this.worker.postMessage({ type: finish ? "finish" : "stop" });
+    this.passMessage({ type: finish ? "finish" : "stop" });
   }
 
   pause() {
-    if(this.worker) this.worker.postMessage({ type: "pause" });
+    this.passMessage({ type: "pause" });
   }
 
   kill() {
@@ -162,27 +169,27 @@ class GameEngineMultithreadingController extends GameEngine {
   }
 
   tick() {
-    if(this.worker) this.worker.postMessage({ type: "tick" });
+    this.passMessage({ type: "tick" });
   }
 
   exit() {
-    if(this.worker) this.worker.postMessage({ type: "exit" });
+    this.passMessage({ type: "exit" });
   }
 
   key(key, numSnake) {
-    if(this.worker) this.worker.postMessage({ type: "key", key: key, numSnake: numSnake });
+    this.passMessage({ type: "key", key: key, numSnake: numSnake });
   }
 
   setGameOver(numSnake) {
-    if(this.worker) this.worker.postMessage({ type: "setGameOver", numSnake: numSnake });
+    this.passMessage({ type: "setGameOver", numSnake: numSnake });
   }
   
   forceStart() {
-    if(this.worker) this.worker.postMessage({ type: "forceStart" });
+    this.passMessage({ type: "forceStart" });
   }
 
   updateEngine(key, data) {
-    if(this.worker) this.worker.postMessage({ type: "update", key: key, data: data });
+    this.passMessage({ type: "update", key: key, data: data });
   }
 
   onReset(callback) {
@@ -223,6 +230,24 @@ class GameEngineMultithreadingController extends GameEngine {
 
   onUpdateCounter(callback) {
     this.reactor.addEventListener("onUpdateCounter", callback);
+  }
+
+  passMessage(message) {
+    if(this.workerReady && this.worker) {
+      this.worker.postMessage(message);
+    } else {
+      this.messageQueue.push(message);
+    }
+  }
+
+  passQueuedMessages() {
+    if(this.workerReady && this.worker) {
+      this.messageQueue.forEach(message => {
+        this.worker.postMessage(message);
+      });
+
+      this.messageQueue = [];
+    }
   }
 }
 
