@@ -50,7 +50,7 @@ function copyGrid(grid) {
   return copy;
 }
 
-function parseSnakes(snakes, grid) {
+async function parseSnakes(snakes, grid) {
   if(game) {
     var grid = grid != null ? grid : game.grid;
   }
@@ -69,7 +69,7 @@ function parseSnakes(snakes, grid) {
       snakes[i].queue[j] = Object.assign(new Position(), snakes[i].queue[j]);
     }
 
-    snakes[i].initAI();
+    await snakes[i].initAI();
   }
 
   return {
@@ -79,18 +79,18 @@ function parseSnakes(snakes, grid) {
 }
 
 if(!isMainThread) {
-  parentPort.on("message", (data) => {
+  parentPort.on("message", async (data) => {
     const type = data.type;
     const keys = Object.keys(data);
 
     if(type == "init") {
-      const parsed = parseSnakes(data.snakes, data.grid);
+      const parsed = await parseSnakes(data.snakes, data.grid);
       const grid = parsed["grid"];
       const snakes = parsed["snakes"];
 
       if(!game) {
         game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
-        game.init();
+        await game.init();
   
         parentPort.postMessage({
           type: "init",
@@ -100,7 +100,8 @@ if(!isMainThread) {
           "enableRetry": game.enableRetry,
           "progressiveSpeed": game.progressiveSpeed,
           "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "errorOccurred": game.errorOccurred
+          "errorOccurred": game.errorOccurred,
+          "engineLoading": game.engineLoading
         });
     
         game.onReset(() => {
@@ -127,7 +128,8 @@ if(!isMainThread) {
             "getInfosGame": false,
             "errorOccurred": game.errorOccurred,
             "aiStuck": game.aiStuck,
-            "precAiStuck": false
+            "precAiStuck": false,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -144,7 +146,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -156,7 +159,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -167,7 +171,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -182,7 +187,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -197,7 +203,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -214,7 +221,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -243,7 +251,8 @@ if(!isMainThread) {
             "numFruit": game.numFruit,
             "offsetFrame": 0,
             "errorOccurred": game.errorOccurred,
-            "aiStuck": game.aiStuck
+            "aiStuck": game.aiStuck,
+            "engineLoading": game.engineLoading
           });
         });
     
@@ -266,14 +275,15 @@ if(!isMainThread) {
             "speed": game.speed,
             "countBeforePlay": game.countBeforePlay,
             "numFruit": game.numFruit,
-            "errorOccurred": game.errorOccurred
+            "errorOccurred": game.errorOccurred,
+            "engineLoading": game.engineLoading
           });
         });
       } else {
         game.snakes = snakes;
         game.grid = grid;
         game.countBeforePlay = 3;
-        game.init();
+        await game.init();
       }
     } else if(game) {
       switch(type) {
@@ -334,10 +344,10 @@ if(!isMainThread) {
         case "init":
           if(data.length > 1) {
             if(data.key == "snakes") {
-              var d = parseSnakes(data.data);
+              var d = await parseSnakes(data.data);
               game.snakes = d.snakes;
             } else if(data.key == "grid") {
-              var d = parseSnakes(null, data.data);
+              var d = await parseSnakes(null, data.data);
               game.grid = d.grid;
             } else {
               game[data.key] = data.data;

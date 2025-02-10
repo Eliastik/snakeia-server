@@ -219,20 +219,20 @@ function getRoomsData() {
     rooms[i]["players"] = Object.keys(game["players"]).length + game.numberAIToAdd;
     rooms[i]["width"] = "???";
     rooms[i]["height"] = "???";
-    rooms[i]["speed"] = game["game"].speed;
+    rooms[i]["speed"] = game["gameEngine"].speed;
     rooms[i]["code"] = keysRooms[i];
     rooms[i]["maxPlayers"] = getMaxPlayers(keysRooms[i]);
     rooms[i]["state"] = (game["started"] ? GameConstants.GameState.STARTED : game["timeoutPlay"] != null ? GameConstants.GameState.STARTING : game["searchingPlayers"] ? GameConstants.GameState.SEARCHING_PLAYERS : "");
 
-    if(game["game"].grid != null) {
-      rooms[i]["width"] = game["game"].grid.width;
-      rooms[i]["height"] = game["game"].grid.height;
-      rooms[i]["borderWalls"] = game["game"].grid.borderWalls;
-      rooms[i]["generateWalls"] = game["game"].grid.generateWalls;
+    if(game["gameEngine"].grid != null) {
+      rooms[i]["width"] = game["gameEngine"].grid.width;
+      rooms[i]["height"] = game["gameEngine"].grid.height;
+      rooms[i]["borderWalls"] = game["gameEngine"].grid.borderWalls;
+      rooms[i]["generateWalls"] = game["gameEngine"].grid.generateWalls;
     }
 
-    if(game["game"].snake != null) {
-      rooms[i]["players"] = game["game"].snake.length;
+    if(game["gameEngine"].snake != null) {
+      rooms[i]["players"] = game["gameEngine"].snake.length;
     }
 
     if(game["spectators"] != null) {
@@ -264,7 +264,7 @@ function generateRandomJsonWebTokenSecretKey(precValue) {
 }
 
 function getMaxPlayers(code) {
-  const game = games[code].game;
+  const game = games[code].gameEngine;
 
   const heightGrid = parseInt(game.grid.height);
   const widthGrid = parseInt(game.grid.width);
@@ -360,7 +360,7 @@ function createRoom(data, socket) {
       const game = new GameEngine(grid, [], speed);
       
       games[code] = {
-        game: game,
+        gameEngine: game,
         private: privateGame,
         players: [],
         spectators: [],
@@ -419,20 +419,40 @@ function createRoom(data, socket) {
 }
 
 function copySnakes(snakes) {
-  const copy = JSON.parse(JSON.stringify(snakes));
+  const snakesCopy = [];
 
-  if(copy) {
-    copy.forEach(snake => {
-      delete snake["grid"];
-      if(snake.snakeAI && snake.snakeAI._aiLevelText) snake.snakeAI.aiLevelText = snake.snakeAI._aiLevelText;
-    });
-  }
+  snakes.forEach(snake => {
+    if(snake) {
+      const snakeCopy = new Snake();
 
-  return copy;
+      snakeCopy.color = snake.color;
+      snakeCopy.direction = snake.direction;
+      snakeCopy.errorInit = snake.errorInit;
+      snakeCopy.gameOver = snake.gameOver;
+      snakeCopy.lastTail = JSON.parse(JSON.stringify(snake.lastTail));
+      snakeCopy.lastTailMoved = snake.lastTailMoved;
+      snakeCopy.name = snake.name;
+      snakeCopy.player = snake.player;
+      snakeCopy.queue = JSON.parse(JSON.stringify(snake.queue));
+      snakeCopy.score = snake.score;
+      snakeCopy.scoreMax = snake.scoreMax;
+      snakeCopy.ticksDead = snake.ticksDead;
+      snakeCopy.ticksWithoutAction = snake.ticksWithoutAction;
+      snakeCopy.grid = null;
+
+      if(snake.snakeAI && snake.snakeAI._aiLevelText) {
+        snake.snakeAI.aiLevelText = snake.snakeAI._aiLevelText;
+      }
+
+      snakesCopy.push(snakeCopy);
+    }
+  });
+
+  return snakesCopy;
 }
 
 function setupRoom(code) {
-  const game = games[code].game;
+  const game = games[code].gameEngine;
 
   game.onReset(() => {
     io.to("room-" + code).emit("reset", {
@@ -622,8 +642,8 @@ function cleanRooms() {
       if(nb <= 0) {
         toRemove.push(keys[i]);
 
-        if(game.game && game.game.kill) {
-          game.game.kill();
+        if(game.gameEngine && game.gameEngine.kill) {
+          game.gameEngine.kill();
         }
       }
     }
@@ -672,13 +692,14 @@ function gameMatchmaking(game, code) {
         "playerNumber": numberPlayers,
         "maxPlayers": getMaxPlayers(code),
         "spectatorMode": false,
-        "errorOccurred": game.game.errorOccurred,
+        "errorOccurred": game.gameEngine.errorOccurred,
         "onlineMaster": false,
         "onlineMode": true,
         "enableRetryPauseMenu": false,
         "countBeforePlay": game.countBeforePlay,
-        "initialSpeed": game.game.initialSpeed,
-        "speed": game.game.speed,
+        "initialSpeed": game.gameEngine.initialSpeed,
+        "speed": game.gameEngine.speed,
+        "engineLoading": game.gameEngine.engineLoading
       });
 
       io.to(game.players[0].id).emit("init", {
@@ -690,7 +711,7 @@ function gameMatchmaking(game, code) {
   setupSpectators(code);
 }
 
-function startGame(code) {
+async function startGame(code) {
   const game = games[code];
 
   if(game != null) {
@@ -701,15 +722,15 @@ function startGame(code) {
 
     game.searchingPlayers = false;
     game.started = true;
-    game.game.snakes = [];
-    game.game.grid.reset();
-    game.game.grid.init();
+    game.gameEngine.snakes = [];
+    game.gameEngine.grid.reset();
+    game.gameEngine.grid.init();
   
     for(let i = 0; i < game.players.length; i++) {
       const username = game.players[i].username;
 
-      game.players[i].snake = new Snake(null, null, game.game.grid, null, null, null, username);
-      game.game.snakes.push(game.players[i].snake);
+      game.players[i].snake = new Snake(null, null, game.gameEngine.grid, null, null, null, username);
+      game.gameEngine.snakes.push(game.players[i].snake);
 
       io.to(game.players[i].id).emit("init", {
         "currentPlayer": (i + 1),
@@ -719,27 +740,31 @@ function startGame(code) {
 
     if(game.enableAI) {
       for(let i = 0; i < game.numberAIToAdd; i++) {
-        const snakeAI = new Snake(null, null, game.game.grid, GameConstants.PlayerType.AI, game.levelAI);
-        game.game.snakes.push(snakeAI);
+        const snakeAI = new Snake(null, null, game.gameEngine.grid, GameConstants.PlayerType.AI, game.levelAI);
+        game.gameEngine.snakes.push(snakeAI);
       }
     }
 
     if(config.enableMaxTimeGame) {
       clearTimeout(game.timeoutMaxTimePlay);
-      game.game.timeStart = Date.now() + 5000;
+      game.gameEngine.timeStart = Date.now() + 5000;
       game.timeoutMaxTimePlay = setTimeout(() => {
-        game.game.stop(true);
+        game.gameEngine.stop(true);
       }, config.maxTimeGame + 5000);
     }
+    
+    io.to("room-" + code).emit("init", {
+      "engineLoading": true
+    });
   
     if(!game.alreadyInit) {
-      game.game.init();
-      game.game.start();
+      game.gameEngine.init();
+      game.gameEngine.start();
       game.alreadyInit = true;
     } else {
-      game.game.countBeforePlay = 3;
-      game.game.init();
-      game.game.reset();
+      game.gameEngine.countBeforePlay = 3;
+      game.gameEngine.init();
+      game.gameEngine.reset();
     }
 
     setupSpectators(code);
@@ -766,8 +791,8 @@ function sendStatus(code) {
 
     if(game != null) {
       for(let i = 0; i < game.players.length; i++) {
-        game.game.key(game.players[i].snake.lastKey, i + 1);
-        if(game.players[i].snake.gameOver) game.game.setGameOver(i + 1);
+        game.gameEngine.key(game.players[i].snake.lastKey, i + 1);
+        if(game.players[i].snake.gameOver) game.gameEngine.setGameOver(i + 1);
       }
     }
   }
@@ -1487,37 +1512,39 @@ io.on("connection", function(socket) {
         
           if(game.started) {
             socket.emit("init", {
-              "paused": game.game.paused,
-              "isReseted": game.game.isReseted,
-              "exited": game.game.exited,
-              "snakes": copySnakes(game.game.snakes),
-              "grid": game.game.grid,
-              "numFruit": game.game.numFruit,
-              "ticks": game.game.ticks,
-              "scoreMax": game.game.scoreMax,
-              "gameOver": game.game.gameOver,
-              "gameFinished": game.game.gameFinished,
-              "gameMazeWin": game.game.gameMazeWin,
-              "starting": game.game.starting,
-              "initialSpeed": game.game.initialSpeed,
-              "speed": game.game.speed,
-              "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+              "paused": game.gameEngine.paused,
+              "isReseted": game.gameEngine.isReseted,
+              "exited": game.gameEngine.exited,
+              "snakes": copySnakes(game.gameEngine.snakes),
+              "grid": game.gameEngine.grid,
+              "numFruit": game.gameEngine.numFruit,
+              "ticks": game.gameEngine.ticks,
+              "scoreMax": game.gameEngine.scoreMax,
+              "gameOver": game.gameEngine.gameOver,
+              "gameFinished": game.gameEngine.gameFinished,
+              "gameMazeWin": game.gameEngine.gameMazeWin,
+              "starting": game.gameEngine.starting,
+              "initialSpeed": game.gameEngine.initialSpeed,
+              "speed": game.gameEngine.speed,
+              "offsetFrame": game.gameEngine.speed * GameConstants.Setting.TIME_MULTIPLIER,
               "confirmReset": false,
               "confirmExit": false,
               "getInfos": false,
               "getInfosGame": false,
-              "errorOccurred": game.game.errorOccurred,
+              "errorOccurred": game.gameEngine.errorOccurred,
               "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
-              "countBeforePlay": game.game.countBeforePlay,
-              "aiStuck": game.game.aiStuck,
-              "precAiStuck": false
+              "countBeforePlay": game.gameEngine.countBeforePlay,
+              "aiStuck": game.gameEngine.aiStuck,
+              "precAiStuck": false,
+              "engineLoading": game.gameEngine.engineLoading
             });
           } else {
             socket.emit("init", {
-              "enablePause": game.game.enablePause,
-              "enableRetry": game.game.enableRetry,
-              "progressiveSpeed": game.game.progressiveSpeed,
-              "offsetFrame": game.game.speed * GameConstants.Setting.TIME_MULTIPLIER
+              "enablePause": game.gameEngine.enablePause,
+              "enableRetry": game.gameEngine.enableRetry,
+              "progressiveSpeed": game.gameEngine.progressiveSpeed,
+              "offsetFrame": game.gameEngine.speed * GameConstants.Setting.TIME_MULTIPLIER,
+              "engineLoading": game.gameEngine.engineLoading
             });
           }
   
@@ -1603,6 +1630,6 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(config.port, function(){
+http.listen(config.port, () => {
   console.log("listening on *:" + config.port);
 });
