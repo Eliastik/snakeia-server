@@ -40,12 +40,8 @@ const { doubleCsrf } = require("csrf-csrf");
 const bodyParser     = require("body-parser");
 const node_config    = require("config");
 
-const games = {}; // Contains all the games processed by the server
 process.env["ALLOW_CONFIG_MUTATIONS"] = true;
 let config = node_config.get("ServerConfig"); // Server configuration (see default config file config.json)
-const tokens = []; // User tokens
-const invalidatedUserTokens = []; // Invalidated user tokens
-const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 // Load config file
 const configSources = node_config.util.getConfigSources();
@@ -101,110 +97,12 @@ const Snake          = snakeia.Snake;
 const Grid           = snakeia.Grid;
 const GameConstants  = snakeia.GameConstants;
 const GameEngine     = config.enableMultithreading ? require("./GameEngineMultithreadingController")(logger) : snakeia.GameEngine;
+const Player         = require("./Player");
 
-class Player {
-  constructor(token, id, snake, ready, version) {
-    this.token = token;
-    this.id = id;
-    this.snake = snake;
-    this.ready = ready;
-    this.version = version;
-  }
-
-  get username() {
-    return Player.getUsername(this);
-  }
-
-  static getPlayer(array, id) {
-    for(let i = 0; i < array.length; i++) {
-      if(array[i] != null && array[i].id == id) {
-        return array[i];
-      }
-    }
-
-    return null;
-  }
-
-  static getPlayerAllGames(id) {
-    const keys = Object.keys(games);
-
-    for(let i = 0; i < keys.length; i++) {
-      const game = games[keys[i]];
-
-      if(game) {
-        const p = this.getPlayer(game.players, id);
-        const p2 = this.getPlayer(game.spectators, id);
-        if(p) return p;
-        if(p2) return p2;
-      }
-    }
-
-    return null;
-  }
-
-  static getPlayerToken(array, token) {
-    if(!token) return null;
-    for(let i = 0; i < array.length; i++) {
-      if(array[i] != null && array[i].token == token) {
-        return array[i];
-      }
-    }
-
-    return null;
-  }
-
-  static getPlayerAllGamesToken(token) {
-    if(!token) return null;
-    const keys = Object.keys(games);
-
-    for(let i = 0; i < keys.length; i++) {
-      const game = games[keys[i]];
-
-      if(game) {
-        const p = this.getPlayerToken(game.players, token);
-        const p2 = this.getPlayerToken(game.spectators, token);
-        if(p) return p;
-        if(p2) return p2;
-      }
-    }
-
-    return null;
-  }
-
-  static containsId(array, id) {
-    return Player.getPlayer(array, id) != null;
-  }
-
-  static containsToken(array, token) {
-    return Player.getPlayerToken(array, token) != null;
-  }
-
-  static containsIdAllGames(id) {
-    return Player.getPlayerAllGames(id) != null;
-  }
-
-  static containsTokenAllGames(token) {
-    return Player.getPlayerAllGamesToken(token) != null;
-  }
-
-  static getUsername(player) {
-    try {
-      const decoded_token = jwt.verify(player.token, jsonWebTokenSecretKey);
-      return decoded_token && decoded_token.username ? decoded_token.username : null;
-    } catch(e) {
-      return null;
-    }
-  }
-
-  static getUsernameSocket(socket) {
-    try {
-      const decoded_token = jwt.verify(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token, jsonWebTokenSecretKey);
-      return decoded_token && decoded_token.username ? decoded_token.username : null;
-    } catch(e) {
-      return null;
-    }
-  }
-}
+const games = {}; // Contains all the games processed by the server
+const tokens = []; // User tokens
+const invalidatedUserTokens = []; // Invalidated user tokens
+const invalidatedAdminTokens = []; // Invalidated admin tokens
 
 function getRoomsData() {
   const rooms = [];
@@ -287,7 +185,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token) && !Player.containsIdAllGames(socket.id)) {
+  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token, games) && !Player.containsIdAllGames(socket.id, games)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -402,7 +300,7 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    if(Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token) || Player.containsIdAllGames(socket.id)) {
+    if(Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token, games) || Player.containsIdAllGames(socket.id, games)) {
       socket.emit("process", {
         success: false,
         code: null,
@@ -440,8 +338,8 @@ function copySnakes(snakes) {
       snakeCopy.ticksWithoutAction = snake.ticksWithoutAction;
       snakeCopy.grid = null;
 
-      if(snake.snakeAI && snake.snakeAI._aiLevelText) {
-        snake.snakeAI.aiLevelText = snake.snakeAI._aiLevelText;
+      if(snake.snakeAI && snake.snakeAI.aiLevelText) {
+        snakeCopy.snakeAI.aiLevelText = snake.snakeAI.aiLevelText;
       }
 
       snakesCopy.push(snakeCopy);
@@ -752,7 +650,7 @@ async function startGame(code) {
         game.gameEngine.stop(true);
       }, config.maxTimeGame + 5000);
     }
-    
+
     io.to("room-" + code).emit("init", {
       "engineLoading": true
     });
@@ -1492,7 +1390,7 @@ io.on("connection", function(socket) {
       const version = data.version;
       const game = games[code];
   
-      if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token) && !Player.containsIdAllGames(socket.id)) {
+      if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token, games) && !Player.containsIdAllGames(socket.id, games)) {
         socket.join("room-" + code);
   
         if(game.players.length + game.numberAIToAdd >= getMaxPlayers(code) || game.started) {
@@ -1617,7 +1515,7 @@ io.on("connection", function(socket) {
             success: false,
             errorCode: GameConstants.Error.ROOM_ALREADY_JOINED
           });
-        } else if(Player.containsTokenAllGames(token) || Player.containsIdAllGames(socket.id)) {
+        } else if(Player.containsTokenAllGames(token, games) || Player.containsIdAllGames(socket.id, games)) {
           socket.emit("join-room", {
             success: false,
             errorCode: GameConstants.Error.ALREADY_CREATED_ROOM
