@@ -319,32 +319,42 @@ function createRoom(data, socket) {
 function copySnakes(snakes) {
   const snakesCopy = [];
 
-  snakes.forEach(snake => {
-    if(snake) {
-      const snakeCopy = new Snake();
-
-      snakeCopy.color = snake.color;
-      snakeCopy.direction = snake.direction;
-      snakeCopy.errorInit = snake.errorInit;
-      snakeCopy.gameOver = snake.gameOver;
-      snakeCopy.lastTail = JSON.parse(JSON.stringify(snake.lastTail));
-      snakeCopy.lastTailMoved = snake.lastTailMoved;
-      snakeCopy.name = snake.name;
-      snakeCopy.player = snake.player;
-      snakeCopy.queue = JSON.parse(JSON.stringify(snake.queue));
-      snakeCopy.score = snake.score;
-      snakeCopy.scoreMax = snake.scoreMax;
-      snakeCopy.ticksDead = snake.ticksDead;
-      snakeCopy.ticksWithoutAction = snake.ticksWithoutAction;
-      snakeCopy.grid = null;
-
-      if(snake.snakeAI && snake.snakeAI.aiLevelText) {
-        snakeCopy.snakeAI.aiLevelText = snake.snakeAI.aiLevelText;
+  if(snakes) {
+    snakes.forEach(snake => {
+      if(snake) {
+        const snakeCopy = new Snake();
+  
+        snakeCopy.color = snake.color;
+        snakeCopy.direction = snake.direction;
+        snakeCopy.errorInit = snake.errorInit;
+        snakeCopy.gameOver = snake.gameOver;
+  
+        if(snake.lastTail) {
+          snakeCopy.lastTail = JSON.parse(JSON.stringify(snake.lastTail));
+        }
+  
+        snakeCopy.lastTailMoved = snake.lastTailMoved;
+        snakeCopy.name = snake.name;
+        snakeCopy.player = snake.player;
+  
+        if(snake.queue) {
+          snakeCopy.queue = JSON.parse(JSON.stringify(snake.queue));
+        }
+  
+        snakeCopy.score = snake.score;
+        snakeCopy.scoreMax = snake.scoreMax;
+        snakeCopy.ticksDead = snake.ticksDead;
+        snakeCopy.ticksWithoutAction = snake.ticksWithoutAction;
+        snakeCopy.grid = null;
+  
+        if(snake.snakeAI && snake.snakeAI.aiLevelText) {
+          snakeCopy.snakeAI.aiLevelText = snake.snakeAI.aiLevelText;
+        }
+  
+        snakesCopy.push(snakeCopy);
       }
-
-      snakesCopy.push(snakeCopy);
-    }
-  });
+    });
+  }
 
   return snakesCopy;
 }
@@ -656,12 +666,12 @@ async function startGame(code) {
     });
   
     if(!game.alreadyInit) {
-      game.gameEngine.init();
+      await game.gameEngine.init();
       game.gameEngine.start();
       game.alreadyInit = true;
     } else {
       game.gameEngine.countBeforePlay = 3;
-      game.gameEngine.init();
+      await game.gameEngine.init();
       game.gameEngine.reset();
     }
 

@@ -23,20 +23,50 @@ const Position                     = snakeia.Position;
 const Grid                         = snakeia.Grid;
 const Snake                        = snakeia.Snake;
 const GameEngine                   = snakeia.GameEngine;
-const seedrandom                   = require("seedrandom");
 
 let game;
 
 function copySnakes(snakes) {
-  var copy = JSON.parse(JSON.stringify(snakes));
+  const snakesCopy = [];
 
-  if(copy) {
-    for(var i = 0; i < copy.length; i++) {
-      delete copy[i]["grid"];
-    }
+  if(snakes) {
+    snakes.forEach(snake => {
+      if(snake) {
+        const snakeCopy = new Snake();
+  
+        snakeCopy.color = snake.color;
+        snakeCopy.direction = snake.direction;
+        snakeCopy.errorInit = snake.errorInit;
+        snakeCopy.gameOver = snake.gameOver;
+  
+        if(snake.lastTail) {
+          snakeCopy.lastTail = JSON.parse(JSON.stringify(snake.lastTail));
+        }
+  
+        snakeCopy.lastTailMoved = snake.lastTailMoved;
+        snakeCopy.name = snake.name;
+        snakeCopy.player = snake.player;
+  
+        if(snake.queue) {
+          snakeCopy.queue = JSON.parse(JSON.stringify(snake.queue));
+        }
+  
+        snakeCopy.score = snake.score;
+        snakeCopy.scoreMax = snake.scoreMax;
+        snakeCopy.ticksDead = snake.ticksDead;
+        snakeCopy.ticksWithoutAction = snake.ticksWithoutAction;
+        snakeCopy.grid = null;
+  
+        if(snake.snakeAI && snake.snakeAI.aiLevelText) {
+          snakeCopy.snakeAI.aiLevelText = snake.snakeAI.aiLevelText;
+        }
+  
+        snakesCopy.push(snakeCopy);
+      }
+    });
   }
 
-  return copy;
+  return snakesCopy;
 }
 
 function copyGrid(grid) {
@@ -50,47 +80,43 @@ function copyGrid(grid) {
   return copy;
 }
 
-async function parseSnakes(snakes, grid) {
-  if(game) {
-    var grid = grid != null ? grid : game.grid;
-  }
+function parseSnakes(snakes, grid) {
+  let gridCopy = game ? (grid ?? game.grid) : grid;
+  gridCopy = Object.assign(new Grid(), gridCopy);
 
-  grid = Object.assign(new Grid(), grid);
+  snakes = snakes ?? game?.snakes;
+  const snakesCopy = (Array.isArray(snakes) ? snakes : [snakes]).map(snake => {
+    const newSnake = Object.assign(new Snake(), snake);
+    newSnake.grid = gridCopy;
+    newSnake.queue = newSnake.queue.map(pos => Object.assign(new Position(), pos));
+    return newSnake;
+  });
 
-  if(!snakes && game) {
-    snakes = game.snakes;
-  }
-  
-  for(var i = 0; i < snakes.length; i++) {
-    snakes[i].grid = grid;
-    snakes[i] = Object.assign(new Snake(), snakes[i]);
-
-    for(var j = 0; j < snakes[i].queue.length; j++) {
-      snakes[i].queue[j] = Object.assign(new Position(), snakes[i].queue[j]);
-    }
-
-    await snakes[i].initAI();
-  }
-
-  return {
-    grid: grid,
-    snakes: snakes
-  };
+  return { grid: gridCopy, snakes: snakesCopy };
 }
 
 if(!isMainThread) {
-  parentPort.on("message", async (data) => {
+  parentPort.on("message", async data => {
     const type = data.type;
     const keys = Object.keys(data);
 
     if(type == "init") {
-      const parsed = await parseSnakes(data.snakes, data.grid);
+      const parsed = parseSnakes(data.snakes, data.grid);
       const grid = parsed["grid"];
       const snakes = parsed["snakes"];
 
       if(!game) {
-        game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
-        await game.init();
+        try {
+          game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
+          await game.init();
+        } catch(e) {
+          console.error(e);
+          
+          parentPort.postMessage({
+            type: "init",
+            errorOccurred: true
+          });
+        }
   
         parentPort.postMessage({
           type: "init",
@@ -283,7 +309,17 @@ if(!isMainThread) {
         game.snakes = snakes;
         game.grid = grid;
         game.countBeforePlay = 3;
-        await game.init();
+
+        try {
+          await game.init();
+        } catch(e) {
+          console.error(e);
+
+          parentPort.postMessage({
+            type: "init",
+            errorOccurred: true
+          });
+        }
       }
     } else if(game) {
       switch(type) {
@@ -344,10 +380,10 @@ if(!isMainThread) {
         case "init":
           if(data.length > 1) {
             if(data.key == "snakes") {
-              var d = await parseSnakes(data.data);
+              var d = parseSnakes(data.data);
               game.snakes = d.snakes;
             } else if(data.key == "grid") {
-              var d = await parseSnakes(null, data.data);
+              var d = parseSnakes(null, data.data);
               game.grid = d.grid;
             } else {
               game[data.key] = data.data;
