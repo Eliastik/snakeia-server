@@ -608,8 +608,7 @@ function gameMatchmaking(game, code) {
         "enableRetryPauseMenu": false,
         "countBeforePlay": game.countBeforePlay,
         "initialSpeed": game.gameEngine.initialSpeed,
-        "speed": game.gameEngine.speed,
-        "engineLoading": game.gameEngine.engineLoading
+        "speed": game.gameEngine.speed
       });
 
       io.to(game.players[0].id).emit("init", {
@@ -677,6 +676,10 @@ async function startGame(code) {
       game.gameEngine.reset();
     }
 
+    io.to("room-" + code).emit("init", {
+      "engineLoading": false
+    });
+
     setupSpectators(code);
   }
 }
@@ -689,7 +692,8 @@ function setupSpectators(code) {
       io.to(game.spectators[i].id).emit("init", {
         "spectatorMode": true,
         "onlineMode": true,
-        "enableRetryPauseMenu": false
+        "enableRetryPauseMenu": false,
+        "engineLoading": false
       });
     }
   }
@@ -1445,16 +1449,14 @@ io.on("connection", function(socket) {
               "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
               "countBeforePlay": game.gameEngine.countBeforePlay,
               "aiStuck": game.gameEngine.aiStuck,
-              "precAiStuck": false,
-              "engineLoading": game.gameEngine.engineLoading
+              "precAiStuck": false
             });
           } else {
             socket.emit("init", {
               "enablePause": game.gameEngine.enablePause,
               "enableRetry": game.gameEngine.enableRetry,
               "progressiveSpeed": game.gameEngine.progressiveSpeed,
-              "offsetFrame": game.gameEngine.speed * GameConstants.Setting.TIME_MULTIPLIER,
-              "engineLoading": game.gameEngine.engineLoading
+              "offsetFrame": game.gameEngine.speed * GameConstants.Setting.TIME_MULTIPLIER
             });
           }
   
