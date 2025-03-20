@@ -1448,7 +1448,10 @@ io.on("connection", function(socket) {
               "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
               "countBeforePlay": game.gameEngine.countBeforePlay,
               "aiStuck": game.gameEngine.aiStuck,
-              "precAiStuck": false
+              "precAiStuck": false,
+              "enablePause": game.gameEngine.enablePause,
+              "enableRetry": game.gameEngine.enableRetry,
+              "progressiveSpeed": game.gameEngine.progressiveSpeed
             });
           } else {
             socket.emit("init", {
