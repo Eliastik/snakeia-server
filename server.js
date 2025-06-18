@@ -1173,6 +1173,13 @@ const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmi
 const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => csrfSecret,
   getSessionIdentifier: (req) => req.cookies.tokenAdmin || randomUUID(),
+  getCsrfTokenFromRequest: (req) => {
+    return (
+      req.headers["x-csrf-token"] ||
+      req.body?._csrf ||
+      req.query?._csrf
+    );
+  },
   cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",

@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.1.4.2 (6/18/2025)
+* Version 1.1.5 (6/18/2025)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.1.4.2", // The server version
+        "version": "1.1.5", // The server version
         "port": 3000, // The port where the server runs
         "proxyMode": false, // Sets this value to true if your server is behind a proxy - defaults to false
         "numberOfProxies": 1, // Sets the number of reverse proxies in front of the server. Default to 1. See: https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
@@ -119,6 +119,9 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 1.1.5 (6/18/2025):
+    - Fixed "Error: invalid CSRF token" occurring during certain actions in the administrator panel
 
 * Version 1.1.4.2 (6/18/2025):
     - Updated dependencies
@@ -185,7 +188,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.1.4.2 (18/06/2025)
+* Version 1.1.5 (18/06/2025)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -251,7 +254,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.1.4.2", // La version du serveur
+        "version": "1.1.5", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
         "numberOfProxies": 1, // Configure le nombre de proxies devant votre serveur. Par défaut 1. Voir : https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
@@ -296,6 +299,9 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 1.1.5 (18/06/2025) :
+    - Correction de l’erreur "Error: invalid CSRF token" lors de certaines actions dans le panneau d’administration
 
 * Version 1.1.4.2 (18/06/2025) :
     - Mise à jour des dépendences
