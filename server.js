@@ -96,6 +96,7 @@ i18n.configure({
 
 // Game modules
 const snakeia        = require("snakeia");
+const { randomUUID } = require("crypto");
 const Snake          = snakeia.Snake;
 const Grid           = snakeia.Grid;
 const GameConstants  = snakeia.GameConstants;
@@ -908,7 +909,8 @@ app.use(i18n.init);
 // Rate limiter
 app.use("/authentication", rateLimit({
   windowMs: config.authentWindowMs,
-  max: config.authentMaxRequest
+  max: config.authentMaxRequest,
+  validate: { trustProxy: false }
 }));
 
 // IP ban
@@ -1168,8 +1170,9 @@ function verifyFormAuthenticationAdmin(body) {
 }
 
 const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
-const { doubleCsrfProtection, generateToken } = doubleCsrf({
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
   getSecret: () => csrfSecret,
+  getSessionIdentifier: (req) => req.cookies.tokenAdmin || randomUUID(),
   cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
@@ -1206,7 +1209,7 @@ app.get("/admin", doubleCsrfProtection, function(req, res) {
             games: games,
             io: io,
             config: config,
-            csrfToken: generateToken(req, res, true),
+            csrfToken: generateCsrfToken(req, res, { overwrite: true, validateOnReuse: true }),
             serverLog: logFile,
             errorLog: errorLogFile,
             getIPSocketIO: getIPSocketIO
@@ -1311,7 +1314,8 @@ app.use(function (err, req, res, next) {
 
 const adminRateLimiter = rateLimit({
   windowMs: config.authentWindowMs,
-  max: config.authentMaxRequest
+  max: config.authentMaxRequest,
+  validate: { trustProxy: false }
 });
 
 app.post("/admin", adminRateLimiter, function(req, res) {
