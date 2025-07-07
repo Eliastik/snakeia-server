@@ -198,7 +198,7 @@ class Player {
 
   static getUsernameSocket(socket) {
     try {
-      const decoded_token = jwt.verify(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token, jsonWebTokenSecretKey);
+      const decoded_token = jwt.verify(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token, jsonWebTokenSecretKey);
       return decoded_token && decoded_token.username ? decoded_token.username : null;
     } catch(e) {
       return null;
@@ -287,7 +287,7 @@ function getMaxPlayers(code) {
 }
 
 function createRoom(data, socket) {
-  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token) && !Player.containsIdAllGames(socket.id)) {
+  if(Object.keys(games).filter(key => games[key] != null).length < config.maxRooms && !Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token) && !Player.containsIdAllGames(socket.id)) {
     let heightGrid = 20;
     let widthGrid = 20;
     let borderWalls = false;
@@ -402,7 +402,7 @@ function createRoom(data, socket) {
       });
     }
   } else if(socket != null) {
-    if(Player.containsTokenAllGames(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token) || Player.containsIdAllGames(socket.id)) {
+    if(Player.containsTokenAllGames(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token) || Player.containsIdAllGames(socket.id)) {
       socket.emit("process", {
         success: false,
         code: null,
@@ -1406,7 +1406,7 @@ function checkAuthentication(token) {
 }
 
 function checkAuthenticationSocket(socket) {
-  return checkAuthentication(socket.handshake.auth.token || socket.handshake.query.token || socket.request.cookies.token);
+  return checkAuthentication(socket?.handshake?.auth?.token || socket?.handshake?.query?.token || socket?.request?.cookies?.token);
 }
 
 function checkAuthenticationExpress(req) {
