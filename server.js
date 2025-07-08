@@ -1032,9 +1032,11 @@ app.get("/rooms", function(req, res) {
 
 // Admin panel
 function kickUser(socketId, token) {
-  if(io.of("/").sockets.get(socketId)) {
-    logger.info("user kicked (socket: " + socketId + ") - ip: " + getIPSocketIO(io.of("/").sockets.get(socketId).handshake));
-    io.of("/").sockets.get(socketId).disconnect(true);
+  const sockets = io.of("/").sockets;
+
+  if(sockets.get(socketId)) {
+    logger.info("user kicked (socket: " + socketId + ") - ip: " + getIPSocketIO(sockets.get(socketId).handshake));
+    sockets.get(socketId).disconnect(true);
     invalidateUserToken(token);
   }
 }
@@ -1060,8 +1062,10 @@ function invalidateUserToken(token) {
 }
 
 function banUserIP(socketId) {
-  if(io.of("/").sockets.get(socketId)) {
-    let ip = getIPSocketIO(io.of("/").sockets.get(socketId).handshake);
+  const sockets = io.of("/").sockets;
+
+  if(sockets.get(socketId)) {
+    let ip = getIPSocketIO(sockets.get(socketId).handshake);
 
     if(ip && ip.substr(0, 7) == "::ffff:") {
       ip = ip.substr(7, ip.length);
@@ -1413,15 +1417,17 @@ function checkAuthenticationExpress(req) {
   return checkAuthentication(req.cookies.token);
 }
 
-io.use(function(socket, next) {
+const checkBanned = function(socket, next) {
   ipBanned(getIPSocketIO(socket.handshake)).then(() => {
     next(new Error(GameConstants.Error.BANNED));
   }, () => {
     next();
   });
-});
+};
 
-io.of("/rooms").on("connection", function(socket) {
+io.use(checkBanned);
+
+io.of("/rooms").use(ioCookieParser()).use(checkBanned).on("connection", function(socket) {
   checkAuthenticationSocket(socket).then(() => {
     socket.emit("rooms", {
       rooms: getRoomsData(),
@@ -1441,7 +1447,7 @@ io.of("/rooms").on("connection", function(socket) {
   });
 });
 
-io.of("/createRoom").on("connection", function(socket) {
+io.of("/createRoom").use(ioCookieParser()).use(checkBanned).on("connection", function(socket) {
   socket.on("create", function(data) {
     checkAuthenticationSocket(socket).then(() => {
       createRoom(data, socket);

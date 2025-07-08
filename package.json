@@ -1,6 +1,6 @@
 {
   "name": "snakeia-server",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Server for multiplaying in SnakeIA (https://github.com/Eliastik/snakeia)",
   "main": "server.js",
   "scripts": {
