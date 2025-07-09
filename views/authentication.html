@@ -23,10 +23,17 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
+    <% if(theme === "dark") { %>
+    <link href="/css/dark-theme.css" rel="stylesheet">
+    <% } %>
     <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
     <title>SnakeIA Server</title>
   </head>
+  <% if(theme === "dark") { %>
+  <body class="text-center remove-padding dark">
+  <% } else { %>
   <body class="text-center remove-padding">
+  <% } %>
     <div class="container">
       <% if(authent) { %>
       <h3><%= __("alreadyAuthentified") %></h3>

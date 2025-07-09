@@ -23,10 +23,17 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
+    <% if(theme === "dark") { %>
+    <link href="/css/dark-theme.css" rel="stylesheet">
+    <% } %>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <title>SnakeIA Server</title>
   </head>
+  <% if(theme === "dark") { %>
+  <body class="text-center dark">
+  <% } else { %>
   <body class="text-center">
+  <% } %>
     <div class="container">
         <div class="row">
             <div class="col">

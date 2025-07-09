@@ -24,12 +24,19 @@
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
+    <% if(theme === "dark") { %>
+    <link href="/css/dark-theme.css" rel="stylesheet">
+    <% } %>
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.bundle.min.js"></script>
     <% if(enableRecaptcha && publicKey) { %><script src="https://www.google.com/recaptcha/api.js?hl=<%= locale %>" async defer></script><% } %>
     <title>SnakeIA Server</title>
   </head>
+  <% if(theme === "dark") { %>
+  <body class="text-center dark">
+  <% } else { %>
   <body class="text-center">
+  <% } %>
     <div class="container">
       <div class="row">
           <div class="col">

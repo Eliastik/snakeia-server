@@ -865,7 +865,8 @@ app.use("/authentication", rateLimit({
 app.use(function(req, res, next) {
   ipBanned(req.ip).then(() => {
     res.render(__dirname + "/views/banned.html", {
-      contact: config.contactBan
+      contact: config.contactBan,
+      theme: req.query.theme
     });
     res.end();
   }, () => {
@@ -876,7 +877,8 @@ app.use(function(req, res, next) {
 app.get("/", function(req, res) {
   res.render(__dirname + "/views/index.html", {
     version: config.version,
-    engineVersion: GameConstants.Setting.APP_VERSION
+    engineVersion: GameConstants.Setting.APP_VERSION,
+    theme: req.query.theme
   });
 });
 
@@ -898,7 +900,8 @@ app.get("/authentication", function(req, res) {
         min: config.minCharactersUsername,
         max: config.maxCharactersUsername,
         enableMaxTimeGame: config.enableMaxTimeGame,
-        maxTimeGame: config.maxTimeGame
+        maxTimeGame: config.maxTimeGame,
+        theme: req.query.theme
       });
     });
   } else {
@@ -935,7 +938,8 @@ app.post("/authentication", function(req, res) {
             min: config.minCharactersUsername,
             max: config.maxCharactersUsername,
             enableMaxTimeGame: config.enableMaxTimeGame,
-            maxTimeGame: config.maxTimeGame
+            maxTimeGame: config.maxTimeGame,
+            theme: req.query.theme
           });
 
           logger.info("authentication - username: " + username + " - ip: " + req.ip);
@@ -957,7 +961,8 @@ app.post("/authentication", function(req, res) {
             min: config.minCharactersUsername,
             max: config.maxCharactersUsername,
             enableMaxTimeGame: config.enableMaxTimeGame,
-            maxTimeGame: config.maxTimeGame
+            maxTimeGame: config.maxTimeGame,
+            theme: req.query.theme
           });
         });
       }
@@ -1171,7 +1176,8 @@ app.get("/admin", doubleCsrfProtection, function(req, res) {
             csrfToken: generateCsrfToken(req, res, { overwrite: true, validateOnReuse: true }),
             serverLog: logFile,
             errorLog: errorLogFile,
-            getIPSocketIO: getIPSocketIO
+            getIPSocketIO: getIPSocketIO,
+            theme: req.query.theme
           });
         });
       });
@@ -1308,7 +1314,8 @@ app.post("/admin", adminRateLimiter, function(req, res) {
             csrfToken: null,
             serverLog: null,
             errorLog: null,
-            getIPSocketIO: getIPSocketIO
+            getIPSocketIO: getIPSocketIO,
+            theme: req.query.theme
           });
         });
       }
