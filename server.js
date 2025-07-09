@@ -617,7 +617,8 @@ function gameMatchmaking(game, code) {
         "enableRetryPauseMenu": false,
         "countBeforePlay": game.countBeforePlay,
         "initialSpeed": game.gameEngine.initialSpeed,
-        "speed": game.gameEngine.speed
+        "speed": game.gameEngine.speed,
+        "errorOccured": game.gameEngine.errorOccured
       });
 
       io.to(game.players[0].id).emit("init", {
@@ -686,6 +687,7 @@ async function startGame(code) {
     }
 
     io.to("room-" + code).emit("init", {
+      "errorOccurred": game.gameEngine.errorOccurred,
       "engineLoading": false
     });
 
