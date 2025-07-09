@@ -255,7 +255,11 @@ function createRoom(data, socket) {
       const grid = new Grid(widthGrid, heightGrid, generateWalls, borderWalls, false, null, false);
       grid.reset();
       grid.init();
-      const game = new GameEngine(grid, [], speed);
+      const game = new GameEngine(grid, [], speed, null, null, null, null, null, {
+        modelListAPIURL: config.aiUltraAPIURL,
+        modelID: config.aiUltraCustomModelURL ? "custom" : config.aiUltraModelID,
+        customURL: config.aiUltraCustomModelURL
+      });
       
       games[code] = {
         gameEngine: game,

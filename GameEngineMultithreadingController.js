@@ -26,8 +26,8 @@ let logger;
 
 class GameEngineMultithreadingController extends GameEngine {
 
-  constructor(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed) {
-    super(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed);
+  constructor(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed, aiStuckLimit, disableStuckAIDetection, aiUltraModelSettings) {
+    super(grid, snakes, speed, enablePause, enableRetry, progressiveSpeed, aiStuckLimit, disableStuckAIDetection, aiUltraModelSettings);
     this.worker = new Worker("./GameEngineMultithreading.js");
     this.workerReady = false;
     this.messageQueue = []; // Queue of message if the worker is still loading
@@ -136,7 +136,10 @@ class GameEngineMultithreadingController extends GameEngine {
       speed: this.speed,
       enablePause: this.enablePause,
       enableRetry: this.enableRetry,
-      progressiveSpeed: this.progressiveSpeed
+      progressiveSpeed: this.progressiveSpeed,
+      aiStuckLimit: this.aiStuckLimit,
+      disableStuckAIDetection: this.disableStuckAIDetection,
+      aiUltraModelSettings: this.aiUltraModelSettings
     });
   }
 

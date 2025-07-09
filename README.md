@@ -86,6 +86,9 @@ You can create another configuration file in the **config** directory named **lo
         "minSpeed": 1, // The minimum speed
         "maxSpeed": 100, // The maximum speed
         "enableAI": false, // Disable or enable AIs
+        "aiUltraAPIURL": "https://www.eliastiksofts.com/snakeia/models/", // URL to the API listing the Ultra AI models. The game engine will use this API to load the default model
+        "aiUltraModelID": null, // ID of the model (as returned by the API at the URL above) to load for the Ultra AI. Can be left empty; in that case, the default model provided by the API will be loaded
+        "aiUltraCustomModelURL": null, // A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the match
         "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
         "enableMaxTimeGame": true, // Enable time limit for each game
         "maxTimeGame": 300000, // The time limit for each game (ms)
@@ -273,6 +276,9 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
         "minSpeed": 1, // La vitesse minimale
         "maxSpeed": 100, // La vitesse maximale
         "enableAI": false, // Désactiver ou activer les IA
+        "aiUltraAPIURL": "https://www.eliastiksofts.com/snakeia/models/", // URL vers l'API listant les modèles de l'IA Ultra. Le moteur du jeu se basera sur cette API pour charger le modèle par défaut
+        "aiUltraModelID": null, // ID du modèle (tel que retourné par l'API à l'URL du dessus) à charger pour l'IA Ultra. Peut rester vide, dans ce cas, le modèle par défaut fourni par l'API sera chargé
+        "aiUltraCustomModelURL": null, // Une URL pointant vers un modèle d'IA à charger. Doit être un modèle Tensorflow.js entraîné pour l'IA Ultra. En cas de soucis, l'initialisation du jeu plantera quand des IA Ultra seront dans la partie
         "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
         "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
         "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)

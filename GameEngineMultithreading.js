@@ -114,7 +114,7 @@ if(!isMainThread) {
 
       if(!game) {
         try {
-          game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed);
+          game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed, data.aiStuckLimit, data.disableStuckAIDetection, data.aiUltraModelSettings);
           await game.init();
         } catch(e) {
           console.error(e);
