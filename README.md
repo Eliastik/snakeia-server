@@ -123,7 +123,7 @@ You can create another configuration file in the **config** directory named **lo
 
 ## Changelog
 
-* Version 1.2.0 (10/5/2025) :
+* Version 1.2.0 (10/5/2025):
     - Adaptation to version 3.0.0 of SnakeIA and implementation of Ultra AI
     - Bug fixes
     - Updated dependencies
