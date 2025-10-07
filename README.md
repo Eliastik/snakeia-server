@@ -123,7 +123,10 @@ You can create another configuration file in the **config** directory named **lo
 
 ## Changelog
 
-* Version 1.2.1/1.2.2 (10/7/2025):
+* Version 1.2.2 (10/7/2025):
+    - Update SnakeIA to 3.0.1
+
+* Version 1.2.1 (10/7/2025):
     - Fixed a bug where the game could get stuck on the "Loading..." screen when restarting.
 
 * Version 1.2.0 (10/5/2025):
@@ -321,7 +324,10 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 
 ## Journal des changements
 
-* Version 1.2.1/1.2.2 (07/10/2025):
+* Version 1.2.2 (07/10/2025):
+    - Mise à jour de SnakeIA vers la version 3.0.1
+
+* Version 1.2.1 (07/10/2025):
     - Correction d'un bug où le jeu restait bloqué sur le message "Chargement..." lorsque la partie était recommencée
 
 * Version 1.2.0 (05/10/2025) :
