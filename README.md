@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.2.0 (10/5/2025)
+* Version 1.2.1 (10/7/2025)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.2.0", // The server version
+        "version": "1.2.1", // The server version
         "port": 3000, // The port where the server runs
         "proxyMode": false, // Sets this value to true if your server is behind a proxy - defaults to false
         "numberOfProxies": 1, // Sets the number of reverse proxies in front of the server. Default to 1. See: https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
@@ -122,6 +122,9 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 1.2.1 (10/7/2025):
+    - Fixed a bug where the game could get stuck on the "Loading..." screen when restarting.
 
 * Version 1.2.0 (10/5/2025):
     - Adaptation to version 3.0.0 of SnakeIA and implementation of Ultra AI
@@ -203,7 +206,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.2.0 (05/10/2025)
+* Version 1.2.1 (07/10/2025)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -269,7 +272,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.2.0", // La version du serveur
+        "version": "1.2.1", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
         "numberOfProxies": 1, // Configure le nombre de proxies devant votre serveur. Par défaut 1. Voir : https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
@@ -317,6 +320,9 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 1.2.1 (07/10/2025):
+    - Correction d'un bug où le jeu restait bloqué sur le message "Chargement..." lorsque la partie était recommencée
 
 * Version 1.2.0 (05/10/2025) :
     - Adaptation à la version 3.0.0 de SnakeIA et à la mise en place de l'IA Ultra
