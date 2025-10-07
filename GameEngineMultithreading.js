@@ -115,7 +115,7 @@ if(!isMainThread) {
       if(!game) {
         try {
           game = new GameEngine(grid, snakes, data.speed, data.enablePause, data.enableRetry, data.progressiveSpeed, data.aiStuckLimit, data.disableStuckAIDetection, data.aiUltraModelSettings);
-          await game.init();
+          await initGame();
         } catch(e) {
           console.error(e);
           
@@ -124,18 +124,6 @@ if(!isMainThread) {
             errorOccurred: true
           });
         }
-  
-        parentPort.postMessage({
-          type: "init",
-          "snakes": copySnakes(game.snakes),
-          "grid": copyGrid(game.grid),
-          "enablePause": game.enablePause,
-          "enableRetry": game.enableRetry,
-          "progressiveSpeed": game.progressiveSpeed,
-          "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
-          "errorOccurred": game.errorOccurred,
-          "engineLoading": game.engineLoading
-        });
     
         game.onReset(() => {
           parentPort.postMessage({
@@ -318,7 +306,7 @@ if(!isMainThread) {
         game.countBeforePlay = 3;
 
         try {
-          await game.init();
+          await initGame();
         } catch(e) {
           console.error(e);
 
@@ -399,5 +387,21 @@ if(!isMainThread) {
           break;
       }
     }
+  });
+}
+
+async function initGame() {
+  await game.init();
+
+  parentPort.postMessage({
+    type: "init",
+    "snakes": copySnakes(game.snakes),
+    "grid": copyGrid(game.grid),
+    "enablePause": game.enablePause,
+    "enableRetry": game.enableRetry,
+    "progressiveSpeed": game.progressiveSpeed,
+    "offsetFrame": game.speed * GameConstants.Setting.TIME_MULTIPLIER,
+    "errorOccurred": game.errorOccurred,
+    "engineLoading": game.engineLoading
   });
 }

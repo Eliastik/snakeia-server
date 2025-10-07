@@ -88,7 +88,7 @@ You can create another configuration file in the **config** directory named **lo
         "enableAI": false, // Disable or enable AIs
         "aiUltraAPIURL": "https://www.eliastiksofts.com/snakeia/models/", // URL to the API listing the Ultra AI models. The game engine will use this API to load the default model
         "aiUltraModelID": null, // ID of the model (as returned by the API at the URL above) to load for the Ultra AI. Can be left empty; in that case, the default model provided by the API will be loaded
-        "aiUltraCustomModelURL": null, // A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the match
+        "aiUltraCustomModelURL": null, // A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the game
         "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
         "enableMaxTimeGame": true, // Enable time limit for each game
         "maxTimeGame": 300000, // The time limit for each game (ms)

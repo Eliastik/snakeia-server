@@ -35,101 +35,24 @@ class GameEngineMultithreadingController extends GameEngine {
   }
 
   async init() {
+    if(!this.eventsInit) {
+      this.initEventHandlers();
+    }
+
+    if(this.grid) {
+      this.grid.rngGrid = null;
+      this.grid.rngGame = null;
+    }
+
     return new Promise(resolve => {
-      if(!this.eventsInit) {
-        this.worker.on("message", (data) => {
-          const type = data.type;
-          const dataKeys = Object.keys(data);
+      const handleMessage = (data) => {
+        if(data.type === "init") {
+          this.worker.off("message", handleMessage);
+          resolve();
+        }
+      };
 
-          if(dataKeys.length > 1) {
-            let grid = this.grid;
-            let snakes = this.snakes;
-
-            if(data.grid) {
-              grid = Object.assign(new Grid(), data.grid);
-              data.grid = grid;
-            }
-            
-            if(data.snakes) {
-              for(let i = 0; i < data.snakes.length; i++) {
-                data.snakes[i].grid = grid;
-                data.snakes[i] = Object.assign(new Snake(), data.snakes[i]);
-
-                for(let j = 0; j < data.snakes[i].queue.length; j++) {
-                  data.snakes[i].queue[j] = Object.assign(new Position(), data.snakes[i].queue[j]);
-                }
-              }
-
-              snakes = data.snakes;
-            }
-
-            this.snakes = snakes;
-            this.grid = grid;
-
-            for(let i = 0; i < dataKeys.length; i++) {
-              if(dataKeys[i] != "snakes" && dataKeys[i] != "grid") {
-                this[dataKeys[i]] = data[dataKeys[i]];
-              }
-            }
-          }
-
-          switch(type) {
-            case "init":
-              this.workerReady = true;
-              this.passQueuedMessages();
-              resolve();
-              break;
-            case "reset":
-              this.reactor.dispatchEvent("onReset");
-              break;
-            case "start":
-              this.reactor.dispatchEvent("onStart");
-              break;
-            case "pause":
-              this.reactor.dispatchEvent("onPause");
-              break;
-            case "continue":
-              this.reactor.dispatchEvent("onContinue");
-              break;
-            case "stop":
-              this.reactor.dispatchEvent("onStop");
-              break;
-            case "exit":
-              this.reactor.dispatchEvent("onExit");
-              break;
-            case "kill":
-              this.reactor.dispatchEvent("onKill");
-              break;
-            case "scoreIncreased":
-              this.reactor.dispatchEvent("onScoreIncreased");
-              break;
-            case "update":
-              this.reactor.dispatchEvent("onUpdate");
-              break;
-            case "updateCounter":
-              this.reactor.dispatchEvent("onUpdateCounter");
-              break;
-          }
-        });
-        
-        this.worker.on("error", (error) => {
-          if(logger) logger.error("Error in GameEngineMultithreading", error);
-          this.errorOccurred = true;
-          this.reactor.dispatchEvent("onStop");
-        });
-        
-        this.worker.on("exit", () => {
-          this.gameFinished = true;
-          this.reactor.dispatchEvent("onStop");
-        });
-
-        this.eventsInit = true;
-      }
-
-      if(this.grid) {
-        this.grid.rngGrid = null;
-        this.grid.rngGame = null;
-      }
+      this.worker.on("message", handleMessage);
 
       this.worker.postMessage({
         type: "init",
@@ -144,6 +67,95 @@ class GameEngineMultithreadingController extends GameEngine {
         aiUltraModelSettings: this.aiUltraModelSettings
       });
     });
+  }
+
+  initEventHandlers() {
+    this.worker.on("message", data => {
+      const type = data.type;
+      const dataKeys = Object.keys(data);
+
+      if (dataKeys.length > 1) {
+        let grid = this.grid;
+        let snakes = this.snakes;
+
+        if (data.grid) {
+          grid = Object.assign(new Grid(), data.grid);
+          data.grid = grid;
+        }
+
+        if (data.snakes) {
+          for (let i = 0; i < data.snakes.length; i++) {
+            data.snakes[i].grid = grid;
+            data.snakes[i] = Object.assign(new Snake(), data.snakes[i]);
+
+            for (let j = 0; j < data.snakes[i].queue.length; j++) {
+              data.snakes[i].queue[j] = Object.assign(new Position(), data.snakes[i].queue[j]);
+            }
+          }
+
+          snakes = data.snakes;
+        }
+
+        this.snakes = snakes;
+        this.grid = grid;
+
+        for (let i = 0; i < dataKeys.length; i++) {
+          if (dataKeys[i] != "snakes" && dataKeys[i] != "grid") {
+            this[dataKeys[i]] = data[dataKeys[i]];
+          }
+        }
+      }
+
+      switch (type) {
+        case "init":
+          this.workerReady = true;
+          this.passQueuedMessages();
+          break;
+        case "reset":
+          this.reactor.dispatchEvent("onReset");
+          break;
+        case "start":
+          this.reactor.dispatchEvent("onStart");
+          break;
+        case "pause":
+          this.reactor.dispatchEvent("onPause");
+          break;
+        case "continue":
+          this.reactor.dispatchEvent("onContinue");
+          break;
+        case "stop":
+          this.reactor.dispatchEvent("onStop");
+          break;
+        case "exit":
+          this.reactor.dispatchEvent("onExit");
+          break;
+        case "kill":
+          this.reactor.dispatchEvent("onKill");
+          break;
+        case "scoreIncreased":
+          this.reactor.dispatchEvent("onScoreIncreased");
+          break;
+        case "update":
+          this.reactor.dispatchEvent("onUpdate");
+          break;
+        case "updateCounter":
+          this.reactor.dispatchEvent("onUpdateCounter");
+          break;
+      }
+    });
+
+    this.worker.on("error", (error) => {
+      if (logger) logger.error("Error in GameEngineMultithreading", error);
+      this.errorOccurred = true;
+      this.reactor.dispatchEvent("onStop");
+    });
+
+    this.worker.on("exit", () => {
+      this.gameFinished = true;
+      this.reactor.dispatchEvent("onStop");
+    });
+
+    this.eventsInit = true;
   }
 
   reset() {
