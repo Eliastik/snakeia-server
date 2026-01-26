@@ -1,6 +1,6 @@
 {
   "name": "snakeia-server",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Server for multiplaying in SnakeIA (https://github.com/Eliastik/snakeia)",
   "main": "server.js",
   "scripts": {
@@ -18,11 +18,11 @@
   },
   "homepage": "https://github.com/Eliastik/snakeia-server#readme",
   "dependencies": {
-    "body-parser": "^2.2.1",
-    "config": "^4.1.1",
+    "body-parser": "^2.2.2",
+    "config": "^4.2.0",
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^4.0.3",
-    "ejs": "^3.1.10",
+    "ejs": "^4.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "html-entities": "^2.6.0",

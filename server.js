@@ -17,16 +17,12 @@
  * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>.
  */
 const express        = require("express");
-const app            = require("express")();
+const app            = express();
 const fs             = require("fs");
-const http           = require("http").createServer(app);
-const io             = require("socket.io")(http, {
-  cors: {
-    origin: true,
-    credentials: true
-  },
-  allowEIO3: true
-});
+const httpLib        = require("http");
+const httpsLib       = require("https");
+let server           = null;
+let io               = null;
 const entities       = require("html-entities");
 const ejs            = require("ejs");
 const jwt            = require("jsonwebtoken");
@@ -88,6 +84,32 @@ i18n.configure({
   defaultLocale: "en",
   queryParameter: "lang",
   cookie: "lang"
+});
+
+// Initialize server
+if(config.enableHttps) {
+  const certPath = config.httpsCertFile;
+  const keyPath = config.httpsKeyFile;
+
+  try {
+    const key = fs.readFileSync(keyPath);
+    const cert = fs.readFileSync(certPath);
+
+    server = httpsLib.createServer({ key, cert }, app);
+  } catch(e) {
+    logger.error("failed to initialize HTTPS server. Fallback to HTTP server.", e);
+    server = httpLib.createServer(app);
+  }
+} else {
+  server = httpLib.createServer(app);
+}
+
+io = require("socket.io")(server, {
+  cors: {
+    origin: true,
+    credentials: true
+  },
+  allowEIO3: true
 });
 
 // Game modules
@@ -1563,6 +1585,6 @@ io.on("connection", function(socket) {
   });
 });
 
-http.listen(config.port, () => {
+server.listen(config.port, () => {
   console.log("listening on *:" + config.port);
 });
