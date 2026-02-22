@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.2.6 (1/26/2026)
+* Version 1.2.7 (2/22/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.2.6", // The server version
+        "version": "1.2.7", // The server version
         "port": 3000, // The port where the server runs
         "enableHttps": false, // Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Path to HTTPS certificate file
@@ -125,6 +125,9 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 1.2.7 (2/22/2026):
+    - Update dependencies + SnakeIA to version 3.1.0
 
 * Version 1.2.6 (1/26/2026):
     - Added the ability to start the server in HTTPS mode
@@ -226,7 +229,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.2.6 (26/01/2026)
+* Version 1.2.7 (22/02/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -292,7 +295,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.2.6", // La version du serveur
+        "version": "1.2.7", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "enableHttps": false, // Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Chemin vers le certificat HTTPS
@@ -343,6 +346,9 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 1.2.7 (22/02/2026) :
+    - Mise à jour des dépendences + SnakeIA vers 3.1.0
 
 * Version 1.2.6 (26/01/2026) :
     - Ajout de la possibilité de démarrer le serveur en HTTPS
