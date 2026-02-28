@@ -416,6 +416,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred,
       "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
       "aiStuck": game.aiStuck,
@@ -435,6 +437,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred,
       "searchingPlayers": false
     });
@@ -447,6 +451,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred
     });
   });
@@ -457,6 +463,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred
     });
   });
@@ -471,6 +479,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred
     });
 
@@ -491,6 +501,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred
     });
   });
@@ -507,6 +519,8 @@ function setupRoom(code) {
       "confirmExit": false,
       "getInfos": false,
       "getInfosGame": false,
+      "getInfosControls": false,
+      "getInfosGoal": false,
       "errorOccurred": game.errorOccurred
     });
   });
@@ -1485,6 +1499,8 @@ io.on("connection", function(socket) {
               "confirmExit": false,
               "getInfos": false,
               "getInfosGame": false,
+              "getInfosControls": false,
+              "getInfosGoal": false,
               "errorOccurred": game.gameEngine.errorOccurred,
               "timerToDisplay": config.enableMaxTimeGame ? (config.maxTimeGame - (Date.now() - game.timeStart)) / 1000 : -1,
               "countBeforePlay": game.gameEngine.countBeforePlay,

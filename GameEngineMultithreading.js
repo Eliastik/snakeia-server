@@ -147,6 +147,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "aiStuck": game.aiStuck,
             "precAiStuck": false,
@@ -167,6 +169,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
@@ -180,6 +184,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
@@ -192,6 +198,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
@@ -208,6 +216,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
@@ -224,6 +234,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
@@ -242,6 +254,8 @@ if(!isMainThread) {
             "confirmExit": false,
             "getInfos": false,
             "getInfosGame": false,
+            "getInfosControls": false,
+            "getInfosGoal": false,
             "errorOccurred": game.errorOccurred,
             "engineLoading": game.engineLoading
           });
