@@ -300,7 +300,7 @@ function createRoom(data, socket) {
 
       games[code].numberAIToAdd = enableAI ? Math.round(getMaxPlayers(code) / 2 - 1) : 0;
 
-      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket)) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id, {
+      logger.info("room creation (code: " + code + ") - username: " + (Player.getUsernameSocket(socket, jsonWebTokenSecretKey)) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id, {
         "widthGrid": widthGrid,
         "heightGrid": heightGrid,
         "generateWalls": generateWalls,
@@ -761,7 +761,7 @@ function sendStatus(code) {
 
 function exitGame(game, socket, code) {
   if(game) {
-    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
+    logger.info("exit game (code: " + code + ") - username: " + Player.getUsernameSocket(socket, jsonWebTokenSecretKey) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
 
     if(Player.containsId(game.players, socket.id) && Player.getPlayer(game.players, socket.id).snake != null) {
       Player.getPlayer(game.players, socket.id).snake.gameOver = true;
@@ -1462,11 +1462,13 @@ io.on("connection", function(socket) {
   
       if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token, games) && !Player.containsIdAllGames(socket.id, games)) {
         socket.join("room-" + code);
+
+        const username = Player.getUsernameToken(token, jsonWebTokenSecretKey);
   
         if(game.players.length + game.numberAIToAdd >= getMaxPlayers(code) || game.started) {
-          game.spectators.push(new Player(token, socket.id, null, false, version));
+          game.spectators.push(new Player(token, username, socket.id, null, false, version));
         } else {
-          game.players.push(new Player(token, socket.id, null, false, version));
+          game.players.push(new Player(token, username, socket.id, null, false, version));
         }
   
         socket.emit("join-room", {
@@ -1576,7 +1578,7 @@ io.on("connection", function(socket) {
           }
         });
   
-        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
+        logger.info("join room (code: " + code + ") - username: " + Player.getUsernameSocket(socket, jsonWebTokenSecretKey) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
       } else {
         if(games[code] == null) {
           socket.emit("join-room", {
