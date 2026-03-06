@@ -1063,7 +1063,7 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, function(req, res) 
             enableMaxTimeGame: config.enableMaxTimeGame,
             maxTimeGame: config.maxTimeGame,
             theme: req.query.theme,
-            csrfToken: null
+            csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true })
           });
         });
       }
