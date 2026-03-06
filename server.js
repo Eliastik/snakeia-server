@@ -917,7 +917,7 @@ const { doubleCsrfProtection: doubleCsrfProtectionAdmin, generateCsrfToken: gene
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
     path: "/",
-    secure: productionMode
+    secure: req.protocol === "https"
   }
 });
 
@@ -936,7 +936,7 @@ const { doubleCsrfProtection: doubleCsrfProtectionUserAuthent, generateCsrfToken
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
     path: "/authentication",
-    secure: productionMode
+    secure: req.protocol === "https"
   }
 });
 
@@ -980,7 +980,8 @@ app.get("/authentication", function(req, res) {
 
         res.cookie("sessionId", sessionId, {
           httpOnly: true,
-          sameSite: "Lax"
+          sameSite: "Lax",
+          secure: req.protocol === "https"
         });
       }
 
@@ -1020,7 +1021,12 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, function(req, res) 
             username: username
           }, jsonWebTokenSecretKey, { expiresIn: config.authenticationTime / 1000 });
       
-          res.cookie("token", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "None", secure: (req.protocol == "https" ? true : false)  });
+          res.cookie("token", token, {
+            expires: new Date(Date.now() + config.authenticationTime),
+            httpOnly: true,
+            sameSite: "None",
+            secure: req.protocol === "https"
+          });
 
           res.render(__dirname + "/views/authentication.html", {
             publicKey: config.recaptchaPublicKey,
@@ -1277,8 +1283,13 @@ function adminAction(req, res, action) {
 
         if(action == "disconnect") {
           invalidatedAdminTokens.add(req.cookies.tokenAdmin);
-          res.cookie("tokenAdmin", { expires: -1 });
+
+          res.cookie("tokenAdmin", {
+            expires: -1
+          });
+
           res.redirect("/admin");
+
           return;
         } else if(action) {
           const socket = req.body.socket;
@@ -1372,7 +1383,12 @@ app.post("/admin", adminRateLimiter, function(req, res) {
             username: username
           }, jsonWebTokenSecretKeyAdmin, { expiresIn: config.authenticationTime / 1000 });
       
-          res.cookie("tokenAdmin", token, { expires: new Date(Date.now() + config.authenticationTime), httpOnly: true, sameSite: "strict", secure: (req.protocol == "https" ? true : false)  });
+          res.cookie("tokenAdmin", token, {
+            expires: new Date(Date.now() + config.authenticationTime),
+            httpOnly: true,
+            sameSite: "strict",
+            secure: req.protocol === "https"
+          });
           res.redirect("/admin");
           logger.info("admin authent - username: " + username + " - ip: " + req.ip);
           return;
