@@ -902,9 +902,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(i18n.init);
 
-const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
-const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
-  getSecret: () => csrfSecret,
+const csrfSecretAdmin = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
+const { doubleCsrfProtection: doubleCsrfProtectionAdmin, generateCsrfToken: generateCsrfTokenAdmin } = doubleCsrf({
+  getSecret: () => csrfSecretAdmin,
   getSessionIdentifier: (req) => req.cookies.tokenAdmin || randomUUID(),
   getCsrfTokenFromRequest: (req) => {
     return (
@@ -913,10 +913,29 @@ const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
       req.query?._csrf
     );
   },
-  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
+  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token-admin" : "snakeia-server.x-csrf-token-admin",
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
     path: "/",
+    secure: productionMode
+  }
+});
+
+const csrfSecretUser = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
+const { doubleCsrfProtection: doubleCsrfProtectionUserAuthent, generateCsrfToken: generateCsrfTokenUserAuthent } = doubleCsrf({
+  getSecret: () => csrfSecretUser,
+  getSessionIdentifier: (req) => req.cookies.sessionId || randomUUID(),
+  getCsrfTokenFromRequest: (req) => {
+    return (
+      req.headers["x-csrf-token"] ||
+      req.body?._csrf ||
+      req.query?._csrf
+    );
+  },
+  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token-user" : "snakeia-server.x-csrf-token-user",
+  cookieOptions: {
+    sameSite: productionMode ? "strict" : "lax",
+    path: "/authentication",
     secure: productionMode
   }
 });
@@ -980,7 +999,7 @@ app.get("/authentication", function(req, res) {
         enableMaxTimeGame: config.enableMaxTimeGame,
         maxTimeGame: config.maxTimeGame,
         theme: req.query.theme,
-        csrfToken: generateCsrfToken(req, res, { overwrite: true, validateOnReuse: true }),
+        csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true }),
       });
     });
   } else {
@@ -988,7 +1007,7 @@ app.get("/authentication", function(req, res) {
   }
 });
 
-app.post("/authentication", doubleCsrfProtection, function(req, res) {
+app.post("/authentication", doubleCsrfProtectionUserAuthent, function(req, res) {
   if(req.cookies && config.enableAuthentication) {
     let err = false;
     
@@ -1202,7 +1221,7 @@ function verifyFormAuthenticationAdmin(body) {
   });
 }
 
-app.get("/admin", doubleCsrfProtection, function(req, res) {
+app.get("/admin", doubleCsrfProtectionAdmin, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
       if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) err = true;
@@ -1230,7 +1249,7 @@ app.get("/admin", doubleCsrfProtection, function(req, res) {
             games: games,
             io: io,
             config: config,
-            csrfToken: generateCsrfToken(req, res, { overwrite: true, validateOnReuse: true }),
+            csrfToken: generateCsrfTokenAdmin(req, res, { overwrite: true, validateOnReuse: true }),
             serverLog: logFile,
             errorLog: errorLogFile,
             getIPSocketIO: getIPSocketIO,
@@ -1324,7 +1343,7 @@ function adminAction(req, res, action) {
 
 const jsonParser = bodyParser.json();
 
-app.post("/admin/:action", jsonParser, doubleCsrfProtection, function(req, res) {
+app.post("/admin/:action", jsonParser, doubleCsrfProtectionAdmin, function(req, res) {
   adminAction(req, res, req.params.action);
 });
 
@@ -1455,7 +1474,7 @@ io.of("/rooms").use(ioCookieParser()).use(checkBanned).on("connection", function
       }
     });
   }, () => {
-    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
+    emitAuthenticationRequired(socket);
   });
 });
 
@@ -1464,22 +1483,12 @@ io.of("/createRoom").use(ioCookieParser()).use(checkBanned).on("connection", fun
     checkAuthenticationSocket(socket).then(() => {
       createRoom(data, socket);
     }, () => {
-      socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
+      emitAuthenticationRequired(socket);
     });
   });
 });
 
 io.on("connection", function(socket) {
-  const sessionId = socket.request.cookies.sessionId;
-
-  if(sessionId) {
-    socketSessions.set(sessionId, socket.id);
-  }
-
-  socket.on("disconnect", () => {
-    socketSessions.delete(sessionId);
-  });
-
   checkAuthenticationSocket(socket).then((token) => {
     const username = Player.getUsernameToken(token, jsonWebTokenSecretKey);
 
@@ -1629,9 +1638,23 @@ io.on("connection", function(socket) {
       }
     });
   }, () => {
-    socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
+    emitAuthenticationRequired(socket);
   });
 });
+
+function emitAuthenticationRequired(socket) {
+  const sessionId = socket.request.cookies.sessionId;
+
+  if(sessionId) {
+    socketSessions.set(sessionId, socket.id);
+  }
+
+  socket.on("disconnect", () => {
+    socketSessions.delete(sessionId);
+  });
+
+  socket.emit("authent", GameConstants.Error.AUTHENTICATION_REQUIRED);
+}
 
 function isTokenExpired(token) {
   try {
