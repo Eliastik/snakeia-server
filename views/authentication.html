@@ -20,6 +20,7 @@
   <head>
     <meta charset="UTF-8"></meta>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="<%= csrfToken %>">
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/flat-ui.min.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
@@ -39,6 +40,7 @@
       <h3><%= __("alreadyAuthentified") %></h3>
       <% } else if(!success) { %>
       <form action="" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
         <fieldset class="form-group">
           <div class="form-group row">
             <label for="username" class="col-12 col-form-label"><%= __("username", __n("characters", max), min) %></label>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Eliastik (eliastiksofts.com)
+ * Copyright (C) 2020-2026 Eliastik (eliastiksofts.com)
  *
  * This file is part of "SnakeIA Server".
  *
@@ -114,7 +114,7 @@ io = require("socket.io")(server, {
 
 // Game modules
 const snakeia        = require("snakeia");
-const { randomUUID } = require("crypto");
+const { randomUUID, randomBytes } = require("crypto");
 const Snake          = snakeia.Snake;
 const Grid           = snakeia.Grid;
 const GameConstants  = snakeia.GameConstants;
@@ -122,9 +122,10 @@ const GameEngine     = config.enableMultithreading ? require("./GameEngineMultit
 const Player         = require("./Player");
 
 const games = {}; // Contains all the games processed by the server
-const tokens = []; // User tokens
-const invalidatedUserTokens = []; // Invalidated user tokens
-const invalidatedAdminTokens = []; // Invalidated admin tokens
+const tokens = new Map(); // User tokens
+const socketSessions = new Map();
+const invalidatedUserTokens = new Set(); // Invalidated user tokens
+const invalidatedAdminTokens = new Set(); // Invalidated admin tokens
 
 function getRoomsData() {
   const rooms = [];
@@ -164,13 +165,23 @@ function getRoomsData() {
 }
 
 function getRandomRoomKey() {
-  let r;
+  let roomKey;
 
   do {
-    r = Math.random().toString(36).substring(2, 10);
-  } while(r in games);
+    const length = 8;
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const charsLength = chars.length;
+  
+    const bytes = randomBytes(length);
 
-  return r;
+    roomKey = "";
+    
+    for(let i = 0; i < length; i++) {
+      roomKey += chars[bytes[i] % charsLength];
+    }
+  } while(roomKey in games);
+
+  return roomKey;
 }
 
 function generateRandomJsonWebTokenSecretKey(precValue) {
@@ -218,13 +229,13 @@ function createRoom(data, socket) {
     let validSettings = true;
     let privateGame = false;
   
-    if(data.heightGrid == null || isNaN(data.heightGrid) || data.heightGrid < config.minGridSize || data.heightGrid > config.maxGridSize) {
+    if(data.heightGrid == null || isNaN(data.heightGrid) || !Number.isInteger(data.heightGrid) || data.heightGrid < config.minGridSize || data.heightGrid > config.maxGridSize) {
       validSettings = false;
     } else {
       heightGrid = data.heightGrid;
     }
   
-    if(data.widthGrid == null || isNaN(data.widthGrid) || data.widthGrid < config.minGridSize || data.widthGrid > config.maxGridSize) {
+    if(data.widthGrid == null || isNaN(data.widthGrid) || !Number.isInteger(data.widthGrid) || data.widthGrid < config.minGridSize || data.widthGrid > config.maxGridSize) {
       validSettings = false;
     } else {
       widthGrid = data.widthGrid;
@@ -249,12 +260,12 @@ function createRoom(data, socket) {
     }
   
     if(data.speed == "custom") {
-      if(data.customSpeed == null || isNaN(data.customSpeed) || data.customSpeed < config.minSpeed || data.customSpeed > config.maxSpeed) {
+      if(data.customSpeed == null || isNaN(data.customSpeed) || !Number.isInteger(data.customSpeed) || data.customSpeed < config.minSpeed || data.customSpeed > config.maxSpeed) {
         validSettings = false;
       } else {
         speed = data.customSpeed;
       }
-    } else if(data.speed == null || isNaN(data.speed) || data.speed < config.minSpeed || data.speed > config.maxSpeed) {
+    } else if(data.speed == null || isNaN(data.speed) || !Number.isInteger(data.speed) || data.speed < config.minSpeed || data.speed > config.maxSpeed) {
       validSettings = false;
     } else {
       speed = data.speed;
@@ -358,11 +369,11 @@ function copySnakes(snakes) {
         snakeCopy.aiLevel = snake.aiLevel;
   
         if(snake.lastTail) {
-          snakeCopy.lastTail = JSON.parse(JSON.stringify(snake.lastTail));
+          snakeCopy.lastTail = structuredClone(snake.lastTail);
         }
   
         if(snake.lastHead) {
-          snakeCopy.lastHead = JSON.parse(JSON.stringify(snake.lastHead));
+          snakeCopy.lastHead = structuredClone(snake.lastHead);
         }
   
         snakeCopy.lastTailMoved = snake.lastTailMoved;
@@ -371,7 +382,7 @@ function copySnakes(snakes) {
         snakeCopy.player = snake.player;
   
         if(snake.queue) {
-          snakeCopy.queue = JSON.parse(JSON.stringify(snake.queue));
+          snakeCopy.queue = structuredClone(snake.queue);
         }
   
         snakeCopy.score = snake.score;
@@ -591,10 +602,9 @@ function cleanRooms() {
     const game = games[keys[i]];
 
     if(game != null) {
-      const players = Object.keys(game.players) + Object.keys(game.spectators);
-      const nb = players.length;
+      const players = Object.keys(game.players).length + Object.keys(game.spectators).length;
   
-      if(nb <= 0) {
+      if(players <= 0) {
         toRemove.push(keys[i]);
 
         if(game.gameEngine && game.gameEngine.kill) {
@@ -605,7 +615,7 @@ function cleanRooms() {
   }
 
   for(let i = 0; i < toRemove.length; i++) {
-    games[toRemove[i]] = null;
+    delete games[toRemove[i]];
   }
 }
 
@@ -816,21 +826,21 @@ function usernameBanned(username) {
 }
 
 function usernameAlreadyInUse(username) {
-  return new Promise((resolve, reject) => {
-    tokens.forEach(token => {
-      try {
-        const otherUsername = jwt.verify(token, jsonWebTokenSecretKey).username;
+  if(!tokens.has(username.toLowerCase())) {
+    return false;
+  }
 
-        if(otherUsername) {
-          if(otherUsername.toLowerCase().indexOf(username.toLowerCase()) > -1) {
-            resolve();
-          }
-        }
-      } catch(e) {}
-    });
+  try {
+    const tokenWithUsername = tokens.get(username.toLowerCase());
+    
+    if(!jwt.verify(tokenWithUsername, jsonWebTokenSecretKey).username) {
+      return false;
+    }
+  } catch(e) {
+    logger.error(e);
+  }
 
-    reject();
-  });
+  return true;
 }
 
 function verifyRecaptcha(response) {
@@ -867,11 +877,11 @@ function verifyFormAuthentication(body) {
         usernameBanned(username).then(() => {
           reject("BANNED_USERNAME");
         }, () => {
-          usernameAlreadyInUse(username).then(() => {
+          if(usernameAlreadyInUse(username)) {
             reject("USERNAME_ALREADY_IN_USE");
-          }, () => {
+          } else {
             resolve();
-          });
+          }
         });
       } else {
         reject("BAD_USERNAME");
@@ -891,6 +901,25 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(i18n.init);
+
+const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
+const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
+  getSecret: () => csrfSecret,
+  getSessionIdentifier: (req) => req.cookies.tokenAdmin || randomUUID(),
+  getCsrfTokenFromRequest: (req) => {
+    return (
+      req.headers["x-csrf-token"] ||
+      req.body?._csrf ||
+      req.query?._csrf
+    );
+  },
+  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
+  cookieOptions: {
+    sameSite: productionMode ? "strict" : "lax",
+    path: "/",
+    secure: productionMode
+  }
+});
 
 // Rate limiter
 app.use("/authentication", rateLimit({
@@ -925,6 +954,17 @@ app.get("/authentication", function(req, res) {
     let err = false;
 
     checkAuthenticationExpress(req).catch(() => err = true).finally(() => {
+      let sessionId = req.cookies.sessionId;
+
+      if(!sessionId) {
+        sessionId = randomUUID();
+
+        res.cookie("sessionId", sessionId, {
+          httpOnly: true,
+          sameSite: "Lax"
+        });
+      }
+
       res.render(__dirname + "/views/authentication.html", {
         publicKey: config.recaptchaPublicKey,
         enableRecaptcha: config.enableRecaptcha,
@@ -939,7 +979,8 @@ app.get("/authentication", function(req, res) {
         max: config.maxCharactersUsername,
         enableMaxTimeGame: config.enableMaxTimeGame,
         maxTimeGame: config.maxTimeGame,
-        theme: req.query.theme
+        theme: req.query.theme,
+        csrfToken: generateCsrfToken(req, res, { overwrite: true, validateOnReuse: true }),
       });
     });
   } else {
@@ -947,7 +988,7 @@ app.get("/authentication", function(req, res) {
   }
 });
 
-app.post("/authentication", function(req, res) {
+app.post("/authentication", doubleCsrfProtection, function(req, res) {
   if(req.cookies && config.enableAuthentication) {
     let err = false;
     
@@ -955,7 +996,6 @@ app.post("/authentication", function(req, res) {
       if(err) {
         verifyFormAuthentication(req.body).then(() => {
           const username = req.body["username"];
-          const id = req.query.id;
 
           const token = jwt.sign({
             username: username
@@ -977,13 +1017,17 @@ app.post("/authentication", function(req, res) {
             max: config.maxCharactersUsername,
             enableMaxTimeGame: config.enableMaxTimeGame,
             maxTimeGame: config.maxTimeGame,
-            theme: req.query.theme
+            theme: req.query.theme,
+            csrfToken: null
           });
 
           logger.info("authentication - username: " + username + " - ip: " + req.ip);
 
-          if(id != null) {
-            io.to("" + id).emit("token", token);
+          const sessionId = req.cookies.sessionId;
+          const socketId = socketSessions.get(sessionId);
+
+          if(socketId != null) {
+            io.to("" + socketId).emit("token", token);
           }
         }, (err) => {
           res.render(__dirname + "/views/authentication.html", {
@@ -1000,7 +1044,8 @@ app.post("/authentication", function(req, res) {
             max: config.maxCharactersUsername,
             enableMaxTimeGame: config.enableMaxTimeGame,
             maxTimeGame: config.maxTimeGame,
-            theme: req.query.theme
+            theme: req.query.theme,
+            csrfToken: null
           });
         });
       }
@@ -1033,23 +1078,16 @@ function kickUser(socketId, token) {
 }
 
 function kickUsername(username) {
-  tokens.forEach(token => {
-    jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
-      if(!err && data && data.username && data.username == username) {
-        invalidateUserToken(token);
-      }
-    });
-  });
+  const usernameToken = tokens.get(username.toLowerCase());
+
+  if(usernameToken) {
+    invalidateUserToken(username, usernameToken);
+  }
 }
 
-function invalidateUserToken(token) {
-  invalidatedUserTokens.push(token);
-
-  for(let i = tokens.length - 1; i >= 0; i--) {
-    if(tokens[i] == token) {
-      tokens.splice(i, 1);
-    }
-  }
+function invalidateUserToken(username, token) {
+  invalidatedUserTokens.add(token);
+  tokens.delete(username.toLowerCase());
 }
 
 function banUserIP(socketId) {
@@ -1164,29 +1202,10 @@ function verifyFormAuthenticationAdmin(body) {
   });
 }
 
-const csrfSecret = generateRandomJsonWebTokenSecretKey(jsonWebTokenSecretKeyAdmin);
-const { doubleCsrfProtection, generateCsrfToken } = doubleCsrf({
-  getSecret: () => csrfSecret,
-  getSessionIdentifier: (req) => req.cookies.tokenAdmin || randomUUID(),
-  getCsrfTokenFromRequest: (req) => {
-    return (
-      req.headers["x-csrf-token"] ||
-      req.body?._csrf ||
-      req.query?._csrf
-    );
-  },
-  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token" : "snakeia-server.x-csrf-token",
-  cookieOptions: {
-    sameSite: productionMode ? "strict" : "lax",
-    path: "/",
-    secure: productionMode
-  }
-});
-
 app.get("/admin", doubleCsrfProtection, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) err = true;
       
       const usernames = Object.keys(config.adminAccounts);
       const authenticated = !err && data && data.username && usernames.includes(data.username);
@@ -1228,7 +1247,7 @@ app.get("/admin", doubleCsrfProtection, function(req, res) {
 function adminAction(req, res, action) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) err = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) err = true;
 
       const usernames = Object.keys(config.adminAccounts);
       const authenticated = !err && data && data.username && usernames.includes(data.username);
@@ -1238,7 +1257,7 @@ function adminAction(req, res, action) {
         const role = config.adminAccounts[username]["role"] || "moderator";
 
         if(action == "disconnect") {
-          invalidatedAdminTokens.push(req.cookies.tokenAdmin);
+          invalidatedAdminTokens.add(req.cookies.tokenAdmin);
           res.cookie("tokenAdmin", { expires: -1 });
           res.redirect("/admin");
           return;
@@ -1324,7 +1343,7 @@ const adminRateLimiter = rateLimit({
 app.post("/admin", adminRateLimiter, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.includes(req.cookies.tokenAdmin)) res = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) res = true;
 
       if(err) {
         verifyFormAuthenticationAdmin(req.body).then(() => {
@@ -1389,7 +1408,7 @@ function checkAuthentication(token) {
     if(!config.enableAuthentication) {
       resolve();
     } else {
-      if(token && invalidatedUserTokens.includes(token)) reject();
+      if(token && invalidatedUserTokens.has(token)) reject();
   
       jwt.verify(token, jsonWebTokenSecretKey, function(err, data) {
         if(!err) {
@@ -1451,9 +1470,22 @@ io.of("/createRoom").use(ioCookieParser()).use(checkBanned).on("connection", fun
 });
 
 io.on("connection", function(socket) {
+  const sessionId = socket.request.cookies.sessionId;
+
+  if(sessionId) {
+    socketSessions.set(sessionId, socket.id);
+  }
+
+  socket.on("disconnect", () => {
+    socketSessions.delete(sessionId);
+  });
+
   checkAuthenticationSocket(socket).then((token) => {
+    const username = Player.getUsernameToken(token, jsonWebTokenSecretKey);
+
     socket.emit("authent", GameConstants.GameState.AUTHENTICATION_SUCCESS);
-    tokens.push(token);
+    
+    tokens.set(username.toLowerCase(), token);
 
     socket.on("join-room", function(data) {
       const code = data.code;
@@ -1462,8 +1494,6 @@ io.on("connection", function(socket) {
   
       if(game != null && !Player.containsId(game.players, socket.id) && !Player.containsId(game.spectators, socket.id) && !Player.containsToken(game.players, token) && !Player.containsToken(game.spectators, token) && !Player.containsTokenAllGames(token, games) && !Player.containsIdAllGames(socket.id, games)) {
         socket.join("room-" + code);
-
-        const username = Player.getUsernameToken(token, jsonWebTokenSecretKey);
   
         if(game.players.length + game.numberAIToAdd >= getMaxPlayers(code) || game.started) {
           game.spectators.push(new Player(token, username, socket.id, null, false, version));
@@ -1603,6 +1633,50 @@ io.on("connection", function(socket) {
   });
 });
 
+function isTokenExpired(token) {
+  try {
+    const decoded = jwt.decode(token);
+    const now = Math.floor(Date.now() / 1000);
+
+    return !decoded || !decoded.exp || decoded.exp < now;
+  } catch {
+    return true;
+  }
+}
+
+function cleanMap(map) {
+  for(const [key, token] of map.entries()) {
+    if(isTokenExpired(token)) {
+      map.delete(key);
+    }
+  }
+}
+
+function cleanSet(set) {
+  for(const token of set) {
+    if(isTokenExpired(token)) {
+      set.delete(token);
+    }
+  }
+}
+
+function cleanSocketSessions() {
+  for(const [sessionId, socketId] of socketSessions.entries()) {
+    if(!io.sockets.sockets.get(socketId)) {
+      socketSessions.delete(sessionId);
+    }
+  }
+}
+
+function cleanupTokenMaps() {
+  cleanMap(tokens);
+  cleanSet(invalidatedUserTokens);
+  cleanSet(invalidatedAdminTokens);
+  cleanSocketSessions();
+}
+
 server.listen(config.port, () => {
   console.log("listening on *:" + config.port);
 });
+
+setInterval(cleanupTokenMaps, 60 * 1000);
