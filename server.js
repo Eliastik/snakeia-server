@@ -948,9 +948,8 @@ app.use(function(req, res, next) {
       contact: config.contactBan,
       theme: req.query.theme
     });
-    res.end();
   }, () => {
-    next()
+    next();
   });
 });
 
@@ -1275,75 +1274,69 @@ function adminAction(req, res, action) {
       const usernames = Object.keys(config.adminAccounts);
       const authenticated = !err && data && data.username && usernames.includes(data.username);
 
-      if(authenticated) {
-        const username = data.username;
-        const role = config.adminAccounts[username]["role"] || "moderator";
+      if(!authenticated) {
+        res.redirect("/admin");
+        return;
+      }
 
-        if(action == "disconnect") {
-          invalidatedAdminTokens.add(req.cookies.tokenAdmin);
+      const username = data.username;
+      const role = config.adminAccounts[username]["role"] || "moderator";
 
-          res.cookie("tokenAdmin", {
-            expires: -1
-          });
+      if(action == "disconnect") {
+        invalidatedAdminTokens.add(req.cookies.tokenAdmin);
+        res.cookie("tokenAdmin", { expires: -1 });
+        res.redirect("/admin");
+        return;
+      }
+      
+      const socket = req.body.socket;
+      const token = req.body.token;
+      const value = req.body.value;
 
-          res.redirect("/admin");
-
-          return;
-        } else if(action) {
-          const socket = req.body.socket;
-          const token = req.body.token;
-          const value = req.body.value;
-
-          switch(action) {
-            case "kick":
-              kickUser(socket, token);
-              break;
-            case "banIP":
-              if(value) {
-                manualIPBan(value);
-              } else {
-                banUserIP(socket);
-                kickUser(socket, token);
-              }
-              break;
-            case "banUserName":
-              if(value) {
-                manualUsernameBan(value);
-                kickUsername(value);
-              } else {
-                banUserName(token);
-                kickUser(socket, token);
-              }
-              break;
-            case "banIPUserName":
-              banUserIP(socket);
-              banUserName(token);
-              kickUser(socket, token);
-              break;
-            case "unbanUsername":
-              unbanUsername(value);
-              break;
-            case "unbanIP":
-              unbanIP(value);
-              break;
-            case "resetLog":
-              if(role === "administrator") resetLog();
-              break;
-            case "resetErrorLog":
-              if(role === "administrator") resetErrorLog();
-              break;
-            case "updateConfig":
-              if(role === "administrator") updateConfig(value);
-              break;
+      switch(action) {
+        case "kick":
+          kickUser(socket, token);
+          break;
+        case "banIP":
+          if(value) {
+            manualIPBan(value);
+          } else {
+            banUserIP(socket);
+            kickUser(socket, token);
           }
-
-          res.redirect("/admin");
-          return;
-        }
+          break;
+        case "banUserName":
+          if(value) {
+            manualUsernameBan(value);
+            kickUsername(value);
+          } else {
+            banUserName(token);
+            kickUser(socket, token);
+          }
+          break;
+        case "banIPUserName":
+          banUserIP(socket);
+          banUserName(token);
+          kickUser(socket, token);
+          break;
+        case "unbanUsername":
+          unbanUsername(value);
+          break;
+        case "unbanIP":
+          unbanIP(value);
+          break;
+        case "resetLog":
+          if(role === "administrator") resetLog();
+          break;
+        case "resetErrorLog":
+          if(role === "administrator") resetErrorLog();
+          break;
+        case "updateConfig":
+          if(role === "administrator") updateConfig(value);
+          break;
       }
 
       res.redirect("/admin");
-      return;
     });
   } else {
     res.end();
