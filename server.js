@@ -802,15 +802,9 @@ function ipBanned(ip) {
     ip = ip.substr(7, ip.length);
   }
 
-  return new Promise((resolve, reject) => {
-    config.ipBan.forEach(ipBanned => {
-      if(ipBanned == ip) {
-        resolve();
-      }
-    });
-
-    reject();
-  });
+  return config.ipBan.includes(ip)
+    ? Promise.resolve()
+    : Promise.reject();
 }
 
 function usernameBanned(username) {
@@ -917,7 +911,7 @@ const { doubleCsrfProtection: doubleCsrfProtectionAdmin, generateCsrfToken: gene
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
     path: "/",
-    secure: req.protocol === "https"
+    secure: productionMode
   }
 });
 
@@ -936,7 +930,7 @@ const { doubleCsrfProtection: doubleCsrfProtectionUserAuthent, generateCsrfToken
   cookieOptions: {
     sameSite: productionMode ? "strict" : "lax",
     path: "/authentication",
-    secure: req.protocol === "https"
+    secure: productionMode
   }
 });
 
@@ -1230,7 +1224,9 @@ function verifyFormAuthenticationAdmin(body) {
 app.get("/admin", doubleCsrfProtectionAdmin, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) err = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) {
+        err = true;
+      }
       
       const usernames = Object.keys(config.adminAccounts);
       const authenticated = !err && data && data.username && usernames.includes(data.username);
@@ -1272,7 +1268,9 @@ app.get("/admin", doubleCsrfProtectionAdmin, function(req, res) {
 function adminAction(req, res, action) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) err = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) {
+        err = true;
+      }
 
       const usernames = Object.keys(config.adminAccounts);
       const authenticated = !err && data && data.username && usernames.includes(data.username);
@@ -1373,7 +1371,9 @@ const adminRateLimiter = rateLimit({
 app.post("/admin", adminRateLimiter, function(req, res) {
   if(req.cookies) {
     jwt.verify(req.cookies.tokenAdmin, jsonWebTokenSecretKeyAdmin, function(err, data) {
-      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) res = true;
+      if(invalidatedAdminTokens.has(req.cookies.tokenAdmin)) {
+        err = true;
+      }
 
       if(err) {
         verifyFormAuthenticationAdmin(req.body).then(() => {
@@ -1420,22 +1420,20 @@ app.post("/admin", adminRateLimiter, function(req, res) {
 io.use(ioCookieParser());
 
 function getIPSocketIO(req) {
-  let ipAddress;
-
-  if(req && req.headers) {
+  if(req?.headers) {
     const forwardedIpsStr = req.headers["x-forwarded-for"];
-  
-    if(forwardedIpsStr && forwardedIpsStr !== undefined && config.proxyMode) {
-      const forwardedIps = forwardedIpsStr.split(",");
-      ipAddress = forwardedIps[0];
-    }
-  
-    if(!ipAddress) {
-      ipAddress = req.address;
-    }
-  }
 
-  return ipAddress;
+    if(forwardedIpsStr && config.proxyMode) {
+      const forwardedIps = forwardedIpsStr.split(",").map(ip => ip.trim());
+      const index = forwardedIps.length - config.numberOfProxies;
+
+      if(index >= 0) {
+        return forwardedIps[index];
+      }
+    }
+
+    return req.address;
+  }
 }
 
 function checkAuthentication(token) {
