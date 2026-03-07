@@ -16,31 +16,31 @@
  * You should have received a copy of the GNU General Public License
  * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>.
  */
-const express        = require("express");
-const app            = express();
-const fs             = require("fs");
-const httpLib        = require("http");
-const httpsLib       = require("https");
-let server           = null;
-let io               = null;
-const entities       = require("html-entities");
-const ejs            = require("ejs");
+const express          = require("express");
+const app              = express();
+const fs               = require("fs");
+const httpLib          = require("http");
+const httpsLib         = require("https");
+let server             = null;
+let io                 = null;
+const entities         = require("html-entities");
+const ejs              = require("ejs");
 const { SignJWT,
   jwtVerify,
-  EncryptJWT,
-  jwtDecrypt }       = require("jose");
-const fetch          = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const cookieParser   = require("cookie-parser");
-const ioCookieParser = require("socket.io-cookie-parser");
-const i18n           = require("i18n");
-const rateLimit      = require("express-rate-limit");
-const winston        = require("winston");
-const { doubleCsrf } = require("csrf-csrf");
-const bodyParser     = require("body-parser");
-const node_config    = require("config");
+  decodeJwt }          = require("jose");
+const fetch            = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const cookieParser     = require("cookie-parser");
+const ioCookieParser   = require("socket.io-cookie-parser");
+const i18n             = require("i18n");
+const rateLimit        = require("express-rate-limit");
+const winston          = require("winston");
+const { doubleCsrf }   = require("csrf-csrf");
+const bodyParser       = require("body-parser");
+const node_config      = require("config");
 const { randomUUID,
-  randomBytes, createSecretKey
-}                    = require("crypto");
+  randomBytes,
+  createSecretKey,
+  createHash }         = require("crypto");
 
 process.env["ALLOW_CONFIG_MUTATIONS"] = true;
 let config = node_config.get("ServerConfig"); // Server configuration (see default config file config.json)
@@ -199,7 +199,7 @@ function generateRandomJsonWebTokenSecretKey(precValue) {
   let key;
 
   do {
-    key = require("crypto").randomBytes(256).toString("base64");
+    key = randomBytes(256).toString("base64");
   } while(precValue && precValue == key);
 
   return key;
@@ -983,17 +983,7 @@ app.get("/authentication", async (req, res) => {
 
   const authenticated = await checkAuthenticationExpress(req).then(() => true).catch(() => false);
 
-  let sessionId = req.cookies.sessionId;
-
-  if(!sessionId) {
-    sessionId = randomUUID();
-
-    res.cookie("sessionId", sessionId, {
-      httpOnly: true,
-      sameSite: "Lax",
-      secure: req.protocol === "https"
-    });
-  }
+  setSessionCookie(req, res);
 
   res.render(__dirname + "/views/authentication.html", {
     publicKey: config.recaptchaPublicKey,
@@ -1017,6 +1007,22 @@ app.get("/authentication", async (req, res) => {
     sendTokenToSocket(req, getExpressUserToken(req));
   }
 });
+
+function setSessionCookie(req, res) {
+  let sessionId = req.cookies.sessionId;
+
+  if(!sessionId) {
+    sessionId = randomUUID();
+
+    res.cookie("sessionId", sessionId, {
+      httpOnly: true,
+      sameSite: productionMode ? "strict" : "lax",
+      secure: req.protocol === "https"
+    });
+
+    req.cookies.sessionId = sessionId;
+  }
+}
 
 app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) => {
   if(!req.cookies || !config.enableAuthentication) {
@@ -1235,7 +1241,7 @@ async function verifyFormAuthenticationAdmin(body) {
   }
 
   const hashPassword = accounts[username]["password"];
-  const enteredPasswordHash = require("crypto").createHash("sha512").update(password).digest("hex");
+  const enteredPasswordHash = createHash("sha512").update(password).digest("hex");
 
   if(hashPassword !== enteredPasswordHash) {
     throw "INVALID";
@@ -1337,13 +1343,13 @@ async function adminAction(req, res, action) {
         manualUsernameBan(value);
         kickUsername(value);
       } else {
-        banUserName(token);
+        await banUserName(token);
         kickUser(socket, token);
       }
       break;
     case "banIPUserName":
       banUserIP(socket);
-      banUserName(token);
+      await banUserName(token);
       kickUser(socket, token);
       break;
     case "unbanUsername":
@@ -1461,14 +1467,14 @@ async function checkAuthentication(token) {
   }
 
   if(!token || invalidatedUserTokens.has(token)) {
-    throw "UNAUTHORIZED";
+    throw new Error("UNAUTHORIZED");
   }
 
   try {
     await jwtVerify(token, jsonWebTokenSecretKey);
     return token;
   } catch {
-    throw "UNAUTHORIZED";
+    throw new Error("UNAUTHORIZED");
   }
 }
 
