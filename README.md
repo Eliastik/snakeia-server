@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 1.2.7 (2/22/2026)
+* Version 2.0.0-beta.1 (3/7/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "1.2.7", // The server version
+        "version": "2.0.0-beta.1", // The server version
         "port": 3000, // The port where the server runs
         "enableHttps": false, // Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Path to HTTPS certificate file
@@ -125,6 +125,14 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 2.0.0-beta.1 (3/7/2026):
+    - ⚠️ Breaking Changes:
+    - Authentication is no longer compatible with SnakeIA 3.1.0 and earlier versions.
+      An update to SnakeIA will be released soon to restore compatibility.
+    - Bug fixes and security improvements
+    - Code refactoring
+    - Dependency updates
 
 * Version 1.2.7 (2/22/2026):
     - Update dependencies + SnakeIA to version 3.1.0
@@ -229,7 +237,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 1.2.7 (22/02/2026)
+* Version 2.0.0-beta.1 (07/03/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -295,7 +303,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "1.2.7", // La version du serveur
+        "version": "2.0.0-beta.1", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "enableHttps": false, // Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Chemin vers le certificat HTTPS
@@ -346,6 +354,14 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 2.0.0-beta.1 (07/03/2026) :
+    - ⚠️ Breaking Changes :
+        - L'authentification n'est plus compatible avec SnakeIA 3.1.0 et versions inférieures
+          Une mise à jour de SnakeIA sera publiée prochainement pour rétablir la compatibilité.
+    - Correction de bugs et améliorations de sécurité
+    - Refactorisation du code
+    - Mise à jour des dépendances
 
 * Version 1.2.7 (22/02/2026) :
     - Mise à jour des dépendences + SnakeIA vers 3.1.0
