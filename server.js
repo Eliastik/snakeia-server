@@ -63,8 +63,13 @@ const productionMode = process.env.NODE_ENV === "production";
 
 // Update config to file
 function updateConfigToFile() {
-  fs.writeFileSync(configFile, JSON.stringify({ "ServerConfig": config }, null, 4), "UTF-8");
-  config = node_config.get("ServerConfig");
+  try {
+    fs.writeFileSync(configFile, JSON.stringify({ "ServerConfig": config }, null, 4), "UTF-8");
+    config = node_config.get("ServerConfig");
+    logger.info("updated config file");
+  } catch(e) {
+    logger.error("failed to update config file", e);
+  }
 }
 
 // Logging
@@ -1201,13 +1206,21 @@ function manualIPBan(value) {
 }
 
 function resetLog() {
-  fs.writeFileSync(config.logFile, "", "UTF-8");
-  logger.info("log file reseted");
+  try {
+    fs.writeFileSync(config.logFile, "", "UTF-8");
+    logger.info("log file reseted");
+  } catch(e) {
+    logger.error("failed to reset log file", e);
+  }
 }
 
 function resetErrorLog() {
-  fs.writeFileSync(config.errorLogFile, "", "UTF-8");
-  logger.info("error log file reseted");
+  try {
+    fs.writeFileSync(config.errorLogFile, "", "UTF-8");
+    logger.info("error log file reseted");
+  } catch(e) {
+    logger.error("failed to reset error log file", e);
+  }
 }
 
 function updateConfig(value) {
