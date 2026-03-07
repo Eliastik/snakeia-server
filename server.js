@@ -941,9 +941,9 @@ const { doubleCsrfProtection: doubleCsrfProtectionUserAuthent, generateCsrfToken
       req.query?._csrf
     );
   },
-  cookieName: productionMode ? "__Host-snakeia-server.x-csrf-token-user" : "snakeia-server.x-csrf-token-user",
+  cookieName: "snakeia-server.x-csrf-token-user",
   cookieOptions: {
-    sameSite: productionMode ? "strict" : "lax",
+    sameSite: "lax",
     path: "/authentication",
     secure: productionMode
   }
