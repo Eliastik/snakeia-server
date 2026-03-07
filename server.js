@@ -1016,7 +1016,7 @@ function setSessionCookie(req, res) {
 
     res.cookie("sessionId", sessionId, {
       httpOnly: true,
-      sameSite: productionMode ? "strict" : "lax",
+      sameSite: "lax",
       secure: req.protocol === "https"
     });
 
