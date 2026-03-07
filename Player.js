@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with "SnakeIA Server".  If not, see <http://www.gnu.org/licenses/>.
  */
-const jwt = require("jsonwebtoken");
+const { jwtVerify } = require("jose");
 
 class Player {
   constructor(token, name, id, snake, ready, version) {
@@ -104,11 +104,15 @@ class Player {
     return Player.getPlayerAllGamesToken(token, games) != null;
   }
 
-  static getUsernameSocket(socket, jsonWebTokenSecretKey) {
-    try {
-      const token = socket?.handshake?.auth?.token
+  static getSocketToken(socket) {
+    return socket?.handshake?.auth?.token
         || socket?.handshake?.query?.token
         || socket?.request?.cookies?.token;
+  }
+
+  static getUsernameSocket(socket, jsonWebTokenSecretKey) {
+    try {
+      const token = Player.getSocketToken(socket);
 
       return Player.getUsernameToken(token, jsonWebTokenSecretKey);
     } catch (e) {
@@ -116,12 +120,12 @@ class Player {
     }
   }
 
-  static getUsernameToken(token, jsonWebTokenSecretKey) {
+  static async getUsernameToken(token, jsonWebTokenSecretKey) {
     try {
-      const decodedToken = jwt.verify(token, jsonWebTokenSecretKey);
+      const { payload } = await jwtVerify(token, jsonWebTokenSecretKey);
 
-      return decodedToken && decodedToken.username
-        ? decodedToken.username
+      return payload && payload.username
+        ? payload.username
         : null;
     } catch (e) {
       return null;
