@@ -105,8 +105,12 @@ You can create another configuration file in the **config** directory named **lo
         "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // ReCaptcha API URL
         "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
         "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
-        "authentMaxRequest": 50, // Maximum request for authentication
-        "authentWindowMs": 900000, // Time when the authentication requests are saved (ms)
+        "authentMaxRequest": 15, // Maximum number of authentication attempts per time window
+        "authentWindowMs": 900000, // Time window duration (for authentication) in ms (900000 = 15 minutes)
+        "adminAuthentMaxRequest": 5, // Maximum number of authentication attempts on the admin panel per time window
+        "adminAuthentWindowMs": 900000, // Time window duration (for admin authentication) in ms (900000 = 15 minutes)
+        "adminActionsMaxRequest": 30, // Maximum number of actions on the admin panel per time window
+        "adminActionsWindowMs": 60000, // Time window duration (for admin actions) in ms (60000 = 1 minute)
         "ipBan": [], // A list of IP to ban
         "usernameBan": [], // A list of usernames to ban
         "contactBan": "", // A contact URL displayed when an user is banned
@@ -334,8 +338,12 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
         "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // URL de l'API ReCaptcha
         "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
         "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
-        "authentMaxRequest": 50, // Nombre maximal de requêtes lors de l'authentification
-        "authentWindowMs": 900000, // Temps durant lequel les tentatives d'authentification seront enregistrées (ms)
+        "authentMaxRequest": 15, // Nombre maximal de tentatives d'authentification par fenêtre de temps
+        "authentWindowMs": 900000, // Durée de la fenêtre de temps (pour l'authentification) en ms (900000 = 15 minutes)
+        "adminAuthentMaxRequest": 5, // Nombre maximal de tentatives d'authentification sur l'interface d'administration par fenêtre de temps
+        "adminAuthentWindowMs": 900000, // Durée de la fenêtre de temps (pour l'authentification admin) en ms (900000 = 15 minutes)
+        "adminActionsMaxRequest": 30, // Nombre maximal d'actions sur l'interface d'administration par fenêtre de temps
+        "adminActionsWindowMs": 60000, // Durée de la fenêtre de temps (pour les actions admin) en ms (60000 = 1 minute)
         "ipBan": [], // Une liste d'IPs à bannir
         "usernameBan": [], // Une liste de noms d'utilisateur à bannir
         "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni

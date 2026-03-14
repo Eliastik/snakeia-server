@@ -1282,13 +1282,19 @@ async function verifyAdminToken(req) {
   }
 }
 
-const adminRateLimiter = rateLimit({
-  windowMs: config.authentWindowMs,
-  max: config.authentMaxRequest,
+const adminAuthentRateLimiter = rateLimit({
+  windowMs: config.adminAuthentWindowMs,
+  max: config.adminAuthentMaxRequest,
   validate: { trustProxy: false }
 });
 
-app.get("/admin", adminRateLimiter, doubleCsrfProtectionAdmin, async (req, res) => {
+const adminActionsRateLimiter = rateLimit({
+  windowMs: config.adminActionsWindowMs,
+  max: config.adminActionsMaxRequest,
+  validate: { trustProxy: false }
+});
+
+app.get("/admin", adminActionsRateLimiter, doubleCsrfProtectionAdmin, async (req, res) => {
   if(!req.cookies) {
     return res.end();
   }
@@ -1393,7 +1399,7 @@ async function adminAction(req, res, action) {
 
 const jsonParser = bodyParser.json();
 
-app.post("/admin/:action", adminRateLimiter, jsonParser, doubleCsrfProtectionAdmin, function(req, res) {
+app.post("/admin/:action", adminActionsRateLimiter, jsonParser, doubleCsrfProtectionAdmin, function(req, res) {
   adminAction(req, res, req.params.action);
 });
 
@@ -1403,7 +1409,7 @@ app.use(function (err, req, res, next) {
   res.send("Error: invalid CSRF token");
 });
 
-app.post("/admin", adminRateLimiter, async (req, res) => {
+app.post("/admin", adminAuthentRateLimiter, async (req, res) => {
   if(!req.cookies) {
     return res.end();
   }
