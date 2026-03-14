@@ -1282,7 +1282,13 @@ async function verifyAdminToken(req) {
   }
 }
 
-app.get("/admin", doubleCsrfProtectionAdmin, async (req, res) => {
+const adminRateLimiter = rateLimit({
+  windowMs: config.authentWindowMs,
+  max: config.authentMaxRequest,
+  validate: { trustProxy: false }
+});
+
+app.get("/admin", adminRateLimiter, doubleCsrfProtectionAdmin, async (req, res) => {
   if(!req.cookies) {
     return res.end();
   }
@@ -1387,7 +1393,7 @@ async function adminAction(req, res, action) {
 
 const jsonParser = bodyParser.json();
 
-app.post("/admin/:action", jsonParser, doubleCsrfProtectionAdmin, function(req, res) {
+app.post("/admin/:action", adminRateLimiter, jsonParser, doubleCsrfProtectionAdmin, function(req, res) {
   adminAction(req, res, req.params.action);
 });
 
@@ -1395,12 +1401,6 @@ app.use(function (err, req, res, next) {
   if(err.code !== "EBADCSRFTOKEN") return next(err);
   res.status(403);
   res.send("Error: invalid CSRF token");
-});
-
-const adminRateLimiter = rateLimit({
-  windowMs: config.authentWindowMs,
-  max: config.authentMaxRequest,
-  validate: { trustProxy: false }
 });
 
 app.post("/admin", adminRateLimiter, async (req, res) => {
