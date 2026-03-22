@@ -41,6 +41,7 @@ const { randomUUID,
   randomBytes,
   createSecretKey,
   createHash }         = require("crypto");
+const semver           = require("semver");
 
 process.env["ALLOW_CONFIG_MUTATIONS"] = true;
 let config = node_config.get("ServerConfig"); // Server configuration (see default config file config.json)
@@ -964,6 +965,8 @@ app.use("/authentication", rateLimit({
 // IP ban
 app.use(function(req, res, next) {
   if(ipBanned(req.ip)) {
+    res.status(403);
+
     return res.render(__dirname + "/views/banned.html", {
       contact: config.contactBan,
       theme: req.query.theme
@@ -983,12 +986,19 @@ app.get("/", function(req, res) {
 
 app.get("/authentication", async (req, res) => {
   if(!req.cookies || !config.enableAuthentication) {
+    res.status(400);
     return res.end();
   }
 
   const authenticated = await checkAuthenticationExpress(req).then(() => true).catch(() => false);
 
   setSessionCookie(req, res);
+
+  const clientCompatible = isClientCompatible(req.query.version, req.query.id);
+
+  if(!clientCompatible) {
+    res.status(403);
+  }
 
   res.render(__dirname + "/views/authentication.html", {
     publicKey: config.recaptchaPublicKey,
@@ -1005,13 +1015,25 @@ app.get("/authentication", async (req, res) => {
     enableMaxTimeGame: config.enableMaxTimeGame,
     maxTimeGame: config.maxTimeGame,
     theme: req.query.theme,
+    clientCompatible,
+    serverGameVersion: GameConstants.Setting.APP_VERSION,
     csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true }),
   });
 
-  if(authenticated) {
+  if(authenticated && clientCompatible) {
     sendTokenToSocket(req, getExpressUserToken(req));
   }
 });
+
+function isClientCompatible(version, hasIdQueryParam) {
+  const hasNoVersion = !version || version.trim().length === 0;
+
+  if((hasNoVersion && hasIdQueryParam) || hasNoVersion) {
+    return false;
+  }
+
+  return semver.gte(version, GameConstants.Setting.APP_VERSION);
+}
 
 function setSessionCookie(req, res) {
   let sessionId = req.cookies.sessionId;
@@ -1031,6 +1053,7 @@ function setSessionCookie(req, res) {
 
 app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) => {
   if(!req.cookies || !config.enableAuthentication) {
+    res.status(400);
     return res.end();
   }
 
@@ -1040,11 +1063,17 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) =>
     return res.end();
   }
 
+  const clientCompatible = isClientCompatible(req.query.version, req.query.id);
+
   let formError = null;
 
-  await verifyFormAuthentication(req.body).catch(e => formError = e);
+  if(clientCompatible) {
+    await verifyFormAuthentication(req.body).catch(e => formError = e);
+  }
 
-  if(formError) {
+  if(formError || !clientCompatible) {
+    res.status(403);
+
     return res.render(__dirname + "/views/authentication.html", {
       publicKey: config.recaptchaPublicKey,
       enableRecaptcha: config.enableRecaptcha,
@@ -1060,6 +1089,8 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) =>
       enableMaxTimeGame: config.enableMaxTimeGame,
       maxTimeGame: config.maxTimeGame,
       theme: req.query.theme,
+      clientCompatible,
+      serverGameVersion: GameConstants.Setting.APP_VERSION,
       csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true })
     });
   }
@@ -1089,6 +1120,8 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) =>
     enableMaxTimeGame: config.enableMaxTimeGame,
     maxTimeGame: config.maxTimeGame,
     theme: req.query.theme,
+    clientCompatible,
+    serverGameVersion: GameConstants.Setting.APP_VERSION,
     csrfToken: null
   });
 
@@ -1296,6 +1329,7 @@ const adminActionsRateLimiter = rateLimit({
 
 app.get("/admin", adminActionsRateLimiter, doubleCsrfProtectionAdmin, async (req, res) => {
   if(!req.cookies) {
+    res.status(400);
     return res.end();
   }
 
@@ -1307,6 +1341,10 @@ app.get("/admin", adminActionsRateLimiter, doubleCsrfProtectionAdmin, async (req
     fs.promises.readFile(config.logFile, "UTF-8").catch(() => ""),
     fs.promises.readFile(config.errorLogFile, "UTF-8").catch(() => "")
   ]);
+
+  if(!authenticated) {
+    res.status(401);
+  }
       
   res.render(__dirname + "/views/admin.html", {
     publicKey: config.recaptchaPublicKey,
@@ -1331,13 +1369,14 @@ app.get("/admin", adminActionsRateLimiter, doubleCsrfProtectionAdmin, async (req
 
 async function adminAction(req, res, action) {
   if(!req.cookies) {
+    res.status(400);
     return res.end();
   }
 
   const payload = await verifyAdminToken(req);
 
   if(!payload) {
-    return res.redirect("/admin");
+    return res.redirect(303, "/admin");
   }
 
   const role = config.adminAccounts[payload.username]["role"] || "moderator";
@@ -1346,7 +1385,7 @@ async function adminAction(req, res, action) {
     invalidatedAdminTokens.add(req.cookies.tokenAdmin);
     res.clearCookie("tokenAdmin");
 
-    return res.redirect("/admin");
+    return res.redirect(303, "/admin");
   }
 
   const { socket, token, value } = req.body;
@@ -1394,7 +1433,7 @@ async function adminAction(req, res, action) {
       break;
   }
 
-  res.redirect("/admin");
+  res.redirect(303, "/admin");
 }
 
 const jsonParser = bodyParser.json();
@@ -1411,18 +1450,21 @@ app.use(function (err, req, res, next) {
 
 app.post("/admin", adminAuthentRateLimiter, async (req, res) => {
   if(!req.cookies) {
+    res.status(400);
     return res.end();
   }
 
   const payload = await verifyAdminToken(req);
 
   if(payload) {
-    return res.redirect("/admin");
+    return res.redirect(303, "/admin");
   }
 
   try {
     await verifyFormAuthenticationAdmin(req.body);
   } catch(err) {
+    res.status(403);
+
     return res.render(__dirname + "/views/admin.html", {
       publicKey: config.recaptchaPublicKey,
       enableRecaptcha: config.enableRecaptcha,
@@ -1456,7 +1498,7 @@ app.post("/admin", adminAuthentRateLimiter, async (req, res) => {
     secure: req.protocol === "https"
   });
 
-  res.redirect("/admin");
+  res.redirect(303, "/admin");
 
   logger.info("admin authent - username: " + username + " - ip: " + req.ip);
 });

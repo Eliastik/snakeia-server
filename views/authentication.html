@@ -36,7 +36,9 @@
   <body class="text-center remove-padding">
   <% } %>
     <div class="container">
-      <% if(authent) { %>
+      <% if(!clientCompatible) { %>
+      <h3><%= __("clientNotCompatible", serverGameVersion) %></h3>
+      <% } else if(authent) { %>
       <h3><%= __("alreadyAuthentified") %></h3>
       <% } else if(!success) { %>
       <form action="" method="post">

@@ -61,5 +61,6 @@
 	"moderator": "Modérateur",
 	"administrator": "Administrateur",
 	"role": "Rôle :",
-	"loggedInAs": "Connecté en tant que"
+	"loggedInAs": "Connecté en tant que",
+	"clientNotCompatible": "Votre version du jeu n'est pas compatible avec ce serveur (version serveur : %s). Mettez à jour votre jeu, puis réessayez."
 }
