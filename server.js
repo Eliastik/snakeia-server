@@ -1358,7 +1358,7 @@ app.get("/admin", adminActionsRateLimiter, doubleCsrfProtectionAdmin, async (req
     locale: i18n.getLocale(req),
     games: games,
     io: io,
-    config: config,
+    config: role === "administrator" ? config : null,
     csrfToken: generateCsrfTokenAdmin(req, res, { overwrite: true, validateOnReuse: true }),
     serverLog: logFile,
     errorLog: errorLogFile,
@@ -1423,13 +1423,28 @@ async function adminAction(req, res, action) {
       unbanIP(value);
       break;
     case "resetLog":
-      if(role === "administrator") resetLog();
+      if(role === "administrator") {
+        resetLog();
+      } else {
+        res.status(403);
+        return res.end();
+      }
       break;
     case "resetErrorLog":
-      if(role === "administrator") resetErrorLog();
+      if(role === "administrator") {
+        resetErrorLog();
+      } else {
+        res.status(403);
+        return res.end();
+      }
       break;
     case "updateConfig":
-      if(role === "administrator") updateConfig(value);
+      if(role === "administrator") {
+        updateConfig(value);
+      } else {
+        res.status(403);
+        return res.end();
+      }
       break;
   }
 
