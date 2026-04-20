@@ -322,6 +322,7 @@ async function createRoom(data, socket) {
         started: false,
         alreadyInit: false,
         timeoutPlay: null,
+        timeoutMatchmaking: null,
         timeStart: null,
         timeoutMaxTimePlay: null
       };
@@ -515,7 +516,14 @@ function setupRoom(code) {
     if(games[code] != null) {
       games[code].started = false;
       games[code].searchingPlayers = true;
+
       clearTimeout(games[code].timeoutMaxTimePlay);
+      clearTimeout(games[code].timeoutMatchmaking);
+
+      games[code].timeoutMatchmaking = setTimeout(() => {
+        gameMatchmaking(games[code], code);
+        io.to("room-" + code).emit("reset", { "gameOver": false, "gameFinished": false, "scoreMax": false, "gameMazeWin": false });
+      }, config.matchmakingWaitTime);
     }
   });
 
@@ -637,6 +645,11 @@ function cleanRooms() {
 }
 
 function gameMatchmaking(game, code) {
+  if(game.timeoutMatchmaking != null) {
+    clearTimeout(game.timeoutMatchmaking);
+    game.timeoutMatchmaking = null;
+  }
+
   if(game != null && games[code] != null && games[code].searchingPlayers) {
     let numberPlayers = game.players.length + games[code].numberAIToAdd;
 
@@ -700,6 +713,11 @@ async function startGame(code) {
     if(game.timeoutPlay != null) {
       clearTimeout(game.timeoutPlay);
       game.timeoutPlay = null;
+    }
+
+    if(game.timeoutMatchmaking != null) {
+      clearTimeout(game.timeoutMatchmaking);
+      game.timeoutMatchmaking = null;
     }
 
     game.searchingPlayers = false;
@@ -1722,7 +1740,6 @@ io.on("connection", async (socket) => {
         });
 
         logger.info("join room (code: " + code + ") - username: " + (await Player.getUsernameSocket(socket, jsonWebTokenSecretKey)) + " - ip: " + getIPSocketIO(socket.handshake) + " - socket: " + socket.id);
-
       } else {
         if(games[code] == null) {
           socket.emit("join-room", { success: false, errorCode: GameConstants.Error.ROOM_NOT_FOUND });

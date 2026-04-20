@@ -93,6 +93,7 @@ You can create another configuration file in the **config** directory named **lo
         "aiUltraModelID": null, // ID of the model (as returned by the API at the URL above) to load for the Ultra AI. Can be left empty; in that case, the default model provided by the API will be loaded
         "aiUltraCustomModelURL": null, // A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the game
         "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
+        "matchmakingWaitTime": 30000, // The amount of time you must wait before resuming matchmaking after a game ends (ms)
         "enableMaxTimeGame": true, // Enable time limit for each game
         "maxTimeGame": 300000, // The time limit for each game (ms)
         "enableAuthentication": true, // Enable authentification when connecting to the server
@@ -326,6 +327,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
         "aiUltraModelID": null, // ID du modèle (tel que retourné par l'API à l'URL du dessus) à charger pour l'IA Ultra. Peut rester vide, dans ce cas, le modèle par défaut fourni par l'API sera chargé
         "aiUltraCustomModelURL": null, // Une URL pointant vers un modèle d'IA à charger. Doit être un modèle Tensorflow.js entraîné pour l'IA Ultra. En cas de soucis, l'initialisation du jeu plantera quand des IA Ultra seront dans la partie
         "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
+        "matchmakingWaitTime": 30000, // Le temps durant lequel attendre avant de recommencer le matchmaking après la fin d'une partie (ms)
         "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
         "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
         "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur

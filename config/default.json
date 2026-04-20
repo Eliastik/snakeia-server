@@ -19,6 +19,7 @@
         "aiUltraModelID": null,
         "aiUltraCustomModelURL": null,
         "playerWaitTime": 60000,
+        "matchmakingWaitTime": 30000,
         "enableMaxTimeGame": true,
         "maxTimeGame": 300000,
         "enableAuthentication": true,
