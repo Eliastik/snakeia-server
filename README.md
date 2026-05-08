@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 2.0.0-beta.1 (3/7/2026)
+* Version 2.0.0 (05/08/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,7 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "2.0.0-beta.1", // The server version
+        "version": "2.0.0", // The server version
         "port": 3000, // The port where the server runs
         "enableHttps": false, // Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Path to HTTPS certificate file
@@ -130,6 +130,34 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 2.0.0 (5/8/2026):
+    - ⚠️ Breaking Changes:
+        - Authentication is no longer compatible with SnakeIA 3.1.0 and earlier versions;
+        - Clients must be updated to SnakeIA 3.2.0 to support the new authentication method;
+        - An explicit error message is now displayed when an incompatible client attempts to authenticate;
+    - Updated to SnakeIA 3.2.0 to benefit from the latest improvements;
+    - Matchmaking now automatically restarts 30 seconds after the end of a game (configurable through the `matchmakingWaitTime` setting);
+    - Bug fixes and security improvements:
+        - Fixed a security issue in the previous authentication system:
+            - The socket ID was transmitted through the authentication URL;
+            - An attacker could reuse this URL to retrieve the victim's token;
+            - The impact remained limited since accounts are currently ephemeral;
+        - Improved security by implementing CSRF protection on most endpoints (previously, only a few endpoints were covered);
+        - Strengthened the rate limiting system:
+            - Stricter rate limiting rules;
+            - Added rate limiting for administration actions;
+            - Separate configurations for:
+                - User authentication;
+                - Administrator authentication;
+                - Administration actions;
+        - Fixed issues related to retrieving usernames from tokens;
+        - Fixed a server crash occurring when modifying the configuration from the administration/moderation panel while the configuration file was read-only;
+    - Technical improvements:
+        - Migrated to the Jose library for authentication token management;
+        - Improved HTTP responses to better comply with REST API standards across multiple endpoints;
+        - Codebase refactoring;
+        - Updated dependencies.
 
 * Version 2.0.0-beta.1 (3/7/2026):
     - ⚠️ Breaking Changes:
@@ -242,7 +270,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 2.0.0-beta.1 (07/03/2026)
+* Version 2.0.0 (08/05/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -308,7 +336,7 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "2.0.0-beta.1", // La version du serveur
+        "version": "2.0.0", // La version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "enableHttps": false, // Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Chemin vers le certificat HTTPS
@@ -364,6 +392,34 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 2.0.0 (08/05/2026) :
+    - ⚠️ Breaking Changes :
+        - L'authentification n'est plus compatible avec SnakeIA 3.1.0 et versions inférieures ;
+        - Le client doit être mis à jour vers SnakeIA 3.2.0 pour être compatible avec la nouvelle méthode d'authentification ;
+        - Une erreur explicite est désormais affichée à l'authentification lorsqu'un client incompatible tente de se connecter ;
+    - Mise à jour vers SnakeIA 3.2.0 pour profiter des dernières améliorations ;
+    - Le matchmaking se relance automatiquement au bout de 30 secondes après la fin d'une partie (paramétrable via la configuration `matchmakingWaitTime`) ;
+    - Correction de bugs et améliorations de sécurité :
+        - Correction d'une faille de sécurité dans l'ancien système d'authentification :
+            - L'ID du socket était transmis dans l'URL d'authentification ;
+            - Un attaquant pouvait alors réutiliser cette URL pour récupérer le token de sa victime ;
+            - L'impact restait limité car les comptes sont actuellement éphémères ;
+        - Amélioration de la sécurité avec la mise en place d'une protection CSRF sur la plupart des endpoints (auparavant, seuls quelques endpoints étaient couverts) ;
+        - Renforcement du système de rate limiting :
+            - Règles plus restrictives ;
+            - Ajout du rate limiting pour les actions d'administration ;
+            - Configuration distincte pour :
+                - L'authentification utilisateur ;
+                - L'authentification administrateur ;
+                - Les actions d'administration ;
+        - Correction de bugs avec la récupération du nom d'utilisateur des tokens ;
+        - Correction d'un crash du serveur lors de la modification de la configuration via le panneau d'administration/modération si le fichier de configuration était en lecture seule ;
+    - Améliorations techniques :
+        - Migration vers la librairie Jose pour la gestion des tokens d'authentification ;
+        - Améliorations des réponses HTTP (respectent les normes API REST) des différents endpoints ;
+        - Refactorisation du code ;
+        - Mise à jour des dépendances
 
 * Version 2.0.0-beta.1 (07/03/2026) :
     - ⚠️ Breaking Changes :
