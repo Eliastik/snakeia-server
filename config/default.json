@@ -1,6 +1,7 @@
 {
     "ServerConfig": {
         "version": "2.0.1",
+        "hideVersion": false,
         "port": 3000,
         "enableHttps": false,
         "httpsCertFile": "path/to/https/cert.pem",

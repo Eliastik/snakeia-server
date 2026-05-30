@@ -62,5 +62,6 @@
 	"administrator": "Administrateur",
 	"role": "Rôle :",
 	"loggedInAs": "Connecté en tant que",
-	"clientNotCompatible": "Votre version du jeu n'est pas compatible avec ce serveur (version serveur : %s). Mettez à jour votre jeu, puis réessayez."
+	"clientNotCompatible": "Votre version du jeu n'est pas compatible avec ce serveur (version serveur : %s). Mettez à jour votre jeu, puis réessayez.",
+	"clientNotCompatibleHideVersion": "Votre version du jeu n'est pas compatible avec ce serveur. Mettez à jour votre jeu, puis réessayez."
 }

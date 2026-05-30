@@ -997,6 +997,7 @@ app.use(function(req, res, next) {
 app.get("/", function(req, res) {
   res.render(__dirname + "/views/index.html", {
     version: config.version,
+    hideVersion: config.hideVersion,
     engineVersion: GameConstants.Setting.APP_VERSION,
     theme: req.query.theme
   });
@@ -1035,6 +1036,7 @@ app.get("/authentication", async (req, res) => {
     theme: req.query.theme,
     clientCompatible,
     serverGameVersion: GameConstants.Setting.APP_VERSION,
+    hideVersion: config.hideVersion,
     csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true }),
   });
 
@@ -1109,6 +1111,7 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) =>
       theme: req.query.theme,
       clientCompatible,
       serverGameVersion: GameConstants.Setting.APP_VERSION,
+      hideVersion: config.hideVersion,
       csrfToken: generateCsrfTokenUserAuthent(req, res, { overwrite: true, validateOnReuse: true })
     });
   }
@@ -1140,6 +1143,7 @@ app.post("/authentication", doubleCsrfProtectionUserAuthent, async (req, res) =>
     theme: req.query.theme,
     clientCompatible,
     serverGameVersion: GameConstants.Setting.APP_VERSION,
+    hideVersion: config.hideVersion,
     csrfToken: null
   });
 
@@ -1600,8 +1604,8 @@ io.of("/rooms").use(ioCookieParser()).use(checkBanned).on("connection", async (s
 
     socket.emit("rooms", {
       rooms: getRoomsData(),
-      serverVersion: config.version,
-      version: GameConstants.Setting.APP_VERSION,
+      serverVersion: config.hideVersion ? null : config.version,
+      version: config.hideVersion ? null : GameConstants.Setting.APP_VERSION,
       settings: {
         maxRooms: config.maxRooms,
         minGridSize: config.minGridSize,

@@ -36,8 +36,10 @@
   <body class="text-center remove-padding">
   <% } %>
     <div class="container">
-      <% if(!clientCompatible) { %>
+      <% if(!clientCompatible && !hideVersion) { %>
       <h3><%= __("clientNotCompatible", serverGameVersion) %></h3>
+      <% } else if(!clientCompatible && hideVersion) { %>
+      <h3><%= __("clientNotCompatibleHideVersion") %></h3>
       <% } else if(authent) { %>
       <h3><%= __("alreadyAuthentified") %></h3>
       <% } else if(!success) { %>
