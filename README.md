@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 2.0.1 (5/30/2026)
+* Version 2.1.0 (6/25/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -74,7 +74,8 @@ You can create another configuration file in the **config** directory named **lo
 ````
 {
     "ServerConfig": {
-        "version": "2.0.1", // The server version
+        "version": "2.1.0", // The server version
+        "hideVersion": false, // Hide or show the version of the server
         "port": 3000, // The port where the server runs
         "enableHttps": false, // Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Path to HTTPS certificate file
@@ -130,6 +131,10 @@ You can create another configuration file in the **config** directory named **lo
 ````
 
 ## Changelog
+
+* Version 2.1.0 (6/25/2026):
+    - Added "hideVersion" configuration to hide server version
+    - Update dependencies
 
 * Version 2.0.1 (5/30/2026):
     - Update dependencies
@@ -273,7 +278,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 2.0.1 (30/05/2026)
+* Version 2.1.0 (25/06/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -339,7 +344,8 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 {
     "ServerConfig": {
-        "version": "2.0.1", // La version du serveur
+        "version": "2.1.0", // La version du serveur
+        "hideVersion": false, // Masque ou affiche la version du serveur
         "port": 3000, // Le port sur lequel lancer le server
         "enableHttps": false, // Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
         "httpsCertFile": "path/to/https/cert.pem", // Chemin vers le certificat HTTPS
@@ -395,6 +401,10 @@ Vous pouvez créer un fichier de configuration **local.json** dans le dossier **
 ````
 
 ## Journal des changements
+
+* Version 2.1.0 (25/06/2026) :
+    - Ajout de la configuration "hideVersion" qui permet de masquer la version du serveur
+    - Mise à jour des dépendances
 
 * Version 2.0.1 (30/05/2026) :
     - Mise à jour des dépendances
