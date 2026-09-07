@@ -1,6 +1,6 @@
 {
     "ServerConfig": {
-        "version": "2.1.1",
+        "version": "2.1.2",
         "hideVersion": false,
         "port": 3000,
         "enableHttps": false,

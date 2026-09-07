@@ -1,6 +1,6 @@
 {
   "name": "snakeia-server",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Server for multiplaying in SnakeIA (https://github.com/Eliastik/snakeia)",
   "main": "server.js",
   "scripts": {
@@ -43,6 +43,12 @@
     },
     "@mapbox/node-pre-gyp": {
       "tar": "^7.5.22"
+    },
+    "express": {
+      "qs": "^6.16.0"
+    },
+    "body-parser": {
+      "qs": "^6.16.0"
     }
   }
 }
