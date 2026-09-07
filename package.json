@@ -19,15 +19,15 @@
   "homepage": "https://github.com/Eliastik/snakeia-server#readme",
   "dependencies": {
     "body-parser": "^2.3.0",
-    "config": "^4.4.2",
+    "config": "^5.0.1",
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^4.0.3",
     "ejs": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.2",
+    "express-rate-limit": "^8.7.0",
     "html-entities": "^2.6.0",
-    "i18n": "^0.15.3",
-    "jose": "^6.2.8",
+    "i18n": "^0.15.4",
+    "jose": "^6.2.12",
     "node-fetch": "^3.3.2",
     "seedrandom": "^3.0.5",
     "semver": "^7.8.5",
@@ -38,11 +38,11 @@
   },
   "overrides": {
     "@tensorflow/tfjs-node": {
-      "tar": "^7.5.10",
+      "tar": "^7.5.22",
       "adm-zip": "^0.6.0"
     },
     "@mapbox/node-pre-gyp": {
-      "tar": "^7.5.10"
+      "tar": "^7.5.22"
     }
   }
 }
