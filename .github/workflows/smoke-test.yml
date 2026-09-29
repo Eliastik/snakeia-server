@@ -1,0 +1,45 @@
+name: Smoke test server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Start server in background
+      run: npm start &
+      env:
+        PORT: 3000
+
+    - name: Wait for server to be ready
+      run: sleep 5
+
+    - name: Test server responds on root
+      run: curl -f http://localhost:3000/ || exit 1
+
+    - name: Debug server logs on failure
+      if: failure()
+      run: |
+        echo "=== Server process ==="
+        ps aux | grep node
+        echo "=== Port binding ==="
+        netstat -tlnp 2>/dev/null || ss -tlnp
+
+    - name: Stop server
+      if: always()
+      run: pkill -f "node server.js" || true
