@@ -61,6 +61,7 @@ const jsonWebTokenSecretKeyAdmin = createSecretKey(
 );
 
 const productionMode = process.env.NODE_ENV === "production";
+const enableHealthcheck = process.env.ENABLE_HEALTHCHECK === "true";
 
 // Update config to file
 function updateConfigToFile() {
@@ -1630,6 +1631,22 @@ io.of("/createRoom").use(ioCookieParser()).use(checkBanned).on("connection", (so
     }
   });
 });
+
+// Healthcheck namespace, only active when enableHealthcheck flag is true
+if (enableHealthcheck) {
+  io.of("/healthcheck").on("connection", (socket) => {
+    logger.info("healthcheck socket connected:", socket.id);
+
+    socket.on("ping", () => {
+      logger.debug("healthcheck ping received from:", socket.id);
+      socket.emit("pong", { timestamp: Date.now(), uptime: process.uptime() });
+    });
+
+    socket.on("disconnect", (reason) => {
+      logger.info("healthcheck socket disconnected:", socket.id, "reason:", reason);
+    });
+  });
+}
 
 io.on("connection", async (socket) => {
   try {

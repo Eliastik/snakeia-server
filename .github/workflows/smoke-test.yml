@@ -21,16 +21,55 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Start server in background
+    - name: Install socket.io-client for smoke tests
+      run: npm install socket.io-client
+
+    - name: Start server in background with healthcheck enabled
       run: npm start &
       env:
         PORT: 3000
+        ENABLE_HEALTHCHECK: "true"
+      id: start-server
 
     - name: Wait for server to be ready
       run: sleep 5
 
-    - name: Test server responds on root
+    - name: Test HTTP root endpoint
       run: curl -f http://localhost:3000/ || exit 1
+
+    - name: Test Socket.io /healthcheck namespace
+      run: |
+        node -e "
+          const { io } = require('socket.io-client');
+          const socket = io('http://localhost:3000/healthcheck', { withCredentials: false });
+          let receivedPong = false;
+          let timeout;
+
+          socket.on('connect', () => {
+            console.log('Socket.io /healthcheck connected:', socket.id);
+            socket.emit('ping');
+          });
+
+          socket.on('pong', (data) => {
+            console.log('Received pong event:', JSON.stringify(data));
+            receivedPong = true;
+            console.log('Socket.io /healthcheck namespace is working');
+          });
+
+          timeout = setTimeout(() => {
+            if (!receivedPong) {
+              console.error('Timeout: no pong event received');
+              process.exit(1);
+            } else {
+              socket.close();
+              process.exit(0);
+            }
+          }, 8000);
+
+          socket.on('close', () => {
+            clearTimeout(timeout);
+          });
+        "
 
     - name: Debug server logs on failure
       if: failure()
