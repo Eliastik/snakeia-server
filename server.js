@@ -1632,14 +1632,57 @@ io.of("/createRoom").use(ioCookieParser()).use(checkBanned).on("connection", (so
   });
 });
 
-// Healthcheck namespace, only active when enableHealthcheck flag is true
+// Healthcheck HTTP endpoint + Socket.io namespace, only active when enableHealthcheck flag is true
 if (enableHealthcheck) {
+  app.get("/healthcheck", (req, res) => {
+    const clientIp = req.ip || req.connection.remoteAddress || "";
+
+    if (clientIp !== "127.0.0.1" && clientIp !== "::1" && clientIp !== "::ffff:127.0.0.1") {
+      logger.warn("Healthcheck endpoint accessed from non-localhost IP:", clientIp);
+      return res.status(403).json({ error: "Forbidden", message: "Healthcheck only available from localhost" });
+    }
+
+    const roomCount = Object.keys(games).length;
+    const playerCount = Object.values(games).reduce((sum, game) => {
+      return sum + (game.players ? game.players.length : 0);
+    }, 0);
+
+    res.json({
+      status: io ? "ok" : "ko",
+      uptime: process.uptime(),
+      timestamp: Date.now(),
+      socketIo: io ? "connected" : "disconnected",
+      rooms: roomCount,
+      players: playerCount
+    });
+  });
+
   io.of("/healthcheck").on("connection", (socket) => {
+    const clientIp = socket.handshake.address || "";
+    const normalizedIp = clientIp.replace(/^::ffff:/, "");
+
+    if (normalizedIp !== "127.0.0.1" && normalizedIp !== "::1") {
+      logger.warn("Healthcheck socket connection rejected from non-localhost IP:", clientIp);
+      return socket.disconnect(true);
+    }
+
     logger.info("healthcheck socket connected:", socket.id);
 
     socket.on("ping", () => {
       logger.debug("healthcheck ping received from:", socket.id);
-      socket.emit("pong", { timestamp: Date.now(), uptime: process.uptime() });
+
+      const roomCount = Object.keys(games).length;
+      const playerCount = Object.values(games).reduce((sum, game) => {
+        return sum + (game.players ? game.players.length : 0);
+      }, 0);
+
+      socket.emit("pong", {
+        status: "ok",
+        uptime: process.uptime(),
+        timestamp: Date.now(),
+        rooms: roomCount,
+        players: playerCount
+      });
     });
 
     socket.on("disconnect", (reason) => {

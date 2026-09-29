@@ -37,6 +37,17 @@ jobs:
     - name: Test HTTP root endpoint
       run: curl -f http://localhost:3000/ || exit 1
 
+    - name: Test HTTP /healthcheck endpoint
+      run: |
+        echo "=== Testing HTTP /healthcheck ==="
+        curl -s http://localhost:3000/healthcheck | jq .
+        status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/healthcheck)
+        if [ "$status" != "200" ]; then
+          echo "HTTP /healthcheck returned $status"
+          exit 1
+        fi
+        echo "HTTP /healthcheck is working"
+
     - name: Test Socket.io /healthcheck namespace
       run: |
         node -e "
@@ -52,8 +63,10 @@ jobs:
 
           socket.on('pong', (data) => {
             console.log('Received pong event:', JSON.stringify(data));
-            receivedPong = true;
-            console.log('Socket.io /healthcheck namespace is working');
+            if (data && data.status === 'ok') {
+              receivedPong = true;
+              console.log('Socket.io /healthcheck namespace is working');
+            }
           });
 
           timeout = setTimeout(() => {

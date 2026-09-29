@@ -8,5 +8,6 @@ RUN chown -R snakeia-server:snakeia-server /home/snakeia-server
 USER snakeia-server
 RUN npm install
 ENTRYPOINT npm run start
+ENV ENABLE_HEALTHCHECK=true
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+  CMD curl -f http://localhost:3000/healthcheck || exit 1
