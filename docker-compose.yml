@@ -11,6 +11,8 @@ services:
       # dockerfile: ./Dockerfile
     environment:
       NODE_ENV: production
+      PORT: 3000
+      ENABLE_HEALTHCHECK: true
     volumes:
       - ./config/default.json:/home/snakeia-server/server/config/default.json
       # - ./config/local.json:/home/snakeia-server/server/config/local.json

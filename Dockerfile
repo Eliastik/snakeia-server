@@ -10,4 +10,4 @@ RUN npm install
 ENTRYPOINT npm run start
 ENV ENABLE_HEALTHCHECK=true
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/healthcheck || exit 1
+  CMD PORT=${PORT:-$(node -e "console.log(require('config').get('ServerConfig.port'))")} && curl -f http://localhost:${PORT}/healthcheck || exit 1
