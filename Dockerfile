@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:26-alpine
 RUN addgroup -S snakeia-server && adduser -S snakeia-server -G snakeia-server && chown -R snakeia-server:snakeia-server /home/snakeia-server
 RUN apk add git curl
 WORKDIR /home/snakeia-server/server
