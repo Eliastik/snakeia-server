@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/Eliastik/snakeia-server/config.schema.json",
+  "$id": "https://raw.githubusercontent.com/Eliastik/snakeia-server/refs/heads/master/config/config.schema.json",
   "title": "SnakeIA server configuration",
   "description": "Schema for the SnakeIA server node-config file (JSON or YAML).",
   "type": "object",

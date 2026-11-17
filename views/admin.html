@@ -200,12 +200,13 @@
               <div class="tab-pane fade" id="config" role="tabpanel">
                 <form method="POST" action="/admin/updateConfig">
                 <% if(config) { %>
+                  <p class="text-muted mb-2"><%= __("configFileFormat", configFile, configFormat) %></p>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-                  <textarea name="value" spellcheck="false" class="form-control" rows="20"><%= JSON.stringify(config, null, 4) %></textarea>
+                  <textarea name="value" spellcheck="false" class="form-control" rows="20" id="configText"><%= configText %></textarea>
                   <div class="form-group row">
                     <div class="btn-group col">
                       <button type="reset" class="btn btn-danger"><span class="fui-cross mr-2"></span> <%= __("reset") %></button>
-                      <button type="submit" class="btn btn-primary"><span class="fui-check mr-2"></span> <%= __("submit") %></button>
+                      <button type="submit" class="btn btn-primary" id="submitConfig"><span class="fui-check mr-2"></span> <%= __("submit") %></button>
                     </div>
                   </div>
                 <% } %>
@@ -260,7 +261,7 @@
     <script type="text/javascript">
       const token = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
-      function requestAction(action, data, element) {
+      function requestAction(action, data, element, displayError = false) {
         fetch("/admin/" + action, {
           credentials: "same-origin",
           headers: {
@@ -283,8 +284,14 @@
             if(response.status === 403) {
               location.href = "/admin";
             }
+
+            if(displayError) {
+              response.text().then((text) => {
+                alert(text);
+              });
+            }
           }
-        }).catch(() => {
+        }).finally(() => {
           element.classList.remove("disabled");
           element.disabled = false;
         });
@@ -316,6 +323,27 @@
           }
         });
       });
+
+      const submitConfigButton = document.getElementById("submitConfig");
+
+      if(submitConfigButton) {
+        const configForm = submitConfigButton.closest("form");
+
+        configForm.addEventListener("submit", function(e) {
+          e.preventDefault();
+
+          const configText = document.getElementById("configText");
+
+          if(!configText) {
+            return;
+          }
+
+          submitConfigButton.classList.add("disabled");
+          submitConfigButton.disabled = true;
+
+          requestAction("updateConfig", { value: configText.value }, submitConfigButton, true);
+        });
+      }
     </script>
     <% } %>
   </body>
