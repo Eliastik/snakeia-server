@@ -14,8 +14,8 @@ services:
       PORT: 3000
       ENABLE_HEALTHCHECK: true
     volumes:
-      - ./config/default.json:/home/snakeia-server/server/config/default.json
-      # - ./config/local.json:/home/snakeia-server/server/config/local.json
+      - ./config/default.yaml:/home/snakeia-server/server/config/default.yaml
+      # - ./config/local.yaml:/home/snakeia-server/server/config/local.yaml
       - ./error.log:/home/snakeia-server/server/logs/error.log
       - ./server.log:/home/snakeia-server/server/logs/server.log
     ports:

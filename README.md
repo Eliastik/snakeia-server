@@ -45,11 +45,10 @@ Don't forget to edit the file to include your local configuration file:
 
 ````
 volumes:
-    - ./config/default.json:/home/snakeia-server/server/config/default.json
+    - ./config/default.yaml:/home/snakeia-server/server/config/default.yaml
 ````
 
-Replace ./config/default.json with the location of your configuration file.
-See the section below to know how to configurate the server.
+Replace ./config/default.yaml with the location of your configuration file (YAML is recommended, but a JSON file such as `./config/default.json` also works). See the section below to know how to configurate the server.
 
 Also, change the running port for the server:
 
@@ -68,66 +67,65 @@ docker-compose up
 
 ## Config file explanations (default config)
 
-The server uses [node-config](https://github.com/lorenwest/node-config) for the configuration files.
-You can create another configuration file in the **config** directory named **local.json** to override the default config file. [See this doc](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
+The server uses [node-config](https://github.com/lorenwest/node-config) for the configuration files. **Both YAML and JSON formats are supported**, but **YAML is recommended**. The config file can be named `default.yaml` (or `default.yml`, or `default.json` for JSON).
 
-````
-{
-    "ServerConfig": {
-        "version": "2.2.2", // The server version
-        "hideVersion": false, // Hide or show the version of the server
-        "port": 3000, // The port where the server runs
-        "enableHttps": false, // Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
-        "httpsCertFile": "path/to/https/cert.pem", // Path to HTTPS certificate file
-        "httpsKeyFile": "path/to/https/key.pem", // Path to HTTPS certificate key file
-        "proxyMode": false, // Sets this value to true if your server is behind a proxy - defaults to false
-        "numberOfProxies": 1, // Sets the number of reverse proxies in front of the server. Default to 1. See: https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-        "enableMultithreading": true, // Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
-        "maxPlayers": 20, // The maximum number of players for each room
-        "maxRooms": 20, // The maximum number of room
-        "minGridSize": 5, // The minimum size for a grid (width and height)
-        "maxGridSize": 50, // The maximum size for a grid (width and height)
-        "minSpeed": 1, // The minimum speed
-        "maxSpeed": 100, // The maximum speed
-        "enableAI": false, // Disable or enable AIs
-        "aiUltraAPIURL": "https://www.eliastiksofts.com/snakeia/models/", // URL to the API listing the Ultra AI models. The game engine will use this API to load the default model
-        "aiUltraModelID": null, // ID of the model (as returned by the API at the URL above) to load for the Ultra AI. Can be left empty; in that case, the default model provided by the API will be loaded
-        "aiUltraCustomModelURL": null, // A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the game
-        "playerWaitTime": 45000, // The time while waiting for players to join a room (ms)
-        "matchmakingWaitTime": 30000, // The amount of time you must wait before resuming matchmaking after a game ends (ms)
-        "enableMaxTimeGame": true, // Enable time limit for each game
-        "maxTimeGame": 300000, // The time limit for each game (ms)
-        "enableAuthentication": true, // Enable authentification when connecting to the server
-        "authenticationTime": 86400000, // The duration of authentication token (ms)
-        "jsonWebTokenSecretKey": "", // A private key for signing a token (if not provided, a random key will be generated)
-        "jsonWebTokenSecretKeyAdmin": "", // A private key for signing an admin token - should be different from previous value (if not provided, a random key will be generated)
-        "minCharactersUsername": 3, // The minimum number of characters for the username
-        "maxCharactersUsername": 15, // The maximum number of characters for the username
-        "enableRecaptcha": true, // Enable ReCaptcha
-        "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // ReCaptcha API URL
-        "recaptchaPublicKey": "", // ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
-        "recaptchaPrivateKey": "", // ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
-        "authentMaxRequest": 15, // Maximum number of authentication attempts per time window
-        "authentWindowMs": 900000, // Time window duration (for authentication) in ms (900000 = 15 minutes)
-        "adminAuthentMaxRequest": 5, // Maximum number of authentication attempts on the admin panel per time window
-        "adminAuthentWindowMs": 900000, // Time window duration (for admin authentication) in ms (900000 = 15 minutes)
-        "adminActionsMaxRequest": 30, // Maximum number of actions on the admin panel per time window
-        "adminActionsWindowMs": 60000, // Time window duration (for admin actions) in ms (60000 = 1 minute)
-        "ipBan": [], // A list of IP to ban
-        "usernameBan": [], // A list of usernames to ban
-        "contactBan": "", // A contact URL displayed when an user is banned
-        "enableLoggingFile": true, // Enable logging into file
-        "logFile": "logs/server.log", // Log file
-        "errorLogFile": "logs/error.log", // Error log file
-        "logLevel": "debug" // Log level (see Winston documentation),
-        "adminAccounts": { // User accounts of the administrator panel (can be accessed at serverDomain/admin)
-            "test": { // Username
-                "password": "", // Password SHA-512 hash
-                "role": "administrator" // Role (administrator or moderator) - defaults to moderator
-            }
-        }
-    }
-}
+You can create another configuration file in the **config** directory named `local.yaml` (or `local.json`) to override the default config file. [See this doc](https://github.com/node-config/node-config/wiki/Configuration-Files).
+
+The configuration is checked against a JSON Schema located at `config/config.schema.json`. If a value does not match the schema (wrong type, unknown key, invalid range...), the server refuses to start and prints the list of errors.
+
+````yaml
+# SnakeIA server - default configuration
+ServerConfig:
+  version: "2.2.2"            # The server version
+  hideVersion: false          # Hide or show the version of the server
+  port: 3000                  # The port where the server runs
+  enableHttps: false          # Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
+  httpsCertFile: "path/to/https/cert.pem"   # Path to HTTPS certificate file
+  httpsKeyFile: "path/to/https/key.pem"     # Path to HTTPS certificate key file
+  proxyMode: false            # Sets this value to true if your server is behind a proxy - defaults to false
+  numberOfProxies: 1          # Sets the number of reverse proxies in front of the server. Default to 1. See: https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+  enableMultithreading: true  # Enabling the use of different threads for the game engine, improves performance / requires a version of Nodejs that supports Worker Threads
+  maxPlayers: 20              # The maximum number of players for each room
+  maxRooms: 20                # The maximum number of room
+  minGridSize: 5              # The minimum size for a grid (width and height)
+  maxGridSize: 50             # The maximum size for a grid (width and height)
+  minSpeed: 1                 # The minimum speed
+  maxSpeed: 100               # The maximum speed
+  enableAI: false             # Disable or enable AIs
+  aiUltraAPIURL: "https://www.eliastiksofts.com/snakeia/models/" # URL to the API listing the Ultra AI models. The game engine will use this API to load the default model
+  aiUltraModelID: null        # ID of the model (as returned by the API at the URL above) to load for the Ultra AI. Can be left empty; in that case, the default model provided by the API will be loaded
+  aiUltraCustomModelURL: null # A URL pointing to a custom AI model to load. Must be a TensorFlow.js model trained for the Ultra AI. If there's an issue, game initialization will fail when Ultra AIs are present in the game
+  playerWaitTime: 45000       # The time while waiting for players to join a room (ms)
+  matchmakingWaitTime: 30000  # The amount of time you must wait before resuming matchmaking after a game ends (ms)
+  enableMaxTimeGame: true     # Enable time limit for each game
+  maxTimeGame: 300000         # The time limit for each game (ms)
+  enableAuthentication: true  # Enable authentification when connecting to the server
+  authenticationTime: 86400000 # The duration of authentication token (ms)
+  jsonWebTokenSecretKey: ""   # A private key for signing a token (if not provided, a random key will be generated)
+  jsonWebTokenSecretKeyAdmin: "" # A private key for signing an admin token - should be different from previous value (if not provided, a random key will be generated)
+  minCharactersUsername: 3    # The minimum number of characters for the username
+  maxCharactersUsername: 15   # The maximum number of characters for the username
+  enableRecaptcha: true       # Enable ReCaptcha
+  recaptchaApiUrl: "https://www.google.com/recaptcha/api/siteverify" # ReCaptcha API URL
+  recaptchaPublicKey: ""      # ReCaptcha public key (if not provided, the ReCaptcha will be disabled)
+  recaptchaPrivateKey: ""     # ReCaptcha private key (if not provided, the ReCaptcha will be disabled)
+  authentMaxRequest: 15       # Maximum number of authentication attempts per time window
+  authentWindowMs: 900000     # Time window duration (for authentication) in ms (900000 = 15 minutes)
+  adminAuthentMaxRequest: 5   # Maximum number of authentication attempts on the admin panel per time window
+  adminAuthentWindowMs: 900000 # Time window duration (for admin authentication) in ms (900000 = 15 minutes)
+  adminActionsMaxRequest: 30  # Maximum number of actions on the admin panel per time window
+  adminActionsWindowMs: 60000  # Time window duration (for admin actions) in ms (60000 = 1 minute)
+  ipBan: []                   # A list of IP to ban
+  usernameBan: []             # A list of usernames to ban
+  contactBan: ""              # A contact URL displayed when an user is banned
+  enableLoggingFile: true     # Enable logging into file
+  logFile: "logs/server.log"  # Log file
+  errorLogFile: "logs/error.log" # Error log file
+  logLevel: "debug"           # Log level (see Winston documentation)
+  adminAccounts:              # User accounts of the administrator panel (can be accessed at serverDomain/admin)
+    test:
+      password: ""            # Password SHA-512 hash
+      role: "administrator"   # Role (administrator or moderator) - defaults to moderator
 ````
 
 ## Changelog
@@ -334,11 +332,10 @@ N'oubliez pas de modifier ce fichier avec l'emplacement de votre fichier de conf
 
 ````
 volumes:
-    - ./config/default.json:/home/snakeia-server/server/config/default.json
+    - ./config/default.yaml:/home/snakeia-server/server/config/default.yaml
 ````
 
-Remplacez ./config/default.json par l'emplacement du fichier de configuration.
-Consultez la section plus bas pour savoir comment configurer le serveur.
+Remplacez ./config/default.yaml par l'emplacement du fichier de configuration (le format YAML est conseillé, mais un fichier JSON comme `./config/default.json` fonctionne également). Consultez la section plus bas pour savoir comment configurer le serveur.
 
 Changez également le port sur lequel le serveur écoute :
 
@@ -357,66 +354,65 @@ docker-compose up
 
 ## Explications du fichier de configuration (configuration par défaut)
 
-Le serveur utilise [node-config](https://github.com/lorenwest/node-config) pour les fichiers de configuration.
-Vous pouvez créer un fichier de configuration **local.json** dans le dossier **config** pour remplacer la configuration par défaut. [Voir cette doc](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
+Le serveur utilise [node-config](https://github.com/lorenwest/node-config) pour les fichiers de configuration. **Les formats YAML et JSON sont tous deux supportés**, mais **le YAML est conseillé**. Le fichier de configuration peut être nommé `default.yaml` (ou `default.yml`, ou `default.json` pour du JSON).
 
-````
-{
-    "ServerConfig": {
-        "version": "2.2.2", // La version du serveur
-        "hideVersion": false, // Masque ou affiche la version du serveur
-        "port": 3000, // Le port sur lequel lancer le server
-        "enableHttps": false, // Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
-        "httpsCertFile": "path/to/https/cert.pem", // Chemin vers le certificat HTTPS
-        "httpsKeyFile": "path/to/https/key.pem", // Chemin vers la clé du certificat HTTPS
-        "proxyMode": false, // Mettez à true si votre serveur est derrière un proxy - par défaut false
-        "numberOfProxies": 1, // Configure le nombre de proxies devant votre serveur. Par défaut 1. Voir : https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
-        "enableMultithreading": true, // Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
-        "maxPlayers": 20, // Le nombre maximal d'utilisateurs par salle
-        "maxRooms": 20, // Le nombre maximal de salles
-        "minGridSize": 5, // La taille minimale pour une grille (largeur et hauteur)
-        "maxGridSize": 50, // La taille maximale pour une grille (largeur et hauteur)
-        "minSpeed": 1, // La vitesse minimale
-        "maxSpeed": 100, // La vitesse maximale
-        "enableAI": false, // Désactiver ou activer les IA
-        "aiUltraAPIURL": "https://www.eliastiksofts.com/snakeia/models/", // URL vers l'API listant les modèles de l'IA Ultra. Le moteur du jeu se basera sur cette API pour charger le modèle par défaut
-        "aiUltraModelID": null, // ID du modèle (tel que retourné par l'API à l'URL du dessus) à charger pour l'IA Ultra. Peut rester vide, dans ce cas, le modèle par défaut fourni par l'API sera chargé
-        "aiUltraCustomModelURL": null, // Une URL pointant vers un modèle d'IA à charger. Doit être un modèle Tensorflow.js entraîné pour l'IA Ultra. En cas de soucis, l'initialisation du jeu plantera quand des IA Ultra seront dans la partie
-        "playerWaitTime": 45000, // Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
-        "matchmakingWaitTime": 30000, // Le temps durant lequel attendre avant de recommencer le matchmaking après la fin d'une partie (ms)
-        "enableMaxTimeGame": true, // Activer la limite de temps pour chaque partie
-        "maxTimeGame": 300000, // La limite de temps pour chaque partie (ms)
-        "enableAuthentication": true, // Activer l'authentification lors de la connexion au serveur
-        "authenticationTime": 86400000, // La durée de vie d'un token d'authentification
-        "jsonWebTokenSecretKey": "", // Une clée privée pour signer un token (si non fournie, une clé sera générée au hasard)
-        "jsonWebTokenSecretKeyAdmin": "", // Une clée privée pour signer un token d'administration - doit être différente de la valeur précédente (si non fournie, une clé sera générée au hasard)
-        "minCharactersUsername": 3, // Le nombre minimal de caractères pour le nom d'utilisateur
-        "maxCharactersUsername": 15, // Le nombre maximal de caractères pour le nom d'utilisateur
-        "enableRecaptcha": true, // Activer le ReCaptcha
-        "recaptchaApiUrl": "https://www.google.com/recaptcha/api/siteverify", // URL de l'API ReCaptcha
-        "recaptchaPublicKey": "", // Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
-        "recaptchaPrivateKey": "", // Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
-        "authentMaxRequest": 15, // Nombre maximal de tentatives d'authentification par fenêtre de temps
-        "authentWindowMs": 900000, // Durée de la fenêtre de temps (pour l'authentification) en ms (900000 = 15 minutes)
-        "adminAuthentMaxRequest": 5, // Nombre maximal de tentatives d'authentification sur l'interface d'administration par fenêtre de temps
-        "adminAuthentWindowMs": 900000, // Durée de la fenêtre de temps (pour l'authentification admin) en ms (900000 = 15 minutes)
-        "adminActionsMaxRequest": 30, // Nombre maximal d'actions sur l'interface d'administration par fenêtre de temps
-        "adminActionsWindowMs": 60000, // Durée de la fenêtre de temps (pour les actions admin) en ms (60000 = 1 minute)
-        "ipBan": [], // Une liste d'IPs à bannir
-        "usernameBan": [], // Une liste de noms d'utilisateur à bannir
-        "contactBan": "", // Une URL de contact à afficher lorsque l'utilisateur est banni
-        "enableLoggingFile": true, // Activer le log dans un fichier
-        "logFile": "logs/server.log", // Fichier de log
-        "errorLogFile": "logs/error.log", // Fichier de log d'erreurs
-        "logLevel": "debug" // Niveau de log (voir la documentation de Winston),
-        "adminAccounts": { // Compte utilisateurs du panel d'administration (peut être accédé à serverDomain/admin)
-            "test": { // Nom d'utilisateur
-                "password": "", // Hash SHA-512 du mot de passe
-                "role": "administrator" // Rôle (administrator ou moderator) - par défaut moderator
-            }
-        }
-    }
-}
+Vous pouvez créer un fichier de configuration `local.yaml` (ou `local.json`) dans le dossier **config** pour remplacer la configuration par défaut. [Voir cette doc](https://github.com/lorenwest/node-config/wiki/Configuration-Files).
+
+La configuration est vérifiée par rapport à un schéma JSON situé dans `config/config.schema.json`. Si une valeur ne correspond pas au schéma (mauvais type, clé inconnue, valeur hors plage...), le serveur refuse de démarrer et affiche la liste des erreurs.
+
+````yaml
+# SnakeIA server - configuration par défaut
+ServerConfig:
+  version: "2.2.2"            # La version du serveur
+  hideVersion: false          # Masque ou affiche la version du serveur
+  port: 3000                  # Le port sur lequel lancer le serveur
+  enableHttps: false          # Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
+  httpsCertFile: "path/to/https/cert.pem"   # Chemin vers le certificat HTTPS
+  httpsKeyFile: "path/to/https/key.pem"     # Chemin vers la clé du certificat HTTPS
+  proxyMode: false            # Mettez à true si votre serveur est derrière un proxy - par défaut false
+  numberOfProxies: 1          # Configure le nombre de proxies devant votre serveur. Par défaut 1. Voir : https://expressjs.com/en/guide/behind-proxies.html / https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+  enableMultithreading: true  # Activer l'utilisation de threads différents pour le moteur de jeu, améliore les performances / nécessite une version de Nodejs qui supporte les Worker Threads
+  maxPlayers: 20              # Le nombre maximal d'utilisateurs par salle
+  maxRooms: 20                # Le nombre maximal de salles
+  minGridSize: 5              # La taille minimale pour une grille (largeur et hauteur)
+  maxGridSize: 50             # La taille maximale pour une grille (largeur et hauteur)
+  minSpeed: 1                 # La vitesse minimale
+  maxSpeed: 100               # La vitesse maximale
+  enableAI: false             # Désactiver ou activer les IA
+  aiUltraAPIURL: "https://www.eliastiksofts.com/snakeia/models/" # URL vers l'API listant les modèles de l'IA Ultra. Le moteur du jeu se basera sur cette API pour charger le modèle par défaut
+  aiUltraModelID: null        # ID du modèle (tel que retourné par l'API à l'URL du dessus) à charger pour l'IA Ultra. Peut rester vide, dans ce cas, le modèle par défaut fourni par l'API sera chargé
+  aiUltraCustomModelURL: null # Une URL pointant vers un modèle d'IA à charger. Doit être un modèle Tensorflow.js entraîné pour l'IA Ultra. En cas de soucis, l'initialisation du jeu plantera quand des IA Ultra seront dans la partie
+  playerWaitTime: 45000       # Le temps durant lequel attendre la connexion d'autres joueurs à la salle (ms)
+  matchmakingWaitTime: 30000  # Le temps durant lequel attendre avant de recommencer le matchmaking après la fin d'une partie (ms)
+  enableMaxTimeGame: true     # Activer la limite de temps pour chaque partie
+  maxTimeGame: 300000         # La limite de temps pour chaque partie (ms)
+  enableAuthentication: true  # Activer l'authentification lors de la connexion au serveur
+  authenticationTime: 86400000 # La durée de vie d'un token d'authentification (ms)
+  jsonWebTokenSecretKey: ""   # Une clé privée pour signer un token (si non fournie, une clé sera générée au hasard)
+  jsonWebTokenSecretKeyAdmin: "" # Une clé privée pour signer un token d'administration - doit être différente de la valeur précédente (si non fournie, une clé sera générée au hasard)
+  minCharactersUsername: 3    # Le nombre minimal de caractères pour le nom d'utilisateur
+  maxCharactersUsername: 15   # Le nombre maximal de caractères pour le nom d'utilisateur
+  enableRecaptcha: true       # Activer le ReCaptcha
+  recaptchaApiUrl: "https://www.google.com/recaptcha/api/siteverify" # URL de l'API ReCaptcha
+  recaptchaPublicKey: ""      # Clé publique ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+  recaptchaPrivateKey: ""     # Clé privée ReCaptcha (si non fournie, le ReCaptcha sera désactivé)
+  authentMaxRequest: 15       # Nombre maximal de tentatives d'authentification par fenêtre de temps
+  authentWindowMs: 900000     # Durée de la fenêtre de temps (pour l'authentification) en ms (900000 = 15 minutes)
+  adminAuthentMaxRequest: 5   # Nombre maximal de tentatives d'authentification sur l'interface d'administration par fenêtre de temps
+  adminAuthentWindowMs: 900000 # Durée de la fenêtre de temps (pour l'authentification admin) en ms (900000 = 15 minutes)
+  adminActionsMaxRequest: 30  # Nombre maximal d'actions sur l'interface d'administration par fenêtre de temps
+  adminActionsWindowMs: 60000  # Durée de la fenêtre de temps (pour les actions admin) en ms (60000 = 1 minute)
+  ipBan: []                   # Une liste d'IPs à bannir
+  usernameBan: []             # Une liste de noms d'utilisateur à bannir
+  contactBan: ""              # Une URL de contact à afficher lorsque l'utilisateur est banni
+  enableLoggingFile: true     # Activer le log dans un fichier
+  logFile: "logs/server.log"  # Fichier de log
+  errorLogFile: "logs/error.log" # Fichier de log d'erreurs
+  logLevel: "debug"           # Niveau de log (voir la documentation de Winston)
+  adminAccounts:              # Compte utilisateurs du panel d'administration (accessible à serverDomain/admin)
+    test:
+      password: ""            # Hash SHA-512 du mot de passe
+      role: "administrator"   # Rôle (administrator ou moderator) - par défaut moderator
 ````
 
 ## Journal des changements

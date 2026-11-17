@@ -1,0 +1,99 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Eliastik/snakeia-server/config.schema.json",
+  "title": "SnakeIA server configuration",
+  "description": "Schema for the SnakeIA server node-config file (JSON or YAML).",
+  "type": "object",
+  "required": ["ServerConfig"],
+  "additionalProperties": false,
+  "properties": {
+    "ServerConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "maxPlayers",
+        "maxRooms",
+        "minGridSize",
+        "maxGridSize",
+        "minSpeed",
+        "maxSpeed"
+      ],
+      "properties": {
+        "version": { "type": "string" },
+        "hideVersion": { "type": "boolean" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "enableHttps": { "type": "boolean" },
+        "httpsCertFile": { "type": "string" },
+        "httpsKeyFile": { "type": "string" },
+        "proxyMode": { "type": "boolean" },
+        "numberOfProxies": { "type": "integer", "minimum": 1 },
+        "enableMultithreading": { "type": "boolean" },
+        "maxPlayers": { "type": "integer", "minimum": 1 },
+        "maxRooms": { "type": "integer", "minimum": 1 },
+        "minGridSize": { "type": "integer", "minimum": 1 },
+        "maxGridSize": { "type": "integer", "minimum": 1 },
+        "minSpeed": { "type": "integer", "minimum": 1 },
+        "maxSpeed": { "type": "integer", "minimum": 1 },
+        "enableAI": { "type": "boolean" },
+        "aiUltraAPIURL": { "type": ["string", "null"] },
+        "aiUltraModelID": { "type": ["string", "null"] },
+        "aiUltraCustomModelURL": { "type": ["string", "null"] },
+        "playerWaitTime": { "type": "integer", "minimum": 0 },
+        "matchmakingWaitTime": { "type": "integer", "minimum": 0 },
+        "enableMaxTimeGame": { "type": "boolean" },
+        "maxTimeGame": { "type": "integer", "minimum": 0 },
+        "enableAuthentication": { "type": "boolean" },
+        "authenticationTime": { "type": "integer", "minimum": 1 },
+        "jsonWebTokenSecretKey": { "type": "string" },
+        "jsonWebTokenSecretKeyAdmin": { "type": "string" },
+        "minCharactersUsername": { "type": "integer", "minimum": 1 },
+        "maxCharactersUsername": { "type": "integer", "minimum": 1 },
+        "enableRecaptcha": { "type": "boolean" },
+        "recaptchaApiUrl": { "type": "string" },
+        "recaptchaPublicKey": { "type": "string" },
+        "recaptchaPrivateKey": { "type": "string" },
+        "authentMaxRequest": { "type": "integer", "minimum": 1 },
+        "authentWindowMs": { "type": "integer", "minimum": 1 },
+        "adminAuthentMaxRequest": { "type": "integer", "minimum": 1 },
+        "adminAuthentWindowMs": { "type": "integer", "minimum": 1 },
+        "adminActionsMaxRequest": { "type": "integer", "minimum": 1 },
+        "adminActionsWindowMs": { "type": "integer", "minimum": 1 },
+        "ipBan": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "usernameBan": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "contactBan": { "type": "string" },
+        "enableLoggingFile": { "type": "boolean" },
+        "logFile": { "type": "string" },
+        "errorLogFile": { "type": "string" },
+        "logLevel": {
+          "type": "string",
+          "enum": ["error", "warn", "info", "debug", "verbose"]
+        },
+        "adminAccounts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["password"],
+            "additionalProperties": false,
+            "properties": {
+              "password": {
+                "type": "string",
+                "description": "SHA-512 hash of the administrator password"
+              },
+              "role": {
+                "type": "string",
+                "enum": ["administrator", "moderator"]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
