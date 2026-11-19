@@ -59,6 +59,7 @@
 	"fileEmpty": "This file is empty.",
 	"config": "Server configuration",
 	"configFileFormat": "Editing %s (%s format). Both YAML and JSON are supported.",
+	"configLocalNote": "This file only holds the values that override the default configuration. The other values come from %s and can be overridden by adding the matching key here.",
 	"configInvalid": "The config doesn't comply with the schema:\n  - %s",
 	"unableToParseConfig": "Unable to parse the config file:\n%s",
 	"moderator": "Moderator",

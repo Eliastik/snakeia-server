@@ -59,6 +59,7 @@
 	"fileEmpty": "Ce fichier est vide.",
 	"config": "Configuration du serveur",
 	"configFileFormat": "Modification de %s (format %s). Le YAML et le JSON sont tous les deux supportés.",
+	"configLocalNote": "Ce fichier ne contient que les valeurs qui surchargent la configuration par défaut. Les autres valeurs proviennent de %s et peuvent être surchargées en ajoutant la clé correspondante ici.",
 	"configInvalid": "La configuration ne respecte pas le schéma :\n  - %s",
 	"unableToParseConfig": "Impossible de parser le fichier de configuration :\n%s",
 	"moderator": "Modérateur",

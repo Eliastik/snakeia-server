@@ -201,6 +201,9 @@
                 <form method="POST" action="/admin/updateConfig">
                 <% if(config) { %>
                   <p class="text-muted mb-2"><%= __("configFileFormat", configFile, configFormat) %></p>
+                  <% if(configFile !== defaultConfigFile) { %>
+                    <p class="text-muted mb-2"><%= __("configLocalNote", defaultConfigFile) %></p>
+                  <% } %>
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                   <textarea name="value" spellcheck="false" class="form-control" rows="20" id="configText"><%= configText %></textarea>
                   <div class="form-group row">
