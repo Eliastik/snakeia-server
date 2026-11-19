@@ -8,7 +8,7 @@ A server for my [SnakeIA](https://github.com/Eliastik/snakeia) game, written in 
 
 ## About this server
 
-* Version 2.2.2 (11/15/2026)
+* Version 2.3.0 (11/19/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * License: GNU GPLv3 (see LICENCE.txt file)
 
@@ -76,7 +76,7 @@ The configuration is checked against a JSON Schema located at `config/config.sch
 ````yaml
 # SnakeIA server - default configuration
 ServerConfig:
-  version: "2.2.2"            # The server version
+  version: "2.3.0"            # The server version
   hideVersion: false          # Hide or show the version of the server
   port: 3000                  # The port where the server runs
   enableHttps: false          # Enable or disable HTTPS listening on the server. If disabled, the server will only listen on HTTP.
@@ -129,6 +129,12 @@ ServerConfig:
 ````
 
 ## Changelog
+
+* Version 2.3.0 (11/19/2026):
+    - Added support for YAML config files (now the recommended config format)
+    - The configuration is now validated using a JSON Schema: if the config is invalid, the server won't start and the config error will be displayed
+    - Fixed configuration editing in the admin panel: only the effective configuration (local.yaml/json) is editable, and when saving, no values from the default config is copied to the effective configuration
+    - Updated dependencies
 
 * Version 2.2.2 (11/15/2026):
     - Update dependencies, update Docker image to Node 26
@@ -295,7 +301,7 @@ Un serveur pour mon jeu [SnakeIA](https://github.com/Eliastik/snakeia), écrit e
 
 ## À propos de ce serveur
 
-* Version 2.2.2 (15/11/2026)
+* Version 2.3.0 (19/11/2026)
 * Made in France by Eliastik - [eliastiksofts.com](http://eliastiksofts.com) - Contact : [eliastiksofts.com/contact](http://eliastiksofts.com/contact)
 * Licence : GNU GPLv3 (voir le fichier LICENCE.txt)
 
@@ -363,7 +369,7 @@ La configuration est vérifiée par rapport à un schéma JSON situé dans `conf
 ````yaml
 # SnakeIA server - configuration par défaut
 ServerConfig:
-  version: "2.2.2"            # La version du serveur
+  version: "2.3.0"            # La version du serveur
   hideVersion: false          # Masque ou affiche la version du serveur
   port: 3000                  # Le port sur lequel lancer le serveur
   enableHttps: false          # Activer ou désactiver l'écoute du serveur en HTTPS. Si désactivé, le serveur n'écoutera qu'en HTTP.
@@ -416,6 +422,12 @@ ServerConfig:
 ````
 
 ## Journal des changements
+
+* Version 2.3.0 (19/11/2026) :
+    - Ajout de la prise en charge des fichiers de configuration YAML (désormais le format de configuration recommandé)
+    - La configuration est désormais validée à l'aide d'un schéma JSON : si la configuration n'est pas valide, le serveur ne démarre pas et une erreur de configuration s'affiche
+    - Correction de l'édition de la configuration dans le panneau d'administration : seule la configuration effective (local.yaml/json) est modifiable, et lors de l'enregistrement, aucune valeur de la configuration par défaut n'est copiée dans la configuration effective
+    - Mise à jour des dépendances
 
 * Version 2.2.2 (15/11/2026) :
     - Mise à jour des dépendances, mise à jour de l'image Docker vers Node 26

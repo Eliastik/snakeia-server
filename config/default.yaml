@@ -2,7 +2,7 @@
 # Supported formats: YAML (recommended) and JSON
 # See https://github.com/node-config/node-config/wiki/Configuration-Files
 ServerConfig:
-  version: "2.2.2"
+  version: "2.3.0"
   hideVersion: false
   port: 3000
   enableHttps: false
